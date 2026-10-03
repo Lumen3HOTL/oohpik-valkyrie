@@ -1,0 +1,14 @@
+{
+    "version": 1,
+    "revision": 0,
+    "rules": [
+        {
+            "primary-output": "MakeADragonFly\\x64\\Debug\\Timer.obj",
+            "outputs": [
+                "MakeADragonFly\\x64\\Debug\\Timer.h.obj.dt.module.json",
+                "MakeADragonFly\\x64\\Debug\\Timer.h.obj.dt.d.json"
+            ],
+            "requires": []
+        }
+    ]
+}

@@ -1,0 +1,11 @@
+3
+4
+2
+2
+red
+ABCD
+EFGH
+IJKL
+MNOP
+QRST
+UVWX

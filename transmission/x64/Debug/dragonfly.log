@@ -1,0 +1,48 @@
+
+---dragonfly log start---
+---current time nanoseconds: 18640582993800---
+<log number: 0 current time nanoseconds: 18640583095600 ns since start: 105700> suite: ObjectList query functions
+
+<log number: 1 current time nanoseconds: 18640583168700 ns since start: 177000> test: objectsOfTypeCount returns correct count result: passed
+<log number: 2 current time nanoseconds: 18640583196100 ns since start: 204200> test: objectsOfTypeCount finds one matching object result: passed
+<log number: 3 current time nanoseconds: 18640583221100 ns since start: 229200> test: objectsOfTypeCount returns zero for missing type result: passed
+<log number: 4 current time nanoseconds: 18640583246600 ns since start: 254600> test: objectsOfTypeCount returns zero for empty type result: passed
+<log number: 5 current time nanoseconds: 18640583276400 ns since start: 284400> test: objectsOfType returns all matching objects result: passed
+<log number: 6 current time nanoseconds: 18640583302200 ns since start: 310200> test: objectsOfType returns empty list for missing type result: passed
+<log number: 7 current time nanoseconds: 18640583323400 ns since start: 331600> test: objectsOfType preserves matching object pointers result: passed
+<log number: 8 current time nanoseconds: 18640583345100 ns since start: 353100> test: objectsOfAltitudeCount returns correct count result: passed
+<log number: 9 current time nanoseconds: 18640583366300 ns since start: 374400> test: objectsOfAltitudeCount finds one object result: passed
+<log number: 10 current time nanoseconds: 18640583399800 ns since start: 408000> test: objectsOfAltitudeCount returns zero for unused altitude result: passed
+<log number: 11 current time nanoseconds: 18640583422200 ns since start: 430300> test: objectsOfAltitudeCount rejects MAX_ALTITUDE result: failed
+<log number: 12 current time nanoseconds: 18640583443100 ns since start: 451200> test: objectsOfAltitudeCount rejects altitude above MAX_ALTITUDE result: passed
+<log number: 13 current time nanoseconds: 18640583474700 ns since start: 482700> test: objectsOfAltitude returns all matching objects result: passed
+<log number: 14 current time nanoseconds: 18640583497300 ns since start: 506900> test: objectsOfAltitude returns empty list for unused altitude result: passed
+<log number: 15 current time nanoseconds: 18640583522000 ns since start: 530100> test: objectsOfAltitude returns empty list for invalid altitude result: passed
+<log number: 16 current time nanoseconds: 18640583554800 ns since start: 634000> test: objectsByAltitude returns MAX_ALTITUDE lists result: failed
+<log number: 17 current time nanoseconds: 18640583650000 ns since start: 658100> test: objectsByAltitude groups objects correctly result: passed
+<log number: 18 current time nanoseconds: 18640583671400 ns since start: 679400> test: objectsByAltitude leaves unused groups empty result: passed
+<log number: 19 current time nanoseconds: 18640583694400 ns since start: 702400> test: objectsOfTypeCount works on empty list result: passed
+<log number: 20 current time nanoseconds: 18640583715300 ns since start: 723400> test: objectsOfAltitudeCount works on empty list result: passed
+<log number: 21 current time nanoseconds: 18640583737800 ns since start: 745800> test: objectsOfType returns empty result for empty list result: passed
+<log number: 22 current time nanoseconds: 18640583760200 ns since start: 768200> test: objectsOfAltitude returns empty result for empty list result: passed
+<log number: 23 current time nanoseconds: 18640583786900 ns since start: 794900> test: objectsByAltitude works on empty list result: failed
+<log number: 24 current time nanoseconds: 18640583807600 ns since start: 815900> suite failed: ObjectList query functions failures: 3
+<log number: 25 current time nanoseconds: 18640586875300 ns since start: 3885700> test: Lifecycle GameManager startup result: failed
+<log number: 26 current time nanoseconds: 18640586947800 ns since start: 3956500> lifecycle tests completed successfully!
+---current time nanoseconds: 18640586988300---
+---dragonfly log end---
+
+
+---dragonfly log start---
+---current time nanoseconds: 18640604671100---
+<log number: 0 current time nanoseconds: 18640604808500 ns since start: 143100> suite failed: Lifecycle failures: 1
+---current time nanoseconds: 18640604877800---
+---dragonfly log end---
+
+
+---dragonfly log start---
+---current time nanoseconds: 18640624378100---
+<log number: 0 current time nanoseconds: 18640624548700 ns since start: 177400> standard set passed
+---current time nanoseconds: 18640624626500---
+---dragonfly log end---
+

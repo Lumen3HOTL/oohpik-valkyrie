@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="MakeADragonFly.vcxproj" Id="c41c5a91-e6dc-466b-82f5-7d4bb53514cd" />
+</Solution>

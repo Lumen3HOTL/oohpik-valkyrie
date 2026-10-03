@@ -1,0 +1,14 @@
+{
+    "version": 1,
+    "revision": 0,
+    "rules": [
+        {
+            "primary-output": "MakeADragonFly\\x64\\Debug\\Event.obj",
+            "outputs": [
+                "MakeADragonFly\\x64\\Debug\\Event.h.obj.dt.module.json",
+                "MakeADragonFly\\x64\\Debug\\Event.h.obj.dt.d.json"
+            ],
+            "requires": []
+        }
+    ]
+}

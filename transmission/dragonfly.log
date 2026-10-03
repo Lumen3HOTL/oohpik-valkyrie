@@ -1,0 +1,19 @@
+
+---dragonfly log start---
+---current time nanoseconds: 11815229203200---
+<log number: 0 current time nanoseconds: 11815229463200 ns since start: 262600> 
+<log number: 1 current time nanoseconds: 11815229493700 ns since start: 292100> 1 2
+<log number: 2 current time nanoseconds: 11815229507100 ns since start: 305000> test % 13.000000 99
+<log number: 3 current time nanoseconds: 11815229540000 ns since start: 338000> +0X1.FFFE000000000P+15
+<log number: 4 current time nanoseconds: 11815229550800 ns since start: 348700> this is a test
+<log number: 5 current time nanoseconds: 11815229561100 ns since start: 359100> test: LogManager formatted logging result: passed
+---current time nanoseconds: 11815229573100---
+---dragonfly log end---
+
+
+---dragonfly log start---
+---current time nanoseconds: 11815235587100---
+<log number: 0 current time nanoseconds: 11815235654800 ns since start: 70300> Clock delta test starting
+<log number: 1 current time nanoseconds: 11817236695200 ns since start: 2001113800> Clock split result: 2001 seconds
+<log number: 2 current time nanoseconds: 11817236767100 ns since start: 2001181300> test: Clock split approximately two seconds result: passed
+<log number: 3 current time nanoseconds: 11817236810200 ns since start: 2001224400> Clock second delta test starting

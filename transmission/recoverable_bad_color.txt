@@ -1,0 +1,7 @@
+1
+3
+2
+1
+not_a_real_color
+ABC
+DEF

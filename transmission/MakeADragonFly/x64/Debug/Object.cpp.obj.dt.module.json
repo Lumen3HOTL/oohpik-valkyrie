@@ -1,0 +1,14 @@
+{
+    "version": 1,
+    "revision": 0,
+    "rules": [
+        {
+            "primary-output": "MakeADragonFly\\x64\\Debug\\Object.obj",
+            "outputs": [
+                "MakeADragonFly\\x64\\Debug\\Object.cpp.obj.dt.module.json",
+                "MakeADragonFly\\x64\\Debug\\Object.cpp.obj.dt.d.json"
+            ],
+            "requires": []
+        }
+    ]
+}
