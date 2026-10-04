@@ -23,7 +23,7 @@ namespace df {
 		return Manager::startUp();
 	}
 
-	// C l o s e g r a p h i c s window .
+	// Close graphics window.
 	void CameraManager::shutDown() {
 		m_currentCameraIndex = 0;
 		m_cameras.clear();

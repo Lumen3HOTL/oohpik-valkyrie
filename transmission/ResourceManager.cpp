@@ -8,17 +8,17 @@ namespace df {
 		m_sprite_count = 0;
 		m_p_sprite = std::vector<Sprite*>();
 		this->setType("ResourceManager");
-		m_sound= std::vector<Sound*>(); // Array o f sound b u f f e r s .
-		m_sound_count=0; // Count o f number o f l o a d e d s o u n d s .
-		 m_music= std::vector<Music*>(); // Array o f music b u f f e r s .
-		m_music_count=0; // Count o f number o f l o a d e d m u s i c s .
+		m_sound= std::vector<Sound*>(); // Array of sound buffers.
+		m_sound_count=0; // Count of number of loaded sounds.
+		 m_music= std::vector<Music*>(); // Array of music buffers.
+		m_music_count=0; // Count of number of loaded musics.
 	}
-	// Get t h e one and o n l y i n s t a n c e o f t h e ResourceManager .
+	// Get the one and only instance of the ResourceManager.
 	ResourceManager& ResourceManager::getInstance() {
 		static ResourceManager resourceMan = ResourceManager();
 		return resourceMan;
 	}
-	// Get ResourceManager r e a d y t o manager f o r r e s o u r c e s .
+	// Get ResourceManager ready to manager for resources.
 	int ResourceManager::startUp() {
 		if (this->isStarted()) {
 			return -1;
@@ -29,7 +29,7 @@ namespace df {
 		return Manager::startUp();
 	}
 
-	// S h u t down ResourceManager , f r e e i n g up any a l l o c a t e d S p r i t e s .
+	// Shut down ResourceManager, freeing up any allocated Sprites.
 	void ResourceManager::shutDown() {
 		if (!m_p_sprite.empty()) {
 			for (int sprite = 0; sprite < m_sprite_count; sprite++) {
@@ -211,9 +211,9 @@ namespace df {
 		}
 		return rv;
 	}
-	// Load S p r i t e from f i l e .
-	// A s s i g n i n d i c a t e d l a b e l t o s p r i t e .
-	// Return 0 i f ok , e l s e −1.
+	// Load Sprite from file.
+	// Assign indicated label to sprite.
+	// Return 0 if ok, else -1.
 	int ResourceManager::loadSprite(std::string filename, std::string label) {
 
 		if (this->isStarted()) {
@@ -557,8 +557,8 @@ namespace df {
 		return -1;
 	}
 
-	// Unload S p r i t e w i t h i n d i c a t e d l a b e l .
-	// Return 0 i f ok , e l s e −1.
+	// Unload Sprite with indicated label.
+	// Return 0 if ok, else -1.
 	int ResourceManager::unloadSprite(std::string label) {
 		if (this->isStarted()) {
 			int found = -1;
@@ -581,8 +581,8 @@ namespace df {
 		return -1;
 	}
 
-	// Find S p r i t e w i t h i n d i c a t e d l a b e l .
-	// Return p o i n t e r t o i t i f found , e l s e NULL.
+	// Find Sprite with indicated label.
+	// Return pointer to it if found, else NULL.
 	Sprite* ResourceManager::getSprite(std::string label) const {
 		if (this->isStarted()) {
 			for (int sprite = 0; sprite < m_sprite_count; sprite++) {
@@ -598,8 +598,8 @@ namespace df {
 
 
 
-	// Load Sound from f i l e .
-	// Return 0 i f ok , e l s e −1.
+	// Load Sound from file.
+	// Return 0 if ok, else -1.
 	int  ResourceManager::loadSound(std::string filename, std::string label) {
 		if (m_sound_count >= MAX_SOUNDS) {
 			return -1;
@@ -622,8 +622,8 @@ namespace df {
 		return 0;
 	}
 
-	// Remove Sound w i t h i n d i c a t e d l a b e l .
-	// Return 0 i f ok , e l s e −1.
+	// Remove Sound with indicated label.
+	// Return 0 if ok, else -1.
 	int  ResourceManager::unloadSound(std::string label) {
 		if (m_sound_count > 0) {
 			int found = -1;
@@ -641,8 +641,8 @@ namespace df {
 		return -1;
 	}
 
-	// Find Sound w i t h i n d i c a t e d l a b e l .
-	// Return p o i n t e r t o i t i f found , e l s e NULL.
+	// Find Sound with indicated label.
+	// Return pointer to it if found, else NULL.
 	Sound* ResourceManager::getSound(std::string label) {
 		for (int s = 0; s < m_sound_count; s++) {
 			if (m_sound[s]->getLabel().compare(label) == 0) {
@@ -652,8 +652,8 @@ namespace df {
 		return nullptr;
 	}
 
-	// A s s o c i a t e f i l e w i t h Music .
-	// Return 0 i f ok , e l s e −1.
+	// Associate file with Music.
+	// Return 0 if ok, else -1.
 	int  ResourceManager::loadMusic(std::string filename, std::string label) {
 		if (m_music_count >= MAX_MUSICS) {
 			return -1;
@@ -677,8 +677,8 @@ namespace df {
 		return 0;
 	}
 
-	// Remove l a b e l f o r Music w i t h i n d i c a t e d l a b e l .
-	// Return 0 i f ok , e l s e −1.
+	// Remove label for Music with indicated label.
+	// Return 0 if ok, else -1.
 	int  ResourceManager::unloadMusic(std::string label) {
 		if (m_music_count > 0) {
 			int found = -1;
@@ -696,8 +696,8 @@ namespace df {
 		return -1;
 	}
 
-	// Find Music w i t h i n d i c a t e d l a b e l .
-	// Return p o i n t e r t o i t i f found , e l s e NULL.
+	// Find Music with indicated label.
+	// Return pointer to it if found, else NULL.
 	Music* ResourceManager::getMusic(std::string label) {
 		for (int m = 0; m < m_music_count; m++) {
 			if (m_music[m]->getLabel().compare(label) == 0) {

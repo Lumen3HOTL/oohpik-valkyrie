@@ -73,7 +73,7 @@ namespace df {
 	void InputManager::getInput() {
 		//safety check
 		if (this->isStarted()) {
-			//get the window so we ca npoll it 
+			//get the window so wec a npoll it 
 			DisplayManager& display = DisplayManager::getInstance();
 			sf::RenderWindow* p_window = display.getWindow();
 			//prealloc the event to save cycles

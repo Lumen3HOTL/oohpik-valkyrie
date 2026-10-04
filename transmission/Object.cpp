@@ -105,28 +105,28 @@ namespace df {
 	}
 
 
-	// S e t s p e e d o f O b j e c t .
+	// Set speed of Object.
 	void Object::setSpeed(float speed) {
 		m_speed = speed;
 	}
 
-	// Get s p e e d o f O b j e c t .
+	// Get speed of Object.
 	float Object::getSpeed() const {
 		return m_speed;
 	}
 
-	// S e t d i r e c t i o n o f O b j e c t .
+	// Set direction of Object.
 	void Object::setDirection(Vector new_direction) {
 		m_direction = new_direction;
 		m_direction.normalize();
 	}
 
-	// Get d i r e c t i o n o f O b j e c t .
+	// Get direction of Object.
 	Vector Object::getDirection() const {
 		return m_direction;
 	}
 
-	// S e t d i r e c t i o n and s p e e d o f O b j e c t .
+	// Set direction and speed of Object.
 	void Object::setVelocity(Vector new_velocity) {
 		m_direction = Vector(new_velocity);
 		m_direction.normalize();
@@ -134,15 +134,15 @@ namespace df {
 		m_speed = new_velocity.getMagnitude();
 	}
 
-	// Get v e l o c i t y o f O b j e c t b a s e d on d i r e c t i o n and s p e e d .
+	// Get velocity of Object based on direction and speed.
 	Vector Object::getVelocity() const {
 		Vector temp = Vector(m_direction);
 		temp.scale(m_speed);
 		return temp;
 	}
 
-	// P r e d i c t O b j e c t p o s i t i o n b a s e d on s p e e d and d i r e c t i o n .
-	// Return p r e d i c t e d p o s i t i o n .
+	// Predict Object position based on speed and direction.
+	// Return predicted position.
 	Vector Object::predictPosition() {
 		return Vector(m_position) + this->getVelocity();
 
@@ -151,7 +151,7 @@ namespace df {
 
 
 	bool Object::isSolid() const {
-		// True i f HARD o r SOFT, e l s e f a l s e .
+		// True if HARD or SOFT, else false.
 		switch (m_solidness) {
 		case HARD:
 			return true;
@@ -162,8 +162,8 @@ namespace df {
 		}
 	}
 
-	// S e t o b j e c t s o l i d n e s s , w i t h c h e c k s f o r c o n s i s t e n c y .
-	// Return 0 i f ok , e l s e −1.
+	// Set object solidness, with checks for consistency.
+	// Return 0 if ok, else -1.
 	int Object::setSolidness(Solidness new_solid) {
 		if ((new_solid >= HARD) && (new_solid <= SPECTRAL)) {
 			m_solidness = new_solid;
@@ -173,25 +173,25 @@ namespace df {
 		return -1;
 	}
 
-	// Return o b j e c t s o l i d n e s s .
+	// Return object solidness.
 	Solidness Object::getSolidness() const {
 		return m_solidness;
 	}
 
 
-	// S e t ‘ no s o f t ’ s e t t i n g ( t r u e − c a n n o t move o n to SOFT O b j e c t s ) .
+	// Set 'no_soft' setting (true - cannot move on to SOFT Objects).
 	void Object::setNoSoft(bool new_no_soft) {
 		m_no_soft = new_no_soft;
 	}
 
-	// Get ‘ no s o f t ’ s e t t i n g ( t r u e − c a n n o t move o n to SOFT O b j e c t s ) .
+	// Get 'no_soft' setting (true - cannot move on to SOFT Objects).
 	bool Object::getNoSoft() const {
 		return m_no_soft;
 	}
 
 
-	// S e t S p r i t e f o r t h i s O b j e c t t o a n i m a te .
-		// Return 0 i f ok , e l s e −1.
+	// Set Sprite for this Object to animate.
+		// Return 0 if ok, else -1.
 	int Object::setSprite(std::string sprite_label) {
 		ResourceManager& rm = ResourceManager::getInstance();
 		Sprite* tempSprite = nullptr;
@@ -205,26 +205,26 @@ namespace df {
 		return 0;
 	}
 
-	// S e t Animation f o r t h i s O b j e c t t o new one .
-	// S e t b o u n d i n g b o x t o s i z e o f a s s o c i a t e d S p r i t e .
+	// Set Animation for this Object to new one.
+	// Set bounding box to size of associated Sprite.
 	void Object::setAnimation(Animation new_animation) {
 		m_animation = new_animation;
 		//not doen yet, still needs box implementation
 		m_box = m_animation.getBox();
 	}
 
-	// Get Animation f o r t h i s O b j e c t .
+	// Get Animation for this Object.
 	Animation Object::getAnimation() const {
 		return m_animation;
 	}
 
 
-	// S e t O b j e c t ’ s b o u n d i n g b o x .
+	// Set Object's bounding box.
 	void Object::setBox(Box new_box) {
 		m_box = new_box;
 	}
 
-	// Get O b j e c t ’ s b o u n d i n g b o x .
+	// Get Object's bounding box.
 	Box Object::getBox() const {
 		return m_box;
 	}

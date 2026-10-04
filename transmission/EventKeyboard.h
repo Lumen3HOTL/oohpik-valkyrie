@@ -9,15 +9,15 @@ namespace df {
 
 	const std::string KEYBOARD_EVENT = "df::Keyboard";
 	
-		// Types o f k e y b o a r d a c t i o n s D r a g o n f l y r e c o g n i z e s .
+		// Types of keyboard actions Dragonfly recognizes.
 	enum EventKeyboardAction {
-		UNDEFINED_KEYBOARD_ACTION = -1, // U n d e f i n e d .
+		UNDEFINED_KEYBOARD_ACTION = -1, // Undefined.
 		KEY_PRESSED, // Was down .
-		KEY_RELEASED, // Was r e l e a s e d .
+		KEY_RELEASED, // Was released.
 		
 	};
 	
-		// Keys D r a g o n f l y r e c o g n i z e s .
+		// Keys Dragonfly recognizes.
 	namespace Keyboard {
 		enum Key {
 			UNDEFINED_KEY = -1,
@@ -45,22 +45,22 @@ namespace df {
 	class EventKeyboard : public Event {
 		
 		private:
-			Keyboard::Key m_key_val; // Key v a l u e .
-			EventKeyboardAction m_keyboard_action; // Key a c t i o n .
+			Keyboard::Key m_key_val; // Key value.
+			EventKeyboardAction m_keyboard_action; // Key action.
 		
 		public:
 			EventKeyboard();
 			
-			// S e t k e y i n e v e n t .
+			// Set key in event.
 			void setKey(Keyboard::Key new_key);
 			
-			// Get k e y from e v e n t .
+			// Get key from event.
 			Keyboard::Key getKey() const;
 			
-			// S e t k e y b o a r d e v e n t a c t i o n .
+			// Set keyboard event action.
 			void setKeyboardAction(EventKeyboardAction new_action);
 			
-			// Get k e y b o a r d e v e n t a c t i o n .
+			// Get keyboard event action.
 			EventKeyboardAction getKeyboardAction() const;
 			
 	};

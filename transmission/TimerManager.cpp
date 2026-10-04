@@ -20,7 +20,7 @@ namespace df {
 		return Manager::startUp();
 	}
 
-	// C l o s e g r a p h i c s window .
+	// Close graphics window.
 	void TimerManager::shutDown() {
 		m_timers.clear();
 		Manager::shutDown();

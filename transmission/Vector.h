@@ -8,27 +8,27 @@ namespace df {
 		float m_y;
 		float m_compairison_tollerance;
 	public:
-		// C r e a t e V e c to r w i t h ( x , y ) .
+		// Create Vector with (x, y).
 		Vector(float init_x, float init_y);
-		// D e f a u l t 2 d ( x , y ) i s ( 0 , 0 ) .
+		// Default 2d (x, y) is (0, 0).
 		Vector();
-		// Get / s e t h o r i z o n t a l component .
+		// Get / set horizontal component.
 		void setX(float new_x);
 		float getX() const;
 
-		// Get / s e t v e r t i c a l component .
+		// Get / set vertical component.
 		void setY(float new_y);
 		float getY() const;
 
-		// S e t h o r i z o n t a l & v e r t i c a l components .
+		// Set horizontal & vertical components.
 		void setXY(float new_x, float new_y);
 
-		// Return m a g n i tu d e o f v e c t o r .
+		// Return magnitude of vector.
 		float getMagnitude() const;
-		// N o r m a l i z e v e c t o r .
+		// Normalize vector.
 		void normalize();
 		
-		// S c a l e v e c t o r .
+		// Scale vector.
 		void scale(float s);
 		
 		void setCompairisonTollerances(float new_tollereance);
@@ -36,16 +36,16 @@ namespace df {
 		float getCompairisonTollerances() const;
 
 
-		// Add two V e c to r s , r e t u r n new V e c to r .
+		// Add two Vectors, return new Vector.
 		Vector operator +(const Vector & other) const;
-		// subtract two V e c to r s , r e t u r n new V e c to r .
+		// subtract two Vectors, return new Vector.
 		Vector operator -(const Vector& other) const;
 
 		//multiply two vectors
-		// Add two V e c to r s , r e t u r n new V e c to r .
+		// Add two Vectors, return new Vector.
 		Vector operator *(const Vector& other) const;
 		// divide two vectors
-		// Add two V e c to r s , r e t u r n new V e c to r .
+		// Add two Vectors, return new Vector.
 		Vector operator /(const Vector& other) const;
 
 		//compairison operators

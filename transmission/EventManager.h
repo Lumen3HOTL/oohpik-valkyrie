@@ -5,9 +5,9 @@
 
 namespace df {
 	class EventManager : public Manager {
-		EventManager(); // P r i v a t e ( a s i n g l e t o n ) .
-		EventManager(EventManager const&); // Don ’ t a l l o w copy .
-		void operator =(EventManager const&); // Don ’ t a l l o w a s s i g n m e n t .
+		EventManager(); // Private (a singleton).
+		EventManager(EventManager const&); // Don't allow copy.
+		void operator =(EventManager const&); // Don't allow assignment.
 		std::vector<EventRegistrationKeeper> m_eventRegistrationKeepers;
 		
 	public:

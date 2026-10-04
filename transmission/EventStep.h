@@ -6,19 +6,19 @@ namespace df {
 	class EventStep : public Event {
 
 	private:
-		unsigned long long m_step_count; // I t e r a t i o n number o f game l o o p .
+		unsigned long long m_step_count; // Iteration number of game loop.
 
 	public:
-		// D e f a u l t c o n s t r u c t o r .
+		// Default constructor.
 		EventStep();
 
-		// C o n s t r u c t o r w i t h i n i t i a l s t e p c o u n t .
+		// Constructor with initial step count.
 		EventStep(unsigned long long init_step_count);
 
-		// S e t s t e p c o u n t .
+		// Set step count.
 		void setStepCount(unsigned long long new_step_count);
 
-		// Get s t e p c o u n t .
+		// Get step count.
 		unsigned long long getStepCount() const;
 	};
 }

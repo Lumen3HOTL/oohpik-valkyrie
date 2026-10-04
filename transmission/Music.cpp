@@ -14,8 +14,8 @@ namespace df {
 		m_music = nullptr;
 	}
 
-	// A s s o c i a t e music b u f f e r w i t h f i l e .
-	// Return 0 i f ok , e l s e −1.
+	// Associate music buffer with file.
+	// Return 0 if ok, else -1.
 	int Music::loadMusic(std::string filename) {
 		if (m_music != nullptr) {
 			delete m_music;
@@ -29,18 +29,18 @@ namespace df {
 		return 0;
 	}
 
-	// S e t l a b e l a s s o c i a t e d w i t h music .
+	// Set label associated with music.
 	void Music::setLabel(std::string new_label) {
 		m_label = new_label;
 	}
 
-	// Get l a b e l a s s o c i a t e d w i t h music .
+	// Get label associated with music.
 	std::string Music::getLabel() const {
 		return m_label;
 	}
 
-	// P l a y music .
-	// I f l o o p i s t r u e , r e p e a t p l a y when done .
+	// Play music.
+	// If loop is true, repeat play when done.
 	void Music::play(bool loop) {
 		if (m_music == nullptr) {
 
@@ -50,7 +50,7 @@ namespace df {
 		m_music->play();
 	}
 
-	// S to p music .
+	// Stop music.
 	void Music::stop() {
 		if (m_music == nullptr) {
 
@@ -68,7 +68,7 @@ namespace df {
 		m_music->pause();
 	}
 
-	// Return p o i n t e r t o SFML music .
+	// Return pointer to SFML music.
 	sf::Music* Music::getMusic() {
 		return m_music;
 	}

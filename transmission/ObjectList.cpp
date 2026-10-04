@@ -69,7 +69,7 @@ namespace df {
 		return false;
 	}
 
-	// I n d e x i n t o l i s t .
+	// Index into list.
 	Object* ObjectList::operator[](int index) {
 		//safety check
 		
@@ -79,7 +79,7 @@ namespace df {
 		return ((Object*) m_p_obj[index]);
 	}
 
-	// I n d e x i n t o l i s t with const .
+	// Index into list with const.
 	Object* ObjectList::operator[](int index) const{
 		//safety check
 		

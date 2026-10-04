@@ -29,7 +29,7 @@ namespace df {
 		m_mouse_xy = new_mouse_xy;
 	}
 
-	// Get mouse e v e n t ’ s p o s i t i o n .
+	// Get mouse event's position.
 	Vector EventMouse::getMousePosition() const {
 		return m_mouse_xy;
 	}

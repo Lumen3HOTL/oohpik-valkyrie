@@ -1,53 +1,53 @@
 #include "Frame.h"
 #include "DisplayManager.h"
 namespace df {
-	// C r e a t e empty frame .
+	// Create empty frame.
 	Frame::Frame() {
 		m_height = 0;
 		m_width = 0;
 		m_frame_str = "";
 	}
 
-	// C r e a t e frame o f i n d i c a t e d w i d t h and h e i g h t w i t h s t r i n g .
+	// Create frame of indicated width and height with string.
 	Frame::Frame(int new_width, int new_height, std::string frame_str) {
 		m_width = new_width;
 		m_height = new_height;
 		m_frame_str = frame_str;
 	}
 
-	// S e t w i d t h o f frame .
+	// Set width of frame.
 	void Frame::setWidth(int new_width) {
 		m_width = new_width;
 	}
 
-	// Get w i d t h o f frame .
+	// Get width of frame.
 	int Frame::getWidth() const {
 		return m_width;
 	}
 
-	// S e t h e i g h t o f frame .
+	// Set height of frame.
 	void Frame::setHeight(int new_height) {
 		m_height = new_height;
 	}
 
-	// Get h e i g h t o f frame .
+	// Get height of frame.
 	int Frame::getHeight() const {
 		return m_height;
 	}
 
-	// S e t frame c h a r a c t e r s ( s t o r e d a s s t r i n g ) .
+	// Set frame characters (stored as string).
 	void Frame::setString(std::string new_frame_str) {
 		m_frame_str = new_frame_str;
 	}
 
-	// Get frame c h a r a c t e r s ( s t o r e d a s s t r i n g ) .
+	// Get frame characters (stored as string).
 	std::string Frame::getString() const {
 		return m_frame_str;
 	}
 
-	// Draw s e l f , c e n t e r e d a t p o s i t i o n ( x , y ) w i t h c o l o r .
-	// Return 0 i f ok , e l s e −1.
-	// Note : top − l e f t c o o r d i n a t e i s ( 0 , 0 ) .
+	// Draw self, centered at position (x, y) with color.
+	// Return 0 if ok, else -1.
+	// Note: top-left coordinate is (0, 0).
 	int Frame::draw(Vector position, Color color, char transparent) const {
 		DisplayManager& dm = DisplayManager::getInstance();
 		if (m_frame_str.empty()) {

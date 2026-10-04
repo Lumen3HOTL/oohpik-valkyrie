@@ -9,9 +9,9 @@
 namespace df {
 	class TimerManager :public Manager {
 		private:
-			TimerManager(); // P r i v a t e ( a s i n g l e t o n ) .
-			TimerManager(TimerManager const&); // Don ’ t a l l o w copy .
-			void operator =(TimerManager const&); // Don ’ t a l l o w a s s i g n m e n t
+			TimerManager(); // Private (a singleton).
+			TimerManager(TimerManager const&); // Don't allow copy.
+			void operator =(TimerManager const&); // Don't allow assignment
 		
 			std::vector<Timer> m_timers;
 		public:
@@ -19,7 +19,7 @@ namespace df {
 
 			int startUp();
 
-			// C l o s e g r a p h i c s window .
+			// Close graphics window.
 			void shutDown();
 
 			int update();

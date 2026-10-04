@@ -2,43 +2,43 @@
 #include "Manager.h"
 #include "Clock.h"
 namespace df {
-	// D e f a u l t frame ti m e ( game l o o p ti m e ) i n m i l l i s e c o n d s ( 3 3 ms == 30 f / s ) .
+	// Default frame time (game loop time) in milliseconds (33 ms == 30 f/s).
 	const int FRAME_TIME_DEFAULT = 33;
 
 	class GameManager : public Manager {
 
 	private:
-		GameManager(); // P r i v a t e s i n c e a s i n g l e t o n .
-		GameManager(GameManager const&); // Don ’ t a l l o w copy .
-		void operator =(GameManager const&); // Don ’ t a l l o w a s s i g n m e n t .
-		bool m_game_over; // True , t h e n game l o o p s h o u l d s t o p .
-		int m_frame_time; // T a r g e t ti m e p e r game l o o p , i n m i l l i s e c o n d s .
+		GameManager(); // Private since a singleton.
+		GameManager(GameManager const&); // Don't allow copy.
+		void operator =(GameManager const&); // Don't allow assignment.
+		bool m_game_over; // True, then game loop should stop.
+		int m_frame_time; // Target time per game loop, in milliseconds.
 		unsigned int m_last_frame_time;
 		unsigned long long m_last_delta_time;
 		Clock m_lastDeltaClock;
 
 	public:
-		// Get t h e s i n g l e t o n i n s t a n c e o f t h e GameManager .
+		// Get the singleton instance of the GameManager.
 		static GameManager& getInstance();
 
-		// S t a r t u p a l l GameManager s e r v i c e s .
+		// Startup all GameManager services.
 		int startUp(bool appendRun = false);
 
-		// S h u t down GameManager s e r v i c e s .
+		// Shut down GameManager services.
 		void shutDown();
 
-		// Run game l o o p .
+		// Run game loop.
 		void run();
 
-		// S e t game o v e r s t a t u s t o i n d i c a t e d v a l u e .
-		// I f t r u e ( d e f a u l t ) , w i l l s t o p game l o o p .
+		// Set game over status to indicated value.
+		// If true (default), will stop game loop.
 		void setGameOver(bool new_game_over = true);
 
-		// Get game o v e r s t a t u s .
+		// Get game over status.
 		bool getGameOver() const;
 
-		// Return frame ti m e .
-		// Frame ti m e i s t a r g e t ti m e f o r game l o o p , i n m i l l i s e c o n d s .
+		// Return frame time.
+		// Frame time is target time for game loop, in milliseconds.
 		int getFrameTime() const;
 
 		unsigned int getLastFrameTime()const;

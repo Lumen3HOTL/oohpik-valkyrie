@@ -8,18 +8,18 @@ namespace df {
 	class CameraManager : public Manager {
 
 		private:
-			CameraManager(); // P r i v a t e ( a s i n g l e t o n ) .
-			CameraManager(CameraManager const&); // Don ’ t a l l o w copy .
-			void operator =(CameraManager const&); // Don ’ t a l l o w a s s i g n m e n t
+			CameraManager(); // Private (a singleton).
+			CameraManager(CameraManager const&); // Don't allow copy.
+			void operator =(CameraManager const&); // Don't allow assignment
 			int m_currentCameraIndex;
 			std::vector<Camera> m_cameras;
 		public:
 			static CameraManager& getInstance();
-			// Open g r a p h i c s window , r e a d y f o r t e x t −b a s e d d i s p l a y .
-				// Return 0 i f ok , e l s e −1.
+			// Open graphics window, ready for text-based display.
+				// Return 0 if ok, else -1.
 			int startUp();
 
-			// C l o s e g r a p h i c s window .
+			// Close graphics window.
 			void shutDown();
 
 			Camera* getCurrentCamera();

@@ -72,7 +72,7 @@ namespace test {
 			//get the display manager
 			df::DisplayManager& display = df::DisplayManager::getInstance();
 			//grab teh current positon
-			//draw each sprite in sequence, error checking and incrememting y as we go along
+			//draw each sprite in sequence, error checking and incrememting yas we go along
 			int error = 0;
 			if (m_in_engine) {
 				df::GameManager& gm = df::GameManager::getInstance();

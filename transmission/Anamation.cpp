@@ -1,39 +1,39 @@
 #include "Animation.h"
 #include <iostream>
 namespace df {
-	// Animation c o n s t r u c t o r
+	// Animation constructor
 	Animation::Animation() {
 		m_p_sprite = nullptr;
 		
-		m_name="undefined_anim"; // S p r i t e name i n ResourceManager .
-		m_index=0; // C u r r e n t i n d e x frame f o r S p r i t e .
-		m_slowdown_count=0; // Slowdown c o u n t e r .
+		m_name="undefined_anim"; // Sprite name in ResourceManager.
+		m_index=0; // Current index frame for Sprite.
+		m_slowdown_count=0; // Slowdown counter.
 	}
 
-	// S e t a s s o c i a t e d S p r i t e t o new one .
-			// Note , S p r i t e i s managed by ResourceManager .
-			// S e t S p r i t e i n d e x t o 0 ( f i r s t frame ) .
+	// Set associated Sprite to new one.
+			// Note, Sprite is managed by ResourceManager.
+			// Set Sprite index to 0 (first frame).
 	void Animation::setSprite(Sprite* p_new_sprite) {
 		m_p_sprite = p_new_sprite;
 		m_index = 0;
 	}
 
-	// Return p o i n t e r t o a s s o c i a t e d S p r i t e .
+	// Return pointer to associated Sprite.
 	Sprite* Animation::getSprite() const {
 		return m_p_sprite;
 	}
 
-	// S e t S p r i t e name ( i n ResourceManager ) .
+	// Set Sprite name (in ResourceManager).
 	void Animation::setName(std::string new_name) {
 		m_name = new_name;
 	}
 
-	// Get S p r i t e name ( i n ResourceManager ) .
+	// Get Sprite name (in ResourceManager).
 	std::string Animation::getName() const {
 		return m_name;
 	}
 
-	// S e t i n d e x o f c u r r e n t S p r i t e frame t o b e d i s p l a y e d .
+	// Set index of current Sprite frame to be displayed.
 	void Animation::setIndex(int new_index) {
 		m_index = new_index;
 		if (m_p_sprite != NULL) {
@@ -43,24 +43,24 @@ namespace df {
 		}
 	}
 
-	// Get i n d e x o f c u r r e n t S p r i t e frame t o b e d i s p l a y e d .
+	// Get index of current Sprite frame to be displayed.
 	int Animation::getIndex() const {
 		return m_index;
 	}
 
-	// S e t a n i m a ti o n slowdown c o u n t (−1 means s t o p a n i m a ti o n ) .
+	// Set animation slowdown count (-1 means stop animation).
 	void Animation::setSlowdownCount(int new_slowdown_count) {
 		m_slowdown_count = new_slowdown_count;
 	}
 
-	// S e t a n i m a ti o n slowdown c o u n t (−1 means s t o p a n i m a ti o n ) .
+	// Set animation slowdown count (-1 means stop animation).
 	int Animation::getSlowdownCount() const {
 		return m_slowdown_count;
 	}
 
-	// Draw s i n g l e frame c e n t e r e d a t p o s i t i o n ( x , y ) .
-	// Drawing a c c o u n t s f o r slowdown , and a d v a n c e s S p r i t e frame .
-	// Return 0 i f ok , e l s e −1.
+	// Draw single frame centered at position (x, y).
+	// Drawing accounts for slowdown, and advances Sprite frame.
+	// Return 0 if ok, else -1.
 	int Animation::draw(Vector position) {
 
 		//i hate this algorithm it makes no sense and i dont understand it, and its poor separation of concerns but because of how the engine is architected i cant change it. (internal screaming)
