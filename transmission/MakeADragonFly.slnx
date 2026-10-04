@@ -3,5 +3,7 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
+  <Project Path="../oohpik/oohpik/oohpik.vcxproj" Id="c93a8631-ad42-4ed7-b501-8a62bebc7dd8" />
   <Project Path="MakeADragonFly.vcxproj" Id="c41c5a91-e6dc-466b-82f5-7d4bb53514cd" />
+  <Project Path="tests/EngineTests.vcxproj" Id="b5903616-5a91-46ea-a236-34e33ffa29fd" />
 </Solution>

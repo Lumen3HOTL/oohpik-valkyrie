@@ -45,16 +45,10 @@
     <ClInclude Include="WorldManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TestObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Color.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DisplayManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TestDrawObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="InputManager.h">
@@ -66,12 +60,6 @@
     <ClInclude Include="EventMouse.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="InputTestDisplayObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="KeyMoveTestObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="EventCollision.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -79,9 +67,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="EventOut.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="VelocityTestObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Frame.h">
@@ -94,9 +79,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Animation.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="AnimationTestobject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Box.h">
@@ -146,9 +128,6 @@
     <ClCompile Include="GameManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="tests.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Vector.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -167,16 +146,10 @@
     <ClCompile Include="WorldManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TestObject.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="DisplayManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Colors.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TestDrawObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="InputManager.cpp">
@@ -188,12 +161,6 @@
     <ClCompile Include="EventMouse.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="InputTestDisplayObject.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="KeyMoveTestObject.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="EventCollision.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -201,9 +168,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="EventOut.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="VelocityTestObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Frame.cpp">
@@ -215,10 +179,7 @@
     <ClCompile Include="ResourceManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Anamation.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="AnimationTestObject.cpp">
+    <ClCompile Include="Animation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Box.cpp">
@@ -270,36 +231,6 @@
     </Text>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\SFML-3.1\bin\sfml-audio-3.dll">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\..\SFML-3.1\bin\sfml-audio-d-3.dll">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\..\SFML-3.1\bin\sfml-graphics-3.dll">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\..\SFML-3.1\bin\sfml-graphics-d-3.dll">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\..\SFML-3.1\bin\sfml-network-3.dll">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\..\SFML-3.1\bin\sfml-network-d-3.dll">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\..\SFML-3.1\bin\sfml-system-3.dll">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\..\SFML-3.1\bin\sfml-system-d-3.dll">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\..\SFML-3.1\bin\sfml-window-3.dll">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\..\SFML-3.1\bin\sfml-window-d-3.dll">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="filenamecompiler.py">
       <Filter>Resource Files</Filter>
     </None>

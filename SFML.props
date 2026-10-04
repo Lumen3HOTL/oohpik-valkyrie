@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Shared SFML settings, imported by every project in the solution. -->
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <!-- SFML location: set the SFML_DIR environment variable to override, otherwise
+         look for an SFML-3.1 folder next to the repo folder, then one level above that. -->
+    <SfmlDir Condition="'$(SFML_DIR)' != ''">$(SFML_DIR)</SfmlDir>
+    <SfmlDir Condition="'$(SfmlDir)' == '' And Exists('$(MSBuildThisFileDirectory)..\SFML-3.1')">$(MSBuildThisFileDirectory)..\SFML-3.1</SfmlDir>
+    <SfmlDir Condition="'$(SfmlDir)' == '' And Exists('$(MSBuildThisFileDirectory)..\..\SFML-3.1')">$(MSBuildThisFileDirectory)..\..\SFML-3.1</SfmlDir>
+    <!-- Engine headers, for the projects that use the engine. -->
+    <EngineDir>$(MSBuildThisFileDirectory)transmission\</EngineDir>
+    <SfmlLibSuffix Condition="'$(Configuration)' == 'Debug'">-d</SfmlLibSuffix>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(SfmlDir)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(SfmlDir)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Winmm.lib;sfml-system$(SfmlLibSuffix).lib;sfml-window$(SfmlLibSuffix).lib;sfml-graphics$(SfmlLibSuffix).lib;sfml-network$(SfmlLibSuffix).lib;sfml-audio$(SfmlLibSuffix).lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <!-- Copy the SFML DLLs next to any executable so it runs without extra setup. -->
+  <Target Name="CopySfmlDlls" AfterTargets="Build" Condition="'$(ConfigurationType)' == 'Application'">
+    <ItemGroup>
+      <SfmlDll Include="$(SfmlDir)\bin\*.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(SfmlDll)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
+</Project>
