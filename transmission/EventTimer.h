@@ -11,10 +11,10 @@ namespace df {
 		std::string m_timerName;
 
 	public:
-		// D e f a u l t c o n s t r u c t o r .
+		// Default constructor.
 		TimerEvent();
 
-		// C o n s t r u c t o r w i t h i n i t i a l s t e p c o u n t .
+		// Constructor with initial step count.
 		TimerEvent(std::string timerName, unsigned long long elapsedMS);
 
 		void setTimerName(std::string new_timer_name);

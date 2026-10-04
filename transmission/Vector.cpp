@@ -70,28 +70,28 @@ namespace df {
 	}
 
 	Vector Vector::operator +(const Vector& other) const {
-		Vector v; // C r e a t e new v e c t o r .
+		Vector v; // Create new vector.
 		v.setX(m_x + other.getX()); // Add x components .
 		v.setY(m_y + other.getY()); // Add y components .
 		return v;
 	}
 
 	Vector Vector::operator -(const Vector& other) const {
-		Vector v; // C r e a t e new v e c t o r .
+		Vector v; // Create new vector.
 		v.setX(m_x - other.getX()); // sub x components .
 		v.setY(m_y - other.getY()); // sub y components .
 		return v;
 	}
 
 	Vector Vector::operator *(const Vector& other) const {
-		Vector v; // C r e a t e new v e c t o r .
+		Vector v; // Create new vector.
 		v.setX(m_x * other.getX()); // mul x components .
 		v.setY(m_y * other.getY()); // mul y components .
 		return v;
 	}
 
 	Vector Vector::operator /(const Vector& other) const {
-		Vector v; // C r e a t e new v e c t o r 
+		Vector v; // Create new vector 
 		v.setX(m_x / other.getX()); // div x components .
 		v.setY(m_y / other.getY()); // div y components .
 		return v;

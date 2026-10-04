@@ -7,7 +7,7 @@ namespace df {
 		return ((fabs(p1.getX() - p2.getX()) <= 1) && (fabs(p1.getY() - p2.getY()) <= 1));
 	}
 
-	// C o n v e r t r e l a t i v e b o u n d i n g Box f o r O b j e c t t o a b s o l u t e w o r l d Box .
+	// Convert relative bounding Box for Object to absolute world Box.
 	Box getWorldBox(const Object* p_o){
 
 		Box box = p_o->getBox();

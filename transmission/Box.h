@@ -7,34 +7,34 @@ namespace df {
 	class Box {
 		
 		private:
-			Vector m_corner; // Upper l e f t c o r n e r o f b o x .
-			float m_horizontal; // H o r i z o n t a l d i m e n s i o n .
-			float m_vertical; // V e r t i c a l d i m e n s i o n .
+			Vector m_corner; // Upper left corner of box.
+			float m_horizontal; // Horizontal dimension.
+			float m_vertical; // Vertical dimension.
 			
 		public:
-			// C r e a t e b o x w i t h ( 0 , 0 ) f o r t h e c o r n e r , and 0 f o r h o r i z and v e r t .
+			// Create box with (0, 0) for the corner, and 0 for horiz and vert.
 			Box();
 		
-			// C r e a t e b o x w i t h an upper − l e f t c o r n e r , h o r i z and v e r t s i z e s .
+			// Create box with an upper-left corner, horiz and vert sizes.
 			Box(Vector init_corner, float init_horizontal, float init_vertical);
 			
-			// S e t u p p e r l e f t c o r n e r o f b o x .
+			// Set upper left corner of box.
 			void setCorner(Vector new_corner);
 			
-			// Get u p p e r l e f t c o r n e r o f b o x .
+			// Get upper left corner of box.
 			Vector getCorner() const;
 			
-			// S e t h o r i z o n t a l s i z e o f b o x .
+			// Set horizontal size of box.
 			void setHorizontal(float new_horizontal);
 			
-			// Get h o r i z o n t a l s i z e o f b o x .
+			// Get horizontal size of box.
 			float getHorizontal() const;
 			
-				// S e t v e r t i c a l s i z e o f b o x .
+				// Set vertical size of box.
 
 			void setVertical(float new_vertical);
 	
-			// Get v e r t i c a l s i z e o f b o x .
+			// Get vertical size of box.
 			float getVertical() const;
 	
 	};

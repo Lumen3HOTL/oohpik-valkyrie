@@ -176,7 +176,7 @@ namespace df {
 			
 			for (int index = 0; index < m_updates.getCount(); index++) {
 				objectCache = m_updates[index];
-				// Add v e l o c i t y t o p o s i t i o n .
+				// Add velocity to position.
 				Vector new_pos = objectCache->predictPosition();
 				if (new_pos != objectCache->getPosition()) {
 					//move the object
@@ -189,8 +189,8 @@ namespace df {
 		}
 		
 	}
-	// I n d i c a t e O b j e c t i s t o b e d e l e t e d a t end o f c u r r e n t game l o o p .
-			// Return 0 i f ok , e l s e −1.
+	// Indicate Object is to be deleted at end of current game loop.
+			// Return 0 if ok, else -1.
 	int WorldManager::markForDelete(Object* p_o) {
 		if (this->isStarted()) {
 			return m_deletions.insert(p_o);
@@ -232,9 +232,9 @@ namespace df {
 		}
 	}
 
-	// Return l i s t o f O b j e c t s c o l l i d e d w i t h a t p o s i t i o n ‘ where ’ .
-			// C o l l i s i o n s o n l y w i t h s o l i d O b j e c t s .
-			// Does n o t c o n s i d e r i f p o i s s o l i d o r n o t .
+	// Return list of Objects collided with at position 'where'.
+			// Collisions only with solid Objects.
+			// Does not consider if po is solid or not.
 	ObjectList WorldManager::getCollisions(const Object* p_o, Vector where) {
 		ObjectList collsions;
 
@@ -255,11 +255,11 @@ namespace df {
 		return collsions;
 	}
 
-	// Move O b j e c t .
-	// I f c o l l i s i o n w i t h s o l i d , s e n d c o l l i s i o n e v e n t s .
-	// I f no c o l l i s i o n w i t h s o l i d , move ok e l s e don ’ t move O b j e c t .
-	// I f O b j e c t i s S p e c t r a l , move ok .
-	// Return 0 i f move ok , e l s e −1 i f c o l l i s i o n w i t h s o l i d .
+	// Move Object.
+	// If collision with solid, send collision events.
+	// If no collision with solid, move ok else don't move Object.
+	// If Object is Spectral, move ok.
+	// Return 0 if move ok, else -1 if collision with solid.
 	int WorldManager::moveObject(Object* p_o, Vector where) {
 		//ok, i hate this algorithm, its so strangely written and slow, its O((floor(d)+1)n^2) time complexity, but it prevents most collision errors, so im keeping it. there probably is better math for tihs, but i sure as hell dont know it!
 		if (this->isStarted()) {

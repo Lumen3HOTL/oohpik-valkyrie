@@ -21,8 +21,8 @@ namespace df {
 		
 	}
 
-	// Load sound b u f f e r from f i l e .
-		// Return 0 i f ok , e l s e −1.
+	// Load sound buffer from file.
+		// Return 0 if ok, else -1.
 	int Sound::loadSound(std::string filename) 
 	{
 		if (m_sound_buffer != nullptr) {
@@ -38,18 +38,18 @@ namespace df {
 	}
 
 
-	// S e t l a b e l a s s o c i a t e d w i t h sound .
+	// Set label associated with sound.
 	void Sound::setLabel(std::string new_label) {
 		m_label = new_label;
 	}
 
-	// Get l a b e l a s s o c i a t e d w i t h sound .
+	// Get label associated with sound.
 	std::string Sound::getLabel() const {
 		return m_label;
 	}
 
-	// P l a y sound .
-	// I f l o o p i s t r u e , r e p e a t p l a y when done .
+	// Play sound.
+	// If loop is true, repeat play when done.
 	void Sound::play(bool loop) {
 		if (m_p_sound == nullptr) {
 			return;
@@ -58,7 +58,7 @@ namespace df {
 		m_p_sound->play();
 	}
 
-	// S to p sound .
+	// Stop sound.
 	void Sound::stop() {
 		if (m_p_sound == nullptr) {
 			return;

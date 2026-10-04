@@ -2,7 +2,7 @@
 #include <SFML/Graphics.hpp>
 #include <cstdint>
 namespace df {
-	// C o l o r s D r a g o n f l y r e c o g n i z e s .
+	// Colors Dragonfly recognizes.
 	enum Color {
 		UNDEFINED_COLOR = -1,
 		BLACK = 0,
@@ -27,7 +27,7 @@ namespace df {
 	
 	std::uint8_t extractInt32ColorChannel(const uint32_t rgbaColor, const channelToExtract channel);
 	std::uint32_t RGBAToUInt32ColorConverter(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a);
-	// I f c o l o r n o t s p e c i f i e d , w i l l u s e t h i s .
+	// If color not specified, will use this.
 	const Color COLOR_DEFAULT = WHITE;
 	const sf::Color COLOR_OBJECT_BROWN = sf::Color::Color(0x875f00ff);
 	const sf::Color ERROR_COLOR = sf::Color::Color(0x9d692eff);

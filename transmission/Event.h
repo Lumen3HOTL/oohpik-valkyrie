@@ -5,19 +5,19 @@ namespace df {
 	class Event {
 
 		private:
-			std::string m_event_type; // H o l d s e v e n t t y p e .
+			std::string m_event_type; // Holds event type.
 
 		public:
-			// C r e a t e b a s e e v e n t .
+			// Create base event.
 			Event();
 
-			// D e s t r u c t o r .
+			// Destructor.
 			virtual ~Event();
 
-			// S e t e v e n t t y p e .
+			// Set event type.
 			void setType(std::string new_type);
 
-			// Get e v e n t t y p e .
+			// Get event type.
 			std::string getType() const;
 
 

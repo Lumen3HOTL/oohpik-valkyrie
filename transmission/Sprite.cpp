@@ -3,7 +3,7 @@
 
 namespace df {
 	Sprite::Sprite() {
-		// S p r i t e a l w a y s h a s one arg , t h e frame c o u n t .
+		// Sprite always has one arg, the frame count.
 		m_color = UNDEFINED_COLOR;
 		m_frame=std::vector<Frame>();
 		m_frame_count = 0;
@@ -11,12 +11,12 @@ namespace df {
 		m_label = "";
 		m_max_frame_count = 0;
 		m_slowdown = 0;
-		char m_transparency=NULL; // S p r i t e t r a n s p a r e n t c h a r a c t e r ( 0 i f none ) .
+		char m_transparency=NULL; // Sprite transparent character (0 if none).
 		m_custom_color = 0;
 	}
 
 
-	// D e s t r o y s p r i t e , d e l e t i n g any a l l o c a t e d f r a m e s .
+	// Destroy sprite, deleting any allocated frames.
 	Sprite::~Sprite() {
 		m_color = UNDEFINED_COLOR;
 		m_frame.clear();
@@ -27,7 +27,7 @@ namespace df {
 		m_slowdown = 0;
 	}
 
-	// C r e a t e s p r i t e w i t h i n d i c a t e d maximum number o f f r a m e s .
+	// Create sprite with indicated maximum number of frames.
 	Sprite::Sprite(int max_frames) {
 		m_max_frame_count = max_frames;
 		m_color = UNDEFINED_COLOR;
@@ -37,47 +37,47 @@ namespace df {
 		m_label = "";
 	
 		m_slowdown = 0;
-		char m_transparency = NULL; // S p r i t e t r a n s p a r e n t c h a r a c t e r ( 0 i f none ) .
+		char m_transparency = NULL; // Sprite transparent character (0 if none).
 		m_custom_color = 0;
 	}
-	// S e t w i d t h o f s p r i t e .
+	// Set width of sprite.
 	void Sprite::setWidth(int new_width) {
 		m_width = new_width;
 	}
 
-	// Get w i d t h o f s p r i t e .
+	// Get width of sprite.
 	int Sprite::getWidth() const {
 		return m_width;
 	}
 
-	// S e t h e i g h t o f s p r i t e .
+	// Set height of sprite.
 	void Sprite::setHeight(int new_height) {
 		m_height = new_height;
 
 	}
 
-	// Get h e i g h t o f s p r i t e .
+	// Get height of sprite.
 	int Sprite::getHeight() const {
 		return m_height;
 	}
 
-	// S e t s p r i t e c o l o r .
+	// Set sprite color.
 	void Sprite::setColor(Color new_color) {
 		m_color = new_color;
 	}
 
-	// Get s p r i t e c o l o r .
+	// Get sprite color.
 	Color Sprite::getColor() const {
 		return m_color;
 	}
 
-	// Get t o t a l c o u n t o f f r a m e s i n s p r i t e .
+	// Get total count of frames in sprite.
 	int Sprite::getFrameCount() const {
 		return m_frame_count;
 	}
 
-	// Add frame t o s p r i t e .
-	// Return −1 i f frame a r r a y f u l l , e l s e 0 .
+	// Add frame to sprite.
+	// Return -1 if frame array full, else 0.
 	int Sprite::addFrame(Frame new_frame) {
 		if (m_frame_count >= m_max_frame_count) {
 			return -1;
@@ -87,8 +87,8 @@ namespace df {
 		return 0;
 	}
 
-	// Get n e x t s p r i t e frame i n d i c a t e d by number .
-	// Return empty frame i f o u t o f r a n g e [ 0 , m f r a m e c o u n t − 1 ] .
+	// Get next sprite frame indicated by number.
+	// Return empty frame if out of range [0, m_frame_count - 1].
 	Frame Sprite::getFrame(int frame_number) const {
 		if ((frame_number < 0) || (frame_number > m_frame_count - 1)) {
 			return Frame();
@@ -96,31 +96,31 @@ namespace df {
 		return m_frame[frame_number];
 	}
 
-	// S e t l a b e l a s s o c i a t e d w i t h s p r i t e .
+	// Set label associated with sprite.
 	void Sprite::setLabel(std::string new_label) {
 		m_label = new_label;
 	}
 
-	// Get l a b e l a s s o c i a t e d w i t h s p r i t e .
+	// Get label associated with sprite.
 	std::string Sprite::getLabel() const {
 		return m_label;
 	}
 
-	// S e t a n i m a ti o n slowdown v a l u e .
-	// Value i n m u l t i p l e s o f GameManager frame ti m e .
+	// Set animation slowdown value.
+	// Value in multiples of GameManager frame time.
 	void Sprite::setSlowdown(int new_sprite_slowdown) {
 		m_slowdown = new_sprite_slowdown;
 	}
 
-	// Get a n i m a ti o n slowdown v a l u e .
-	// Value i n m u l t i p l e s o f GameManager frame ti m e .
+	// Get animation slowdown value.
+	// Value in multiples of GameManager frame time.
 	int Sprite::getSlowdown() const {
 		return m_slowdown;
 	}
 
-	// Draw i n d i c a t e d frame c e n t e r e d a t p o s i t i o n ( x , y ) .
-	// Return 0 i f ok , e l s e −1.
-	// Note : top − l e f t c o o r d i n a t e i s ( 0 , 0 ) .
+	// Draw indicated frame centered at position (x, y).
+	// Return 0 if ok, else -1.
+	// Note: top-left coordinate is (0, 0).
 	int Sprite::draw(int frame_number, Vector position) const {
 		if ((frame_number < 0) || (frame_number > m_frame_count - 1)) {
 			return -1;
@@ -137,12 +137,12 @@ namespace df {
 		return success;
 	}
 
-	// S e t S p r i t e t r a n s p a r e n c y c h a r a c t e r ( 0 means none ) .
+	// Set Sprite transparency character (0 means none).
 	void Sprite::setTransparency(char new_transparency) {
 		m_transparency = new_transparency;
 	}
 
-	// Get S p r i t e t r a n s p a r e n c y c h a r a c t e r ( 0 means none ) .
+	// Get Sprite transparency character (0 means none).
 	char Sprite::getTransparency() const {
 		return m_transparency;
 	}

@@ -5,7 +5,7 @@
 namespace df {
 
 
-	// Compute c h a r a c t e r h e i g h t i n p i x e l s , b a s e d on window s i z e .
+	// Compute character height in pixels, based on window size.
 	float charHeight() {
 		DisplayManager& dm = DisplayManager::getInstance();
 		/*
@@ -17,7 +17,7 @@ namespace df {
 		return ((float)dm.getVerticalPixels()) / ((float)dm.getVertical());
 	}
 
-	// Compute c h a r a c t e r w i d t h i n p i x e l s , b a s e d on window s i z e .
+	// Compute character width in pixels, based on window size.
 	float charWidth() {
 		DisplayManager& dm = DisplayManager::getInstance();
 		/*
@@ -29,12 +29,12 @@ namespace df {
 		return ((float)dm.getHorizontalPixels()) / ((float)dm.getHorizontal());
 	}
 
-	// C o n v e r t ASCII s p a c e s ( x , y ) t o window p i x e l s ( x , y ) .
+	// Convert ASCII spaces (x, y) to window pixels (x, y).
 	Vector spacesToPixels(Vector spaces) {
 		return Vector((spaces.getX() * charWidth()), (spaces.getY() * charHeight()));
 	}
 
-	// C o n v e r t window p i x e l s ( x , y ) t o ASCII s p a c e s ( x , y ) .
+	// Convert window pixels (x, y) to ASCII spaces (x, y).
 	Vector pixelsToSpaces(Vector pixels) {
 		float char_width = charWidth();
 		float char_height = charHeight();
@@ -54,12 +54,12 @@ namespace df {
 
 
 	DisplayManager::DisplayManager() {
-		m_font; // Font u s e d f o r ASCII g r a p h i c s .
-		m_p_window=nullptr; // P o i n t e r t o SFML window .
-		m_window_horizontal_pixels=0; // H o r i z o n t a l p i x e l s i n window .
-		m_window_vertical_pixels=0; // V e r t i c a l p i x e l s i n window .
-		m_window_horizontal_chars=0; // H o r i z o n t a l ASCII s p a c e s i n window .
-		m_window_vertical_chars=0; // V e r t i c a l ASCII s p a c e s i n window .
+		m_font; // Font used for ASCII graphics.
+		m_p_window=nullptr; // Pointer to SFML window.
+		m_window_horizontal_pixels=0; // Horizontal pixels in window.
+		m_window_vertical_pixels=0; // Vertical pixels in window.
+		m_window_horizontal_chars=0; // Horizontal ASCII spaces in window.
+		m_window_vertical_chars=0; // Vertical ASCII spaces in window.
 		m_window_title = "";
 		m_font_file_name = "";
 		m_window_background_color=sf::Color();
@@ -101,14 +101,14 @@ namespace df {
 			return -1;
 		}
 
-		// Turn o f f mouse c u r s o r f o r window .
+		// Turn off mouse cursor for window.
 		m_p_window->setMouseCursorVisible(false);
 
 
 		
 
 
-		// S y n c h r o n i z e r e f r e s h r a t e w i t h m o n i to r .
+		// Synchronize refresh rate with monitor.
 		m_p_window->setVerticalSyncEnabled(true);
 
 		
@@ -167,10 +167,10 @@ namespace df {
 			m_p_window = nullptr;
 		}
 		m_font = sf::Font();
-		m_window_horizontal_pixels = 0; // H o r i z o n t a l p i x e l s i n window .
-		m_window_vertical_pixels = 0; // V e r t i c a l p i x e l s i n window .
-		m_window_horizontal_chars = 0; // H o r i z o n t a l ASCII s p a c e s i n window .
-		m_window_vertical_chars = 0; // V e r t i c a l ASCII s p a c e s i n window .
+		m_window_horizontal_pixels = 0; // Horizontal pixels in window.
+		m_window_vertical_pixels = 0; // Vertical pixels in window.
+		m_window_horizontal_chars = 0; // Horizontal ASCII spaces in window.
+		m_window_vertical_chars = 0; // Vertical ASCII spaces in window.
 		m_window_title = "";
 		m_font_file_name = "";
 		m_window_background_color = sf::Color();
@@ -204,7 +204,7 @@ namespace df {
 				m_p_window->draw(matteMask);
 
 				sf::Text textToDraw(m_font);
-				textToDraw.setStyle(sf::Text::Bold); // S e t t e x t s t y l e .
+				textToDraw.setStyle(sf::Text::Bold); // Set text style.
 				textToDraw.setString(ch);
 
 				if (charWidth() < charHeight()) {
@@ -364,7 +364,7 @@ namespace df {
 		return -1;
 	}
 
-	// Return window ’ s h o r i z o n t a l maximum ( i n p i x e l s ) .
+	// Return window's horizontal maximum (in pixels).
 	int DisplayManager::getHorizontalPixels() const {
 		if (this->isStarted()) {
 			return m_window_horizontal_pixels;
@@ -372,7 +372,7 @@ namespace df {
 		return -1;
 	}
 
-	// Return window ’ s v e r t i c a l maximum ( i n p i x e l s ) .
+	// Return window's vertical maximum (in pixels).
 	int DisplayManager::getVerticalPixels() const {
 		if (this->isStarted()) {
 			return m_window_vertical_pixels;

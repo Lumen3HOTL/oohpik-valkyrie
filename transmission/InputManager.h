@@ -10,9 +10,9 @@ namespace df {
 	class InputManager : public Manager {
 	
 	private:
-		InputManager(); // P r i v a t e ( a s i n g l e t o n ) .
-		InputManager(InputManager const&); // Don ’ t a l l o w copy .
-		void operator =(InputManager const&); // Don ’ t a l l o w a s s i g n m e n t
+		InputManager(); // Private (a singleton).
+		InputManager(InputManager const&); // Don't allow copy.
+		void operator =(InputManager const&); // Don't allow assignment
 		Clock m_leftMouseButtonFrameCounter;
 		Clock m_middleMouseButtonFrameCounter;
 		Clock m_rightMouseButtonFrameCounter;
@@ -24,18 +24,18 @@ namespace df {
 		int m_mouseClickTollerance;
 	
 	public:
-		// Get t h e one and o n l y i n s t a n c e o f t h e InputManager .
+		// Get the one and only instance of the InputManager.
 			static InputManager & getInstance();
 		
-			// Get window r e a d y t o c a p t u r e i n p u t .
-			// Return 0 i f ok , e l s e r e t u r n −1.
+			// Get window ready to capture input.
+			// Return 0 if ok, else return -1.
 			int startUp();
 		
-			// R e v e r t b a c k t o normal window mode .
+			// Revert back to normal window mode.
 			void shutDown();
 		
-			// Get i n p u t from t h e k e y b o a r d and mouse .
-			// Pass e v e n t a l o n g t o a l l O b j e c t s .
+			// Get input from the keyboard and mouse.
+			// Pass event along to all Objects.
 			void getInput();
 		
 	};

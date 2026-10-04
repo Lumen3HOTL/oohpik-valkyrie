@@ -9,7 +9,7 @@
 #include <cstdio>
 #include "WorldManager.h"
 #include "EventStep.h"
-#include <iostream> // f o r s t d : : c o u t
+#include <iostream> // for std::cout
 #include <SFML/Graphics.hpp>
 #include <math.h>
 #include "DisplayManager.h"
@@ -995,7 +995,7 @@ namespace test {
 		logman.startUp(true);
 		logman.setFlush(true);
 		
-		// Load f o n t .
+		// Load font.
 		sf::Font font;
 		if (font.openFromFile("df-font.ttf") == false) {
 			logman.writeLog("Error! Unable to load font \"df-font.ttf\" .");
@@ -1004,16 +1004,16 @@ namespace test {
 
 		}
 
-		// S e t u p t e x t t o d i s p l a y .
+		// Setup text to display.
 		sf::Text text(font);
-		text.setString("Hello, world!"); // S e t s t r i n g t o d i s p l a y .
-		text.setCharacterSize(32); // S e t c h a r a c t e r s i z e ( i n p i x e l s ) .
-		text.setFillColor(sf::Color::Green); // S e t t e x t c o l o r 
-		text.setStyle(sf::Text::Bold); // S e t t e x t s t y l e .
-		text.setPosition({ 96 ,134 }); // S e t t e x t p o s i t i o n ( i n p i x e l s ) .
+		text.setString("Hello, world!"); // Set string to display.
+		text.setCharacterSize(32); // Set character size (in pixels).
+		text.setFillColor(sf::Color::Green); // Set text color 
+		text.setStyle(sf::Text::Bold); // Set text style.
+		text.setPosition({ 96 ,134 }); // Set text position (in pixels).
 		unsigned int window_horizontal = 1024;
 		unsigned int window_vertical = 768;
-		// C r e a t e window t o draw on .
+		// Create window to draw on.
 		sf::RenderWindow* p_window = new sf::RenderWindow(sf::VideoMode(sf::Vector2u(window_horizontal, window_vertical)), "SFML Hello World!");
 		if (!p_window) {
 			logman.writeLog("Error! Unable to allocate RenderWindow.");
@@ -1022,24 +1022,24 @@ namespace test {
 
 		}
 
-		// Turn o f f mouse c u r s o r f o r window .
+		// Turn off mouse cursor for window.
 		p_window->setMouseCursorVisible(false);
 
-		// S y n c h r o n i z e r e f r e s h r a t e w i t h m o n i to r .
+		// Synchronize refresh rate with monitor.
 		p_window->setVerticalSyncEnabled(true);
 
-		// Repeat f o r e v e r ( a s l o n g a s window i s open ) .
+		// Repeat forever (as long as window is open).
 		Clock timer;
 		int timeout = (30 * 33);
 		timer.delta();
 		while (1) {
 
-			// C l e a r window and draw t e x t .
+			// Clear window and draw text.
 			p_window->clear();
 			p_window->draw(text);
 			p_window->display();
 
-			// Loop u n t i l no more e v e n t s ( o r window c l o s e d ) .
+			// Loop until no more events (or window closed).
 			while (const std::optional < sf::Event > p_event = p_window->pollEvent()) {
 				if (p_event->is < sf::Event::Closed >()) {
 					p_window->close();
@@ -1049,7 +1049,7 @@ namespace test {
 				}
 
 
-			} // End o f w h i l e ( e v e n t ) .
+			} // End of while (event).
 
 			if ((timer.split() / 1000 )>= timeout) {
 				p_window->close();
@@ -1057,7 +1057,7 @@ namespace test {
 				return 0;
 			}
 			
-		} // End o f w h i l e ( 1 ) .
+		} // End of while (1).
 
 		Sleep(1000);
 	 // End o f main ( ) .

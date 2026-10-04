@@ -16,7 +16,7 @@ namespace df{
 		this->shutDown();
 	}
 
-	// Get t h e one and o n l y i n s t a n c e o f t h e LogManager .
+	// Get the one and only instance of the LogManager.
 	LogManager& LogManager::getInstance() {
 		static LogManager logKeeper;
 		return logKeeper;

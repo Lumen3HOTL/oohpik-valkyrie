@@ -7,35 +7,35 @@ namespace df {
 	class ObjectList {
 	
 		private:
-			int m_count; // Count o f o b j e c t s i n l i s t .
-			std::vector<Object *> m_p_obj; // Array o f p o i n t e r s t o o b j e c t s .
+			int m_count; // Count of objects in list.
+			std::vector<Object *> m_p_obj; // Array of pointers to objects.
 		
 	public:
-			// D e f a u l t c o n s t r u c t o r .
+			// Default constructor.
 			ObjectList();
 		
-			// I n s e r t o b j e c t p o i n t e r i n l i s t .
-			// Return 0 i f ok , e l s e −1.
+			// Insert object pointer in list.
+			// Return 0 if ok, else -1.
 			int insert(Object* p_o);
 		
-			// Remove o b j e c t p o i n t e r from l i s t .
-			// Return 0 i f found , e l s e −1.
+			// Remove object pointer from list.
+			// Return 0 if found, else -1.
 			int remove(Object* p_o);
 		
-			// C l e a r l i s t ( s e t t i n g c o u n t t o 0 ) .
+			// Clear list (setting count to 0).
 			void clear();
 		
-			// Return c o u n t o f number o f o b j e c t s i n l i s t .
+			// Return count of number of objects in list.
 			int getCount() const;
-			// Return t r u e i f l i s t i s empty , e l s e f a l s e .
+			// Return true if list is empty, else false.
 			bool isEmpty() const;
 			
-			// Return t r u e i f l i s t i s f u l l , e l s e f a l s e .
+			// Return true if list is full, else false.
 			bool isFull() const;
 			
-			// I n d e x i n t o l i s t .
+			// Index into list.
 			 Object* operator[](int index);
-			 // I n d e x i n t o l i s t for const requiring vars.
+			 // Index into list for const requiring vars.
 			 Object* operator[](int index) const;
 			 //backported from world manager
 			 int objectsOfTypeCount(std::string type) const;

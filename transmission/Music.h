@@ -2,43 +2,43 @@
 #include <string>
 #include <SFML/Audio.hpp>
 namespace df {
-	// System i n c l u d e s .
+	// System includes.
 	
 	
 	
 	class Music {
 
 		private:
-			Music(Music const&); // SFML d o e s n ’ t a l l o w music copy .
-			void operator =(Music const&); // SFML d o e s n ’ t a l l o w music a s s i g n m e n t .
+			Music(Music const&); // SFML doesn't allow music copy.
+			void operator =(Music const&); // SFML doesn't allow music assignment.
 			sf::Music* m_music; // The SFML music .
-			std::string m_label; // Text l a b e l t o i d e n t i f y music .
+			std::string m_label; // Text label to identify music.
 
 		public:
 			Music();
 			~Music();
 
-			// A s s o c i a t e music b u f f e r w i t h f i l e .
-			// Return 0 i f ok , e l s e −1.
+			// Associate music buffer with file.
+			// Return 0 if ok, else -1.
 			int loadMusic(std::string filename);
 
-			// S e t l a b e l a s s o c i a t e d w i t h music .
+			// Set label associated with music.
 			void setLabel(std::string new_label);
 
-			// Get l a b e l a s s o c i a t e d w i t h music .
+			// Get label associated with music.
 			std::string getLabel() const;
 
-			// P l a y music .
-			// I f l o o p i s t r u e , r e p e a t p l a y when done .
+			// Play music.
+			// If loop is true, repeat play when done.
 			void play(bool loop = true);
 
-			// S to p music .
+			// Stop music.
 			void stop();
 
 			// Pause music .
 			void pause();
 
-			// Return p o i n t e r t o SFML music .
+			// Return pointer to SFML music.
 			sf::Music* getMusic();
 		};
 }
