@@ -414,7 +414,7 @@ namespace df {
 				customColor=(uint32_t)maybeAColor;
 			}
 			//update the line number
-			bool transparncyDefined = false;
+			bool transparencyDefined = false;
 			bool first = false;
 			currentline++;
 			if (!getline(spriteFile, inputLine)) {
@@ -424,12 +424,12 @@ namespace df {
 				return -1;
 			}
 			if (cleanLine(inputLine).compare("define_transparency_char") == 0) {
-				transparncyDefined = true;
+				transparencyDefined = true;
 			}
 			char transparency = NULL;
 			
 			
-			if (transparncyDefined) {
+			if (transparencyDefined) {
 				currentline++;
 				if (!getline(spriteFile, inputLine)) {
 					logMessage = logMessage.append("load error: file ended early at line: ").append(std::to_string(currentline)).append("!");
@@ -462,7 +462,7 @@ namespace df {
 			newSprite->setColor(color);
 			newSprite->setCustomColor(customColor);
 			newSprite->setLabel(label);
-			if (transparncyDefined) {
+			if (transparencyDefined) {
 				newSprite->setTransparency(transparency);
 			}
 			//create a frame and texture string on the stack, to save allocations later
@@ -486,8 +486,8 @@ namespace df {
 							delete newSprite;
 							return -1;
 						}
-						first = false;
 					}
+					first = false;
 					
 					//if the line isnt long enough  close the file and delete the in progress sprite and log and error out
 					if (inputLine.size() < width) {

@@ -71,7 +71,6 @@ void Hero::forward() {
 	// Commit the move
 	setPosition(target);
 	updateFrame();
-	m_moves++;
 }
 
 void Hero::updateFrame() {
