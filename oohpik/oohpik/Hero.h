@@ -1,14 +1,15 @@
 #pragma once
 #include "Object.h"
+#include "EventKeyboard.h"
 
 class Hero : public df::Object {
 private:
-    //void kbd(const df::EventKeyboard* p_keyboard_event);
-    void move(int dy);
-    void step();
+    void turn(int delta);
+    void forward();
+    void updateFrame();
 
-    int move_slowdown;
-    int move_countdown = move_slowdown;
+	int m_direction; // 0 = up, 1 = right, 2 = down, 3 = left
+    int m_moves; // Move counter
 
 public:
     Hero();

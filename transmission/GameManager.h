@@ -46,3 +46,4 @@ namespace df {
 	};
 }
  
+#define GM df::GameManager::getInstance()

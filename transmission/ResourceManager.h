@@ -86,3 +86,5 @@ namespace df {
 			
 	};
 }
+
+#define RM df::ResourceManager::getInstance()

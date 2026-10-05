@@ -3,13 +3,17 @@
 #include "ResourceManager.h"
 #include "LogManager.h"
 
-// Function prototypes.
+// Game includes
+#include "Hero.h"
+
+// Function prototypes
 void loadResources(void);
+void populateWorld(void);
 
 int main(int argc, char* argv[]) {
 	df::GameManager& game_manager = df::GameManager::getInstance();
 
-	// Start up the game engine.
+	// Start up the game engine
 	if (game_manager.startUp()) {
 		df::LogManager::getInstance().writeLog("Error starting game manager!");
 		game_manager.shutDown();
@@ -17,15 +21,21 @@ int main(int argc, char* argv[]) {
 	}
 
 	loadResources();
+	populateWorld();
 
-	// Run the game (this blocks until the game ends).
+	// Run the game
 	game_manager.run();
 
-	// Shut everything down.
+	// Shut everything down
 	game_manager.shutDown();
 	return 0;
 }
 
 void loadResources(void) {
+	RM.loadSprite("Resources/Sprites/player.sprite", "hero");
+}
 
+void populateWorld(void) {
+	// Create player
+	new Hero();
 }
