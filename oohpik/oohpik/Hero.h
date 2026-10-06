@@ -7,6 +7,7 @@ private:
     void turn(int delta);
     void forward();
     void updateFrame();
+    void die();
 
 	int m_direction; // 0 = up, 1 = right, 2 = down, 3 = left
     int m_moves; // Move counter

@@ -202,6 +202,7 @@ namespace df {
 		}
 		tempAnim.setSprite(tempSprite);
 		m_animation = tempAnim;
+		m_box = m_animation.getBox();
 		return 0;
 	}
 

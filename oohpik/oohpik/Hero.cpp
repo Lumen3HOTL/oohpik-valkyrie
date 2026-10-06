@@ -3,11 +3,13 @@
 #include "DisplayManager.h"
 #include "EventManager.h"
 #include "GameManager.h"
+#include "EventCollision.h"
+#include "GameOver.h"
 
 Hero::Hero() {
 	// initialize general system params
 	setType("Hero");
-	setSolidness(df::SOFT);
+	setSolidness(df::HARD);
 	setAltitude(3);
 	setSprite("hero");
 
@@ -19,7 +21,7 @@ Hero::Hero() {
 	m_direction = 1;
 	updateFrame();
 	df::EventManager::getInstance().registerEvent(this, df::KEYBOARD_EVENT);
-	
+	df::EventManager::getInstance().registerEvent(this, df::COLLISION_EVENT);
 }
 
 // Placeholder so the game links; Object's destructor is virtual.
@@ -39,6 +41,12 @@ int Hero::eventHandler(const df::Event* p_e) {
 			default: return 0;
 		}
 		m_moves++;
+		return 1;
+	} else if (p_e->getType() == df::COLLISION_EVENT) {
+		auto* c = static_cast<const df::EventCollision*>(p_e);
+		if (c->getObject2()->getType() == "Tree") {
+			die();
+		}
 		return 1;
 	}
 	return 0;
@@ -68,8 +76,8 @@ void Hero::forward() {
 		return;
 	}
 
-	// Commit the move
-	setPosition(target);
+	// Move
+	WM.moveObject(this, target);
 	updateFrame();
 }
 
@@ -78,4 +86,9 @@ void Hero::updateFrame() {
 	a.setIndex(m_direction);
 	a.setSlowdownCount(-1); // -1 stops the animation so the frame stays on our facing
 	setAnimation(a);
+}
+
+void Hero::die() {
+	new GameOver(m_moves);  // show the death screen
+	WM.markForDelete(this); // remove the owl; deletion happens at the end of this frame
 }

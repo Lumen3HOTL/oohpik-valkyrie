@@ -5,6 +5,7 @@
 
 // Game includes
 #include "Hero.h"
+#include "Tree.h"
 
 // Function prototypes
 void loadResources(void);
@@ -33,9 +34,13 @@ int main(int argc, char* argv[]) {
 
 void loadResources(void) {
 	RM.loadSprite("Resources/Sprites/player.sprite", "hero");
+	RM.loadSprite("Resources/Sprites/tree.sprite", "tree");
 }
 
 void populateWorld(void) {
 	// Create player
 	new Hero();
+
+	// Add obstacles
+	for (int x = 35; x <= 45; x++) new Tree(df::Vector(x, 8));
 }
