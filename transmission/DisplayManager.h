@@ -123,3 +123,5 @@ namespace df {
 			int getApplyCamera()const;
 	};
 }
+
+#define DM df::ResourceManager::getInstance()

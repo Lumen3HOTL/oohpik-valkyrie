@@ -77,3 +77,5 @@ namespace df {
 	};
 
 }
+
+#define WM df::WorldManager::getInstance()
