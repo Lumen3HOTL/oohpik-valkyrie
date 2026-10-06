@@ -6,6 +6,7 @@ namespace ookpik {
 		m_map_height=0;
 		m_map_origin=df::Vector();
 
+		m_map_object_altitude = 0;
 
 		m_min_rand_trees=0;
 		m_max_rand_trees=0;
@@ -22,8 +23,12 @@ namespace ookpik {
 		m_max_rand_daig_line_width=0;
 		m_max_rand_diag_line_height=0;
 
+		m_random_seed = 0;
 
+		m_timeout_seconds = 0;
 
+		m_map_object_width=0;
+		m_map_object_height=0;
 
 		m_min_rooms=0;
 		m_max_rooms=0;
@@ -38,6 +43,35 @@ namespace ookpik {
 
 		m_min_seeds=0;
 		m_max_seeds=0;
+	}
+
+	void MapGenConfig::setTimeoutSeconds(int new_timeout) {
+		m_timeout_seconds = new_timeout;
+	}
+	int MapGenConfig::getTimeoutSeconds()const {
+		return m_timeout_seconds;
+	}
+
+	void MapGenConfig::setRandomSeed(int new_seed) {
+		m_random_seed = new_seed;
+	}
+	int MapGenConfig::getRandomSeed()const {
+		return m_random_seed;
+	}
+
+
+	int MapGenConfig::getMapObjectWidth()const {
+		return m_map_object_width;
+	}
+	int MapGenConfig::getMapObjectHeight()const {
+		return m_map_object_height;
+	}
+
+	void MapGenConfig::setMapObjectWidth(int new_object_width) {
+		m_map_object_width = new_object_width;
+	}
+	void MapGenConfig::setMapObjectheight(int new_object_height) {
+		m_map_height = new_object_height;
 	}
 
 	df::Vector MapGenConfig::getMapOrigin()const {
@@ -225,5 +259,13 @@ namespace ookpik {
 	}
 	int MapGenConfig::setMinDiagLineHeight(int new_min_diag_line_height) {
 		m_min_rand_diag_line_height = new_min_diag_line_height;
+	}
+
+	int MapGenConfig::getMapObjectAltitude()const {
+		return m_map_object_altitude;
+	}
+
+	void MapGenConfig::setMapObjectAltitude(int new_map_object_altitude) {
+		m_map_object_altitude = new_map_object_altitude;
 	}
 }

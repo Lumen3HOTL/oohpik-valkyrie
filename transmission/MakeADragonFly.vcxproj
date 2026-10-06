@@ -146,14 +146,12 @@
     <ClInclude Include="CameraManager.h" />
     <ClInclude Include="Clock.h" />
     <ClInclude Include="Color.h" />
-    <ClInclude Include="CoordinatePair.h" />
     <ClInclude Include="DisplayManager.h" />
     <ClInclude Include="Event.h" />
     <ClInclude Include="EventCameraOut.h" />
     <ClInclude Include="EventCollision.h" />
     <ClInclude Include="EventKeyboard.h" />
     <ClInclude Include="EventManager.h" />
-    <ClInclude Include="EventMapGenDone.h" />
     <ClInclude Include="EventMouse.h" />
     <ClInclude Include="EventOut.h" />
     <ClInclude Include="EventRegistrationKeeper.h" />
@@ -163,8 +161,6 @@
     <ClInclude Include="InputManager.h" />
     <ClInclude Include="LogManager.h" />
     <ClInclude Include="Manager.h" />
-    <ClInclude Include="MapBuilder.h" />
-    <ClInclude Include="MapGenConfigObj.h" />
     <ClInclude Include="Music.h" />
     <ClInclude Include="Object.h" />
     <ClInclude Include="ObjectList.h" />
@@ -176,8 +172,6 @@
     <ClInclude Include="TimerManager.h" />
     <ClInclude Include="utility.h" />
     <ClInclude Include="Vector.h" />
-    <ClInclude Include="VectorQueue.h" />
-    <ClInclude Include="VectorQueueEntry.h" />
     <ClInclude Include="WorldManager.h" />
   </ItemGroup>
   <ItemGroup>
@@ -187,14 +181,12 @@
     <ClCompile Include="CameraManager.cpp" />
     <ClCompile Include="Clock.cpp" />
     <ClCompile Include="Colors.cpp" />
-    <ClCompile Include="CoordinatePair.cpp" />
     <ClCompile Include="DisplayManager.cpp" />
     <ClCompile Include="Event.cpp" />
     <ClCompile Include="EventCameraOut.cpp" />
     <ClCompile Include="EventCollision.cpp" />
     <ClCompile Include="EventKeyboard.cpp" />
     <ClCompile Include="EventManager.cpp" />
-    <ClCompile Include="EventMapGenDone.cpp" />
     <ClCompile Include="EventMouse.cpp" />
     <ClCompile Include="EventOut.cpp" />
     <ClCompile Include="EventRegistrationKeeper.cpp" />
@@ -204,8 +196,6 @@
     <ClCompile Include="InputManager.cpp" />
     <ClCompile Include="LogManager.cpp" />
     <ClCompile Include="Manager.cpp" />
-    <ClCompile Include="MapBuilder.cpp" />
-    <ClCompile Include="MapGenConfig.cpp" />
     <ClCompile Include="Music.cpp" />
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="ObjectList.cpp" />
@@ -215,10 +205,8 @@
     <ClCompile Include="Timer.cpp" />
     <ClCompile Include="EventTimer.cpp" />
     <ClCompile Include="TimerManager.cpp" />
-    <ClCompile Include="VectorQueue.cpp" />
     <ClCompile Include="utility.cpp" />
     <ClCompile Include="Vector.cpp" />
-    <ClCompile Include="VectorQueueEntry.cpp" />
     <ClCompile Include="WorldManager.cpp" />
   </ItemGroup>
   <ItemGroup>
