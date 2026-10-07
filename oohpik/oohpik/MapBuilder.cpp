@@ -2540,7 +2540,7 @@ namespace ookpik {
 						
 						this->setBuilding(true);
 						this->setCurrentBuildPos(m_configObj.getMapOrigin());
-						m_to_build=(this->m_configObj.getMapWidth() + (this->m_configObj.getMapBorderThickness() * 2)) * (this->m_configObj.getMapHeight() + (this->m_configObj.getMapBorderThickness() * 2));
+						this->setToBuild((this->m_configObj.getMapWidth() + (this->m_configObj.getMapBorderThickness() * 2)) * (this->m_configObj.getMapHeight() + (this->m_configObj.getMapBorderThickness() * 2)));
 
 					}
 					else if ((!this->getBuildDone()) && (this->getBuilding())&&this->getBaseFunctionExit()) {
