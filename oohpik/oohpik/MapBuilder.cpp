@@ -6,7 +6,18 @@ namespace ookpik {
 	// and every object costs time each frame. Set to true to create them again.
 	const bool CREATE_GROUND_OBJECTS = false;
 
-	
+	unsigned long long MapBuilder::getBuildTime() {
+		unsigned long long temp = 0;
+		m_state_gate.lock();
+		temp = m_buildTime;
+		m_state_gate.unlock();
+		return temp;
+	}
+	void MapBuilder::setBuildTime(unsigned long long new_build_time) {
+		m_state_gate.lock();
+		m_buildTime = new_build_time;
+		m_state_gate.unlock();
+	}
 
 	std::vector<df::Vector> MapBuilder::generateBresenhamLine(int x1, int y1, int x2, int y2) {
 		std::vector <df::Vector> pathPoints;
@@ -1020,14 +1031,24 @@ namespace ookpik {
 
 
 	void MapBuilder::resetTimer() {
+		m_state_gate.lock();
 		m_timer.delta();
+		m_state_gate.unlock();
 	}
 	bool MapBuilder::checkTimer() {
-		return ((m_timer.split() / 1000) >= (m_timeout * 33 * 30));
+		bool temp = false;
+		m_state_gate.lock();
+		temp= ((m_timer.split() / 1000) >= (m_timeout * 33 * 30));
+		m_state_gate.unlock();
+		return temp;
 	
 	}
 	unsigned long long MapBuilder::getTimerTime() {
-		return m_timer.split();
+		unsigned long long temp = 0;
+		m_state_gate.lock();
+		temp= m_timer.split();
+		m_state_gate.unlock();
+		return temp;
 	}
 	int MapBuilder::getTimeout() {
 		int temp = 0;
@@ -2566,6 +2587,7 @@ namespace ookpik {
 						this->setBuilding(true);
 						this->setCurrentBuildPos(m_configObj.getMapOrigin());
 						this->setToBuild((this->m_configObj.getMapWidth() + (this->m_configObj.getMapBorderThickness() * 2)) * (this->m_configObj.getMapHeight() + (this->m_configObj.getMapBorderThickness() * 2)));
+						this->resetTimer();
 
 					}
 					else if ((!this->getBuildDone()) && (this->getBuilding())&&this->getBaseFunctionExit()) {
@@ -2585,8 +2607,9 @@ namespace ookpik {
 							this->setBuilding(false);
 						}
 						else if (this->getBuildDone()) {
+							this->setBuildTime(this->getTimerTime());
 							df::GameManager& gm = df::GameManager::getInstance();
-							EventMapGenDone done = EventMapGenDone(m_mapReturn, m_genTime);
+							EventMapGenDone done = EventMapGenDone(m_mapReturn, this->getGenTime(),this->getBuildTime());
 							gm.onEvent(&done);
 
 							this->setDoneSent(true);

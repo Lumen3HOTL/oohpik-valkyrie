@@ -47,6 +47,7 @@ namespace ookpik {
 		bool m_building;
 		std::thread* m_genThread;
 		unsigned long long m_genTime;
+		unsigned long long m_buildTime;
 		int m_timeout;
 		df::Clock m_timer;
 		df::Object* m_player;
@@ -86,7 +87,8 @@ namespace ookpik {
 		void setCurrentBuildPos(df::Vector  new_current_build_pos);
 		df::Vector getCurrentBuildPos();
 
-
+		unsigned long long getBuildTime();
+		void setBuildTime(unsigned long long n_build_time);
 		
 
 		void setBuildDone(bool new_build_done);

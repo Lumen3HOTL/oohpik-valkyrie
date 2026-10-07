@@ -9,9 +9,16 @@ namespace ookpik {
 		m_error_messages = std::vector<std::string>();
 		m_error_messages.push_back("no error");
 	}
-	EventMapGenDone::EventMapGenDone(df::ObjectList mapObjects, unsigned long long genTimeMS) {
+	unsigned long long EventMapGenDone::getBuildTime()const {
+		return m_buildTime;
+	}
+	void EventMapGenDone::setBuildTime(unsigned long long new_build_time) {
+		m_buildTime = new_build_time;
+	}
+	EventMapGenDone::EventMapGenDone(df::ObjectList mapObjects, unsigned long long genTimeMS, unsigned long long buildTimeMS) {
 		m_genTime = genTimeMS;
 		m_map_objects = mapObjects;
+		m_buildTime = buildTimeMS;
 	}
 	EventMapGenDone::EventMapGenDone(std::vector<std::string> error_message) {
 		m_error = true;
