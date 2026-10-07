@@ -1704,7 +1704,7 @@ namespace ookpik {
 			return;
 		}
 		errorNumber++;
-		if (maxRoomHeight > minRoomHeight) {
+		if (maxRoomHeight < minRoomHeight) {
 			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured room height. min room height must be less than max rooms height. min room height is: ").append(std::to_string(minRoomHeight)).append(" max room hieght is: ").append(std::to_string(maxDiagLineHeight)));
 			this->setGenError(true);
 			this->setBaseFunctionExit(true);
