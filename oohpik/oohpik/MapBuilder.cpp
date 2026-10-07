@@ -2589,7 +2589,7 @@ namespace ookpik {
 			}
 			else if (this->getGenerating()) {
 				return dm.drawString(this->getPosition(), "generating map!", df::CENTER_JUSTIFIED, df::WHITE);
-			} if (this->getBuilding()) {
+			} else if (this->getBuilding()) {
 				return dm.drawString(this->getPosition(), "building map!", df::CENTER_JUSTIFIED, df::WHITE);
 			}
 			else {
