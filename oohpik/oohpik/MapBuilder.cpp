@@ -623,7 +623,7 @@ namespace ookpik {
 
 		CoordinatePair fixPoints;
 		while (zones.size() > 1) {
-			if ((timer.split() / 1000) >= (33 * timeout * 60)) {
+			if ((timer.split() / 1000) >= (33 * timeout * 30)) {
 				this->addErrorMessage(std::string("eliminateDisperateZones: error 2 process timeout!"));
 				return -1;
 			}
