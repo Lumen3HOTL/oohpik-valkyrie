@@ -5,6 +5,7 @@
   </Configurations>
   <Folder Name="/Solution Items/">
     <File Path="../readme.md" />
+    <File Path="AIUSE.md" />
   </Folder>
   <Project Path="../oohpik/oohpik/oohpik.vcxproj" Id="c93a8631-ad42-4ed7-b501-8a62bebc7dd8" />
   <Project Path="MakeADragonFly.vcxproj" Id="c41c5a91-e6dc-466b-82f5-7d4bb53514cd" />
