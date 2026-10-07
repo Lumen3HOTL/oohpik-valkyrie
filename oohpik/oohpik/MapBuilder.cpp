@@ -4,7 +4,7 @@
 namespace ookpik {
 	// Ground objects are invisible and do nothing, but there is one per open tile,
 	// and every object costs time each frame. Set to true to create them again.
-	const bool CREATE_GROUND_OBJECTS = false;
+	const bool CREATE_GROUND_OBJECTS = true;
 
 	unsigned long long MapBuilder::getBuildTime() {
 		unsigned long long temp = 0;
@@ -647,7 +647,7 @@ namespace ookpik {
 		std::vector<df::Vector> startZone = zones.at(zones.size() - 1);
 		zones.pop_back();
 		std::vector<df::Vector> fixLine;
-		bool started = false;
+		
 		
 		if (this->getGenError()) {
 			this->addErrorMessage(std::string("eliminateDisperateZones: error 1 zone search failed!"));
@@ -658,9 +658,10 @@ namespace ookpik {
 		
 
 		CoordinatePair fixPoints;
-		while ((zones.size() > 0)||(!started)) {
+		while ((zones.size() > 0)) {
 			if ((timer.split() / 1000) >= (33 * timeout * 30)) {
 				this->addErrorMessage(std::string("eliminateDisperateZones: error 3 process timeout!"));
+				this->setGenError(true);
 				return -1;
 			}
 
@@ -687,7 +688,7 @@ namespace ookpik {
 				this->setGenError(true);
 				return -1;
 			}
-			started = true;
+			
 			
 			startZone = zones.at(zones.size() - 1);
 			zones.pop_back();
@@ -1743,7 +1744,7 @@ namespace ookpik {
 
 		errorNumber++;
 		if (minRooms > maxRooms) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured rooms lines. min rooms must be less thanmax rooms. min rooms is: ").append(std::to_string(minDiagLines)).append(" max rooms is: ").append(std::to_string(maxDiagLines)));
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured rooms lines. min rooms must be less thanmax rooms. min rooms is: ").append(std::to_string(minRooms)).append(" max rooms is: ").append(std::to_string(maxRooms)));
 			this->setGenError(true);
 			this->setBaseFunctionExit(true);
 			return;
@@ -1771,7 +1772,7 @@ namespace ookpik {
 		}
 		errorNumber++;
 		if (maxRoomHeight < minRoomHeight) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured room height. min room height must be less than max rooms height. min room height is: ").append(std::to_string(minRoomHeight)).append(" max room hieght is: ").append(std::to_string(maxDiagLineHeight)));
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured room height. min room height must be less than max rooms height. min room height is: ").append(std::to_string(minRoomHeight)).append(" max room hieght is: ").append(std::to_string(maxRoomHeight)));
 			this->setGenError(true);
 			this->setBaseFunctionExit(true);
 			return;
@@ -1884,9 +1885,9 @@ namespace ookpik {
 			for (int index = 0; index < requestedRooms; index++) {
 				width = this->getRandom(minRoomsWidth, maxRoomWidth);
 				height = this->getRandom(minRoomHeight, maxRoomHeight);
-				startx = this->getRandom(0, (mapWidth - width) - 1);
-				starty = (this->getRandom(0, (mapHeight - height) - 1));
-				df::Box room = df::Box(df::Vector(startx,startx),(width), (height));
+				startx = this->getRandom(0, ((mapWidth) - width));
+				starty = (this->getRandom(0, ((mapHeight) - height)));
+				df::Box room = df::Box(df::Vector(startx,starty),(width), (height));
 				this->drawRectangle(protomap, room, mapTileIds::EMPTY);
 				if (this->getGenError()) {
 					
@@ -1949,7 +1950,7 @@ namespace ookpik {
 				height = this->getRandom(minRightAngleLineHeight, maxRightAngleLineHeight);
 				startX = this->getRandom(0, (mapWidth-1) - width);
 				startY = this->getRandom(0,(mapHeight-1)-height);
-				yfirst - false;
+				yfirst = false;
 				if (this->getRandom(0,1) == 0) {
 					yfirst = true;
 				}
@@ -1962,7 +1963,7 @@ namespace ookpik {
 				this->drawLine(protomap, toDraw, mapTileIds::EMPTY);
 
 				if (this->getGenError()) {
-					this->addErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" diag line draw failed! diag line number: ").append(std::to_string(index)).append(" out of ").append(std::to_string(requestedDiagLines)));
+					this->addErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" right angle line draw failed! right angle line number: ").append(std::to_string(index)).append(" out of ").append(std::to_string(requestedDiagLines)));
 					this->setBaseFunctionExit(true);
 					return;
 				}
@@ -1976,20 +1977,8 @@ namespace ookpik {
 			this->setBaseFunctionExit(true);
 			return;
 		}
-		this->ensureSpace(protomap, mapTileIds::EMPTY, mapTileIds::TREE, neededOpen);
-		errorNumber++;
-		if (this->getGenError()) {
-			this->addErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" space ensurance failed!"));
-			this->setBaseFunctionExit(true);
-			return;
-		}
-		errorNumber++;
-		if (this->checkTimer()) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime() / 1000)) / 33) / 30))).append(" seconds!"));
-			this->setGenError(true);
-			this->setBaseFunctionExit(true);
-			return;
-		}
+
+
 		int openCount = this->findCoordsOfValueCount(protomap, mapTileIds::EMPTY);
 		errorNumber++;
 		if (this->getGenError()) {
@@ -2006,9 +1995,9 @@ namespace ookpik {
 		}
 		int requestedRandomTrees = 0;
 		if (openCount > neededOpen) {
-			
-			requestedRandomTrees = this->getRandom(minRandTrees,maxRandTrees);
-			if (openCount - requestedRandomTrees <neededOpen) {
+
+			requestedRandomTrees = this->getRandom(minRandTrees, maxRandTrees);
+			if (openCount - requestedRandomTrees < neededOpen) {
 				requestedRandomTrees = openCount - neededOpen;
 			}
 
@@ -2027,6 +2016,22 @@ namespace ookpik {
 			this->setBaseFunctionExit(true);
 			return;
 		}
+
+		this->ensureSpace(protomap, mapTileIds::EMPTY, mapTileIds::TREE, neededOpen);
+		errorNumber++;
+		if (this->getGenError()) {
+			this->addErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" space ensurance failed!"));
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		errorNumber++;
+		if (this->checkTimer()) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime() / 1000)) / 33) / 30))).append(" seconds!"));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		
 		std::vector<std::vector<df::Vector>> zones;
 		zones = this->findZones(protomap,mapTileIds::FLOOD, mapTileIds::EMPTY);
 		errorNumber++;
@@ -2106,7 +2111,55 @@ namespace ookpik {
 			return;
 		}
 		
-		this->m_map_plan = protomap;
+		this->m_map_plan = this->copyMap(protomap);
+		if (m_debug) {
+			df::LogManager& lm = df::LogManager::getInstance();
+			int protomapArea = 0;
+			int mapY = protomap[0].size();
+			bool error = false;
+			for (int i = 0; i < protomap.size(); i++) {
+				if (protomap[i].size() != mapY) {
+					error = true;
+					m_log_man_access.lock();
+					lm.writeLog("map gen debug log failed: map y sizes inconsitent!");
+					m_log_man_access.unlock();
+					break;
+				}
+			}
+			if (!error) {
+				std::string mapTiles="";
+				for (int y = 0; y < mapY; y++) {
+					for (int x = 0; x < protomap.size(); x++) {
+						switch (protomap[x][y]) {
+						case mapTileIds::EMPTY:
+							mapTiles.append("..");
+							break;
+
+						case mapTileIds::EXIT:
+							mapTiles.append("EE");
+							break;
+						
+						case mapTileIds::OWL:
+							mapTiles.append("/\\");
+							break;
+
+						case mapTileIds::SEED:
+							mapTiles.append("@@");
+							break;
+						
+						case mapTileIds::TREE:
+							mapTiles.append("##");
+							break;
+						}
+					}
+					mapTiles.append("\n");
+				}
+				m_debug_map1 = std::string("map order:\n").append(mapTiles).c_str();
+				lm.writeLog(m_debug_map1.c_str());
+			}
+			
+		}
+		
 		this->setGenTime(this->getTimerTime());
 		this->setGenerating(false);
 		this->setGenDone(true);
@@ -2196,8 +2249,8 @@ namespace ookpik {
 			return -1;
 		}
 
-		df::ObjectList mapObjects;
-		mapObjects = this->getMapReturn();
+		
+		
 		int borderThickness = config.getMapBorderThickness();
 		df::Vector start = config.getMapOrigin();
 		df::Vector currentPos = df::Vector();
@@ -2266,22 +2319,30 @@ namespace ookpik {
 
 				for (int y = startY; y < playAreaHeight + (borderThickness * 2); y++) {
 
-					framePorgressCount++;
+					if (m_debug) {
+						m_debug_Coords.push_back(currentPos);
+						m_debug_map_positions.push_back(df::Vector(x, y));
+					}
+					
 					
 					if (((x < borderThickness) || (x >= borderThickness + playAreaWidth)) || ((y < borderThickness) || (y >= borderThickness + playAreaHeight))) {
 
 						newTree = new Tree();
 						newTree->setAltitude(0);
 						newTree->setPosition(start + currentPos);
-						mapObjects.insert(newTree);
+						if (m_debug) {
+							m_current_debug_strip.push_back("##");
+
+						}
+						m_mapReturn.insert(newTree);
 
 					}
 					else {
 
 						if (map.at(x - borderThickness).size() < playAreaHeight) {
 							df::WorldManager& wm = df::WorldManager::getInstance();
-							for (int i = 0; i < mapObjects.getCount(); i++) {
-								wm.markForDelete(mapObjects[i]);
+							for (int i = 0; i < m_mapReturn.getCount(); i++) {
+								wm.markForDelete(m_mapReturn[i]);
 							}
 							this->addErrorMessage(std::string("buildMap: error 9 map Y vector less than configured!").append(" values: map y: ").append(std::to_string(map.at(x - borderThickness).size())).append(" configured y: ").append(std::to_string(playAreaHeight)).append("!"));
 							this->setGenError(true);
@@ -2294,34 +2355,49 @@ namespace ookpik {
 								newGround = new Ground();
 								newGround->setAltitude(altitude);
 								newGround->setPosition(currentPos + start);
-								mapObjects.insert(newGround);
+								m_mapReturn.insert(newGround);
+							}
+							if (m_debug) {
+								m_current_debug_strip.push_back("..");
 							}
 							break;
 						case mapTileIds::OWL:
 							owl->setPosition(currentPos + start);
+							if (m_debug) {
+								m_current_debug_strip.push_back("/\\");
+							}
 							break;
 						case mapTileIds::EXIT:
 							newExit = new MapExit();
 							newExit->setAltitude(altitude);
 							newExit->setPosition(currentPos + start);
-							mapObjects.insert(newExit);
+							m_mapReturn.insert(newExit);
+							if (m_debug) {
+								m_current_debug_strip.push_back("EE");
+							}
 							break;
 						case mapTileIds::SEED:
 							newSeed = new Seed();
 							newSeed->setAltitude(altitude);
 							newSeed->setPosition(currentPos + start);
-							mapObjects.insert(newSeed);
+							m_mapReturn.insert(newSeed);
+							if (m_debug) {
+								m_current_debug_strip.push_back("@@");
+							}
 							break;
 						case mapTileIds::TREE:
 							newTree = new Tree();
 							newTree->setAltitude(altitude);
 							newTree->setPosition(start + currentPos);
-							mapObjects.insert(newTree);
+							m_mapReturn.insert(newTree);
+							if (m_debug) {
+								m_current_debug_strip.push_back("##");
+							}
 							break;
 						default:
 							df::WorldManager& wm = df::WorldManager::getInstance();
-							for (int i = 0; i < mapObjects.getCount(); i++) {
-								wm.markForDelete(mapObjects[i]);
+							for (int i = 0; i < m_mapReturn.getCount(); i++) {
+								wm.markForDelete(m_mapReturn[i]);
 							}
 							this->addErrorMessage(std::string("buildMap: error 10 invalid tile id!").append(" values: id Value: ").append(std::to_string((int)map.at((x)-borderThickness).at((y)-borderThickness))).append("!"));
 							this->setGenError(true);
@@ -2330,34 +2406,76 @@ namespace ookpik {
 						}
 					}
 					currentPos.setY(currentPos.getY() + tileHeight);
+					
 					if (framePorgressCount >= this->getBuildPerFrame()) {
-						if (y >= playAreaHeight + (borderThickness * 2) - 1) {
-							currentPos.setY(start.getY());
+						if (y >= tileHeight*(playAreaHeight + (borderThickness * 2) - 1)) {
+							currentPos.setY(0);
 							currentPos.setX(currentPos.getX() + tileWidth);
 							this->setLastX(this->getLastX() + 1);
 							this->setLastY(0);
+							m_debug_strips.push_back(m_current_debug_strip);
+							m_current_debug_strip.clear();
 						}
 						else {
 							this->setLastY(y + 1);
-							this->setCurrentBuildPos(currentPos);
+							
 
 						}
-						this->setMapReturn(mapObjects);
+						this->setCurrentBuildPos(currentPos);
 						this->setBuildProgress(this->getBuildProgress() + framePorgressCount);
 						return 0;
 
 					}
+					framePorgressCount++;
 				}
+				m_debug_strips.push_back(m_current_debug_strip);
+				m_current_debug_strip.clear();
 				startY = 0;
-				currentPos.setY(start.getY());
+				currentPos.setY(0);
 				currentPos.setX(currentPos.getX() + tileWidth);
 			}
 		}
 		
 		
-		mapObjects.insert(owl);
+		m_mapReturn.insert(owl);
+
+		if (m_debug) {
+			df::LogManager& lm = df::LogManager::getInstance();
+			m_debug_map2 = "built map:\n";
+			int stripy = m_debug_strips[0].size();
+			int error = false;
+			std::string coordsString="visited coords: ";
+			for (int i = 0; i < m_debug_Coords.size(); i++) {
+				coordsString.append(std::string("< coord: ").append(std::to_string(i)).append(" map pos:  x:").append(std::to_string(m_debug_map_positions[i].getX())).append(" y: ").append(std::to_string(m_debug_map_positions[i].getY())).append(" object pos: x: ").append(std::to_string(m_debug_Coords[i].getX())).append(" y: ").append(std::to_string(m_debug_Coords[i].getY())).append(" >, "));
+			}
+			m_log_man_access.lock();
+			lm.writeLog(coordsString.c_str());
+			m_log_man_access.unlock();
+			for (int i = 0; i < m_debug_strips.size(); i++) {
+				if (m_debug_strips[i].size() != stripy) {
+					error = true;
+					m_log_man_access.lock();
+					lm.writeLog("map build debug log failed: strip sizes inconsitent!");
+					m_log_man_access.unlock();
+					break;
+				}
+			}
+			if (!error) {
+				for(int y=0; y< stripy; y++){
+					for (int x = 0; x < m_debug_strips.size(); x++) {
+						m_debug_map2.append(m_debug_strips[x][y]);
+					}
+					m_debug_map2.append("\n");
+				}
+				m_log_man_access.lock();
+				lm.writeLog(m_debug_map2.c_str());
+				m_log_man_access.unlock();
+			}
+
+		}
+
 		this->setBuildProgress(this->getBuildProgress() + framePorgressCount);
-		this->setMapReturn(mapObjects);
+		
 		
 		this->setBuildDone(true);
 		return 0;
@@ -2404,7 +2522,8 @@ namespace ookpik {
 			m_mapReturn = df::ObjectList();
 			m_timer = df::Clock();
 			m_map_plan = std::vector<std::vector<mapTileIds::mapTileId>>();
-		
+			m_debug_map1 = "";
+			m_debug_map2 = "";
 			
 			m_error_messages = std::vector<std::string>();
 			m_player = nullptr;
@@ -2520,8 +2639,14 @@ namespace ookpik {
 		m_mapReturn=df::ObjectList();
 		m_timer = df::Clock();
 		m_map_plan = std::vector<std::vector<mapTileIds::mapTileId>>();
-
+		m_debug_map1 = "";
+		m_debug_map2 = "";
+		m_current_debug_strip= std::vector<std::string>();
+		m_debug_strips= std::vector<std::vector<std::string>>();
 		m_error_messages=std::vector<std::string>();
+		m_debug_Coords= std::vector<df::Vector>();
+
+		m_debug_map_positions= std::vector<df::Vector>();
 		m_player = nullptr;
 		m_genThread = nullptr;
 		m_genTime = 0;
@@ -2607,9 +2732,11 @@ namespace ookpik {
 						}
 
 						std::vector < std::string> errorMessages = this->getErrorMessages();
+						m_log_man_access.lock();
 						for (int i = 0; i < errorMessages.size(); i++) {
 							lm.writeLog(errorMessages.at(i).c_str());
 						}
+						m_log_man_access.unlock();
 
 						EventMapGenDone done = EventMapGenDone(errorMessages);
 						gm.onEvent(&done);
@@ -2642,10 +2769,11 @@ namespace ookpik {
 							df::GameManager& gm = df::GameManager::getInstance();
 							df::LogManager& lm = df::LogManager::getInstance();
 							std::vector < std::string> errorMessages = this->getErrorMessages();
+							m_log_man_access.lock();
 							for (int i = 0; i < errorMessages.size(); i++) {
 								lm.writeLog(errorMessages.at(i).c_str());
 							}
-
+							m_log_man_access.unlock();
 							EventMapGenDone done = EventMapGenDone(errorMessages);
 							
 							gm.onEvent(&done);

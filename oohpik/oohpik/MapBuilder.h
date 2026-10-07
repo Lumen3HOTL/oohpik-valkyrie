@@ -56,6 +56,7 @@ namespace ookpik {
 		std::vector<std::string> m_error_messages;
 		std::mutex m_error_gate=std::mutex();
 		std::mutex m_state_gate=std::mutex();
+		std::mutex m_log_man_access = std::mutex();
 		
 		int m_build_progress;
 		int m_to_build;
@@ -65,6 +66,13 @@ namespace ookpik {
 		int m_lastx;
 		int m_lasty;
 		std::mt19937 m_RandomEngine;
+		std::string m_debug_map1;
+		std::string m_debug_map2;
+		std::vector<std::string> m_current_debug_strip;
+		std::vector<std::vector<std::string>> m_debug_strips;
+		std::vector<df::Vector > m_debug_Coords;
+		std::vector<df::Vector> m_debug_map_positions;
+		bool m_debug = true;
 
 
 		int getRandom(int low, int high);
