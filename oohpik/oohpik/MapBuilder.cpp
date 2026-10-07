@@ -1564,7 +1564,7 @@ namespace ookpik {
 
 		errorNumber++;
 		if (minRightAngleLines > maxRightAngleLine) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured right angle lines. min right angle lines  must be less than max right angle lines. min right angle lines  is: ").append(std::to_string(minRightAngleLinesWidth)).append(" max right angle lines is: ").append(std::to_string(maxRightAngleLineWidth)));
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured right angle lines. min right angle lines  must be less than max right angle lines. min right angle lines  is: ").append(std::to_string(minRightAngleLines)).append(" max right angle lines is: ").append(std::to_string(maxRightAngleLine)));
 			this->setGenError(true);
 			this->setBaseFunctionExit(true);
 			return;
@@ -1691,7 +1691,7 @@ namespace ookpik {
 			return;
 		}
 		errorNumber++;
-		if (maxRoomHeight > maxDiagLineHeight) {
+		if (maxRoomHeight > minRoomHeight) {
 			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured room height. min room height must be less than max rooms height. min room height is: ").append(std::to_string(minRoomHeight)).append(" max room hieght is: ").append(std::to_string(maxDiagLineHeight)));
 			this->setGenError(true);
 			this->setBaseFunctionExit(true);
