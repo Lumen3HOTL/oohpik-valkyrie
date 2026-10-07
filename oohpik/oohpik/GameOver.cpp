@@ -5,18 +5,22 @@
 #include "DisplayManager.h"
 #include "GameManager.h"
 
-GameOver::GameOver(int moves) {
+GameOver::GameOver(int moves, int seeds, int maps) {
     setType("GameOver");
     setSolidness(df::SPECTRAL); // can't be collided with
     m_moves = moves;
+    m_seeds = seeds;
+    m_maps = maps;
     df::EventManager::getInstance().registerEvent(this, df::KEYBOARD_EVENT);
     df::EventManager::getInstance().registerEvent(this, df::STEP_EVENT);
 }
 
 int GameOver::draw() {
     df::DisplayManager& dm = df::DisplayManager::getInstance(); // not DM: that macro is still wrong
-    dm.drawString(df::Vector(57, 13), "you died!", df::CENTER_JUSTIFIED, df::RED);
-    dm.drawString(df::Vector(57, 15), "moves: " + std::to_string(m_moves), df::CENTER_JUSTIFIED, df::WHITE);
+    dm.drawString(df::Vector(57, 11), "you died!", df::CENTER_JUSTIFIED, df::RED);
+    dm.drawString(df::Vector(57, 13), "moves: " + std::to_string(m_moves), df::CENTER_JUSTIFIED, df::WHITE);
+    dm.drawString(df::Vector(57, 14), "seeds collected: " + std::to_string(m_seeds), df::CENTER_JUSTIFIED, df::WHITE);
+    dm.drawString(df::Vector(57, 15), "maps completed: " + std::to_string(m_maps), df::CENTER_JUSTIFIED, df::WHITE);
     dm.drawString(df::Vector(57, 17), "press any key to quit", df::CENTER_JUSTIFIED, df::WHITE);
     return 0;
 }

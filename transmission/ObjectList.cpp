@@ -146,7 +146,9 @@ namespace df {
 		int alt = 0;
 		for (int i = 0; i < m_count; i++) {
 			alt = m_p_obj[i]->getAltitude();
-			altVect[alt].insert(m_p_obj[i]);
+			// Don't call insert() because we know the object isn't in the list already and the dupe check gets really expensive with a lot of objects
+			altVect[alt].m_p_obj.push_back(m_p_obj[i]);
+			altVect[alt].m_count++;
 		}
 		return altVect;
 	}

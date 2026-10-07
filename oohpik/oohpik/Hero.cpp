@@ -6,6 +6,8 @@
 #include "EventCollision.h"
 #include "GameOver.h"
 #include "Seed.h"
+#include "MapExit.h"
+#include "Level.h"
 #include <string>
 
 Hero::Hero() {
@@ -21,6 +23,7 @@ Hero::Hero() {
 
 	m_moves = 0;
 	m_seeds = 0;
+	m_maps = 0;
 	m_direction = 1;
 	updateFrame();
 	df::EventManager::getInstance().registerEvent(this, df::KEYBOARD_EVENT);
@@ -53,6 +56,12 @@ int Hero::eventHandler(const df::Event* p_e) {
 			// collect() returns false if this seed was already picked up by an earlier event this move
 			if (static_cast<ookpik::Seed*>(c->getObject2())->collect()) {
 				m_seeds++;
+			}
+		} else if (c->getObject2()->getType() == "mapExit") {
+			// use() returns false if this exit already fired earlier this move
+			if (static_cast<ookpik::MapExit*>(c->getObject2())->use()) {
+				m_maps++;
+				startNewMap(this); // old map is removed at the end of this frame
 			}
 		}
 		return 1;
@@ -102,13 +111,14 @@ int Hero::draw() {
 
 	std::string status = "seeds: " + std::to_string(m_seeds)
 		+ "    remaining: " + std::to_string(WM.objectsOfTypeCount("Seed"))
-		+ "    moves: " + std::to_string(m_moves);
+		+ "    moves: " + std::to_string(m_moves)
+		+ "    maps: " + std::to_string(m_maps);
 	df::DisplayManager::getInstance().drawString(df::Vector(1, 0), status, df::LEFT_JUSTIFIED, df::WHITE);
 
 	return result;
 }
 
 void Hero::die() {
-	new GameOver(m_moves);  // show the death screen
+	new GameOver(m_moves, m_seeds, m_maps);  // show the death screen with this run's totals
 	WM.markForDelete(this); // remove the owl; deletion happens at the end of this frame
 }

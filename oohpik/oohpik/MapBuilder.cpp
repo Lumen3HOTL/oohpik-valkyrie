@@ -2,6 +2,10 @@
 #include "EventManager.h"
 
 namespace ookpik {
+	// Ground objects are invisible and do nothing, but there is one per open tile,
+	// and every object costs time each frame. Set to true to create them again.
+	const bool CREATE_GROUND_OBJECTS = false;
+
 	
 
 	std::vector<df::Vector> MapBuilder::generateBresenhamLine(int x1, int y1, int x2, int y2) {
@@ -2223,10 +2227,12 @@ namespace ookpik {
 						//if you want to swap out the gameobjects the object instances, this switch statement is where you do that
 						switch (map[(x)-borderThickness][(y)-borderThickness]) {
 						case mapTileIds::EMPTY:
-							newGround = new Ground();
-							newGround->setAltitude(0);
-							newGround->setPosition(currentPos + start);
-							mapObjects.insert(newGround);
+							if (CREATE_GROUND_OBJECTS) {
+								newGround = new Ground();
+								newGround->setAltitude(0);
+								newGround->setPosition(currentPos + start);
+								mapObjects.insert(newGround);
+							}
 							break;
 						case mapTileIds::OWL:
 							owl->setPosition(currentPos + start);

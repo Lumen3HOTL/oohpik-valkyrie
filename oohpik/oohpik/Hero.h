@@ -12,6 +12,7 @@ private:
 	int m_direction; // 0 = up, 1 = right, 2 = down, 3 = left
     int m_moves; // Move counter
     int m_seeds; // Seeds collected
+    int m_maps; // Maps completed (exits reached)
 
 public:
     Hero();

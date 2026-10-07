@@ -156,6 +156,7 @@
     <ClCompile Include="GameOver.cpp" />
     <ClCompile Include="Ground.cpp" />
     <ClCompile Include="Hero.cpp" />
+    <ClCompile Include="Level.cpp" />
     <ClCompile Include="MapBuilder.cpp" />
     <ClCompile Include="MapExit.cpp" />
     <ClCompile Include="MapGenConfigObj.cpp" />
@@ -168,6 +169,7 @@
     <ClInclude Include="GameOver.h" />
     <ClInclude Include="Ground.h" />
     <ClInclude Include="Hero.h" />
+    <ClInclude Include="Level.h" />
     <ClInclude Include="MapBuilder.h" />
     <ClInclude Include="MapExit.h" />
     <ClInclude Include="MapGenConfigObj.h" />

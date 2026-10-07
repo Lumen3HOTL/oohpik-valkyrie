@@ -204,23 +204,18 @@ namespace df {
 			DisplayManager& dm = DisplayManager::getInstance();
 			ObjectList currentAlt;
 			for (int alt = 0; alt <= MAX_ALTITUDE; alt++) {
-				currentAlt = zWorld[alt];
+				const ObjectList& currentAlt = zWorld[alt];
 				
 				if (!currentAlt.isEmpty()) {
 				
-					
-				
 					for (int layerIDX = 0; layerIDX < currentAlt.getCount(); layerIDX++) {
 						
-						
-				
 						Object* obj = currentAlt[layerIDX];
 						
 						if (obj->getVisible()) {
 							
 							dm.setApplyCamera(obj->getCameraAffected());
 							obj->draw();
-							
 							
 						}
 						
