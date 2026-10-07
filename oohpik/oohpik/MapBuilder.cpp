@@ -2274,6 +2274,8 @@ namespace ookpik {
 			m_lasty = 0;
 			m_building = false;
 			m_RandomEngine = std::mt19937();
+			m_player = owl;
+			m_configObj = config;
 			this->setBuildPerFrame(config.getObjectsConstructedPerFrame());
 			
 			m_genThread = new std::thread(&MapBuilder::generateMap, this);
