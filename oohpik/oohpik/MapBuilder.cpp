@@ -1203,10 +1203,12 @@ namespace ookpik {
 						if ((closeCoord.getX() < 0) || (closeCoord.getX() >= map.size())) {
 							this->addErrorMessage(std::string("ensureSpace: error 13 invalid target coord x: ").append(std::to_string(closeCoord.getX())).append(" map width: ").append(std::to_string(map.size())).append("!"));
 							this->setGenError(true);
+							return -1;
 						}
 						if ((closeCoord.getY() < 0) || (closeCoord.getY() >= map[(int)closeCoord.getX()].size())) {
 							this->addErrorMessage(std::string("ensureSpace: error 14 invalid target coord y: ").append(std::to_string(closeCoord.getY())).append(" map width: ").append(std::to_string(map[(int)closeCoord.getX()].size())).append("!"));
 							this->setGenError(true);
+							return -1;
 						}
 						map[(int)closeCoord.getX()][(int)closeCoord.getY()] = empty;
 						
@@ -1224,16 +1226,19 @@ namespace ookpik {
 						if ((closeCoord.getX() < 0) || (closeCoord.getX() >= map.size())) {
 							this->addErrorMessage(std::string("ensureSpace: error 13 invalid target coord x: ").append(std::to_string(closeCoord.getX())).append(" map width: ").append(std::to_string(map.size())).append("!"));
 							this->setGenError(true);
+							return -1;
 						}
 						if ((closeCoord.getY() < 0) || (closeCoord.getY() >= map[(int)closeCoord.getX()].size())) {
 							this->addErrorMessage(std::string("ensureSpace: error 14 invalid target coord y: ").append(std::to_string(closeCoord.getY())).append(" map width: ").append(std::to_string(map[(int)closeCoord.getX()].size())).append("!"));
 							this->setGenError(true);
+							return -1;
 						}
 						if (!(((closeCoord.getX() < 0) || (closeCoord.getX() >= ((int)map.size())-1))|| ((closeCoord.getY() < 0) || (closeCoord.getY() >= ((int)map[(int)closeCoord.getX()].size()) - 1)))) {
 							this->squarePlot(map, closeCoord,empty);
 							if (this->getGenError()) {
 								this->addErrorMessage(std::string("ensureSpace: error 15 square plot failrue!"));
 								this->setGenError(true);
+								return -1;
 							}
 						}
 						
