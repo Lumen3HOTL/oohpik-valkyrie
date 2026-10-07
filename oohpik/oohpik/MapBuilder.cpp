@@ -290,22 +290,22 @@ namespace ookpik {
 					map[((int)currentCoord.getX())][((int)currentCoord.getY())] = fillValue;
 					newCoord = currentCoord;
 					newCoord.setX(((int)newCoord.getX()) - 1);
-					if ((((int)newCoord.getX()) >= 0)&&(map[((int)newCoord.getX())].size()>=((int)newCoord.getY()))&&map[((int)newCoord.getX())][((int)newCoord.getY())]==emptyValue) {
+					if ((((int)newCoord.getX()) >= 0)&&(map[((int)newCoord.getX())].size()>((int)newCoord.getY()))&&map[((int)newCoord.getX())][((int)newCoord.getY())]==emptyValue) {
 						toVisit.push(newCoord);
 					}
 					newCoord = currentCoord;
 					newCoord.setX(((int)newCoord.getX()) + 1);
-					if ((((int)newCoord.getX()) < map.size()) && (map[((int)newCoord.getX())].size() >= ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
+					if ((((int)newCoord.getX()) < map.size()) && (map[((int)newCoord.getX())].size() > ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
 						toVisit.push(newCoord);
 					}
 					newCoord = currentCoord;
 					newCoord.setY(((int)newCoord.getY()) - 1);
-					if ((((int)newCoord.getY()) >= 0) && (map[((int)newCoord.getX())].size() >= ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
+					if ((((int)newCoord.getY()) >= 0) && (map[((int)newCoord.getX())].size() > ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
 						toVisit.push(newCoord);
 					}
 					newCoord = currentCoord;
 					newCoord.setY(((int)newCoord.getY()) + 1);
-					if ((((int)newCoord.getX()) < map[((int)newCoord.getX())].size()) && (map[((int)newCoord.getX())].size() >= ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
+					if ((((int)newCoord.getX()) < map[((int)newCoord.getX())].size()) && (map[((int)newCoord.getX())].size() > ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
 						toVisit.push(newCoord);
 					}
 				}
@@ -359,22 +359,22 @@ namespace ookpik {
 					foundCoords.push_back(currentCoord);
 					newCoord = currentCoord;
 					newCoord.setX(((int)newCoord.getX()) - 1);
-					if ((((int)newCoord.getX()) >= 0) && (map[((int)newCoord.getX())].size() >= ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
+					if ((((int)newCoord.getX()) >= 0) && (map[((int)newCoord.getX())].size() > ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
 						toVisit.push(newCoord);
 					}
 					newCoord = currentCoord;
 					newCoord.setX(((int)newCoord.getX()) + 1);
-					if ((((int)newCoord.getX()) < map.size()) && (map[((int)newCoord.getX())].size() >= ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
+					if ((((int)newCoord.getX()) < map.size()) && (map[((int)newCoord.getX())].size() > ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
 						toVisit.push(newCoord);
 					}
 					newCoord = currentCoord;
 					newCoord.setY(((int)newCoord.getY()) - 1);
-					if ((((int)newCoord.getY()) >= 0) && (map[((int)newCoord.getX())].size() >= ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
+					if ((((int)newCoord.getY()) >= 0) && (map[((int)newCoord.getX())].size() >((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
 						toVisit.push(newCoord);
 					}
 					newCoord = currentCoord;
 					newCoord.setY(((int)newCoord.getY()) + 1);
-					if ((((int)newCoord.getX()) < map[((int)newCoord.getX())].size()) && (map[((int)newCoord.getX())].size() >= ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
+					if ((((int)newCoord.getX()) < map[((int)newCoord.getX())].size()) && (map[((int)newCoord.getX())].size() > ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
 						toVisit.push(newCoord);
 					}
 				}
@@ -2189,7 +2189,7 @@ namespace ookpik {
 
 					framePorgressCount++;
 					currentPos.setY(currentPos.getY() + tileHeight);
-					if (((x < borderThickness) || (x > borderThickness + playAreaWidth)) || ((y < borderThickness) || (y > borderThickness + playAreaHeight))) {
+					if (((x < borderThickness) || (x >= borderThickness + playAreaWidth)) || ((y < borderThickness) || (y >= borderThickness + playAreaHeight))) {
 
 						newTree = new Tree();
 						newTree->setAltitude(0);
