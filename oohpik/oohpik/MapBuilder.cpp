@@ -635,7 +635,7 @@ namespace ookpik {
 		std::vector<df::Vector> startZone = zones[zones.size() - 1];
 		zones.pop_back();
 		std::vector<df::Vector> fixLine;
-		
+		bool started = false;
 		
 		if (this->getGenError()) {
 			this->addErrorMessage(std::string("eliminateDisperateZones: error 1 zone search failed!"));
@@ -643,35 +643,42 @@ namespace ookpik {
 		}
 		int timeout = configObj.getTimeoutSeconds();
 
+		
+
 		CoordinatePair fixPoints;
-		while (zones.size() > 1) {
+		while ((zones.size() > 1)||(!started)) {
 			if ((timer.split() / 1000) >= (33 * timeout * 30)) {
-				this->addErrorMessage(std::string("eliminateDisperateZones: error 2 process timeout!"));
+				this->addErrorMessage(std::string("eliminateDisperateZones: error 3 process timeout!"));
 				return -1;
 			}
 
 			fixPoints = this->findSmallestConnectionLine(startZone, zones);
 			if (this->getGenError()) {
-				this->addErrorMessage(std::string("eliminateDisperateZones: error 3 connection line search failed!"));
+				this->addErrorMessage(std::string("eliminateDisperateZones: error 4 connection line search failed!"));
 				return -1;
 			}
 
 
 			fixLine = this->generateBresenhamLine(fixPoints.getPoint0().getX(), fixPoints.getPoint0().getY(), fixPoints.getPoint1().getX(), fixPoints.getPoint1().getY());
-
+			if (this->getGenError()) {
+				this->addErrorMessage(std::string("eliminateDisperateZones: error 5 zone search failed!"));
+				return -1;
+			}
 			this->drawLine(map, fixLine, empty);
 			if (this->getGenError()) {
-				this->addErrorMessage(std::string("eliminateDisperateZones: error 4 connection line draw failed!"));
+				this->addErrorMessage(std::string("eliminateDisperateZones: error 6 connection line draw failed!"));
 				return -1;
 			}
 			zones = this->findZones(map, flood, empty);
 			if (zones.empty()) {
-				this->addErrorMessage(std::string("eliminateDisperateZones: error 6 no open zones found after joining!"));
+				this->addErrorMessage(std::string("eliminateDisperateZones: error 7 no open zones found after joining!"));
 				this->setGenError(true);
 				return -1;
 			}
+			started = true;
 			startZone = zones[zones.size() - 1];
 			zones.pop_back();
+			
 		}
 		return 0;
 	}
