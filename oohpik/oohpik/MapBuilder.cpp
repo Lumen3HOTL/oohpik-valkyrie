@@ -624,7 +624,7 @@ namespace ookpik {
 
 		CoordinatePair fixPoints;
 		while (zones.size() > 1) {
-			if ((timer.split() / 1000) >= (33 * timeout * 60)) {
+			if ((timer.split() / 1000) >= (33 * timeout * 30)) {
 				this->addErrorMessage(std::string("eliminateDisperateZones: error 2 process timeout!"));
 				return -1;
 			}
@@ -751,20 +751,20 @@ namespace ookpik {
 		}
 
 
-		for (int treeIndex = 0; treeIndex < seeds; treeIndex++) {
-			if ((((int)openSpace[treeIndex].getX()) >= map.size())|| (((int)openSpace[treeIndex].getX()) < 0)) {
-				this->addErrorMessage(std::string("sprinkleSeeds: error 3 map x smaller than random open coord x or random open cooord x less than zero! values: map x: ").append(std::to_string(map.size())).append(" coord x: ").append(std::to_string((int)openSpace[treeIndex].getX())).append("!"));
+		for (int seedIndex = 0; seedIndex < seeds; seedIndex++) {
+			if ((((int)openSpace[seedIndex].getX()) >= map.size())|| (((int)openSpace[seedIndex].getX()) < 0)) {
+				this->addErrorMessage(std::string("sprinkleSeeds: error 3 map x smaller than random open coord x or random open cooord x less than zero! values: map x: ").append(std::to_string(map.size())).append(" coord x: ").append(std::to_string((int)openSpace[seedIndex].getX())).append("!"));
 
 				this->setGenError(true);
 				return -1;
 			}
-			if (map[(int)openSpace[treeIndex].getX()].size() <= (int)openSpace[treeIndex].getY()) {
-				this->addErrorMessage(std::string("sprinkleSeeds: error 4 map y smaller than random open coord y! values: small y x:").append(std::to_string((int)openSpace[treeIndex].getX())).append(" map y size: ").append(std::to_string(map[(int)openSpace[treeIndex].getX()].size())).append(" coord y: ").append(std::to_string((int)openSpace[treeIndex].getY())).append("!"));
+			if (map[(int)openSpace[seedIndex].getX()].size() <= (int)openSpace[seedIndex].getY()) {
+				this->addErrorMessage(std::string("sprinkleSeeds: error 4 map y smaller than random open coord y! values: small y x:").append(std::to_string((int)openSpace[seedIndex].getX())).append(" map y size: ").append(std::to_string(map[(int)openSpace[seedIndex].getX()].size())).append(" coord y: ").append(std::to_string((int)openSpace[seedIndex].getY())).append("!"));
 
 				this->setGenError(true);
 				return -1;
 			}
-			map[(int)openSpace[treeIndex].getX()][(int)openSpace[treeIndex].getY()] = seed;
+			map[(int)openSpace[seedIndex].getX()][(int)openSpace[seedIndex].getY()] = seed;
 		}
 		return 0;
 	}
@@ -849,12 +849,12 @@ namespace ookpik {
 			return -1;
 		}
 		if ((((int)location.getX())+1 >= map.size())) {
-			this->addErrorMessage(std::string("squarePlot: error 1 corner 1 x invalid! values: pos x: ").append(std::to_string(((int)location.getX()))).append(" map x: ").append(std::to_string(map.size())).append("!"));
+			this->addErrorMessage(std::string("squarePlot: error 3 corner 1 x invalid! values: pos x: ").append(std::to_string(((int)location.getX()))).append(" map x: ").append(std::to_string(map.size())).append("!"));
 			this->setGenError(true);
 			return -1;
 		}
 		if ((((int)location.getY())+1 >= map[((int)location.getX())].size())) {
-			this->addErrorMessage(std::string("squarePlot: error 2 corner 1 Y invalid! values: pos y: ").append(std::to_string(((int)location.getY()))).append(" map Y: ").append(std::to_string(map[(int)location.getX()].size())).append("!"));
+			this->addErrorMessage(std::string("squarePlot: error 4 corner 1 Y invalid! values: pos y: ").append(std::to_string(((int)location.getY()))).append(" map Y: ").append(std::to_string(map[(int)location.getX()].size())).append("!"));
 			this->setGenError(true);
 			return -1;
 		}
@@ -1204,10 +1204,12 @@ namespace ookpik {
 						if ((closeCoord.getX() < 0) || (closeCoord.getX() >= map.size())) {
 							this->addErrorMessage(std::string("ensureSpace: error 13 invalid target coord x: ").append(std::to_string(closeCoord.getX())).append(" map width: ").append(std::to_string(map.size())).append("!"));
 							this->setGenError(true);
+							return -1;
 						}
 						if ((closeCoord.getY() < 0) || (closeCoord.getY() >= map[(int)closeCoord.getX()].size())) {
 							this->addErrorMessage(std::string("ensureSpace: error 14 invalid target coord y: ").append(std::to_string(closeCoord.getY())).append(" map width: ").append(std::to_string(map[(int)closeCoord.getX()].size())).append("!"));
 							this->setGenError(true);
+							return -1;
 						}
 						map[(int)closeCoord.getX()][(int)closeCoord.getY()] = empty;
 						
@@ -1225,16 +1227,19 @@ namespace ookpik {
 						if ((closeCoord.getX() < 0) || (closeCoord.getX() >= map.size())) {
 							this->addErrorMessage(std::string("ensureSpace: error 13 invalid target coord x: ").append(std::to_string(closeCoord.getX())).append(" map width: ").append(std::to_string(map.size())).append("!"));
 							this->setGenError(true);
+							return -1;
 						}
 						if ((closeCoord.getY() < 0) || (closeCoord.getY() >= map[(int)closeCoord.getX()].size())) {
 							this->addErrorMessage(std::string("ensureSpace: error 14 invalid target coord y: ").append(std::to_string(closeCoord.getY())).append(" map width: ").append(std::to_string(map[(int)closeCoord.getX()].size())).append("!"));
 							this->setGenError(true);
+							return -1;
 						}
 						if (!(((closeCoord.getX() < 0) || (closeCoord.getX() >= ((int)map.size())-1))|| ((closeCoord.getY() < 0) || (closeCoord.getY() >= ((int)map[(int)closeCoord.getX()].size()) - 1)))) {
 							this->squarePlot(map, closeCoord,empty);
 							if (this->getGenError()) {
 								this->addErrorMessage(std::string("ensureSpace: error 15 square plot failrue!"));
 								this->setGenError(true);
+								return -1;
 							}
 						}
 						
@@ -1700,8 +1705,8 @@ namespace ookpik {
 			return;
 		}
 		errorNumber++;
-		if (minRoomHeight > maxRoomHeight) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured room height. min room height must be less than max rooms height. min room height is: ").append(std::to_string(minRoomHeight)).append(" max room hieght is: ").append(std::to_string(maxRoomHeight)));
+		if (maxRoomHeight < minRoomHeight) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured room height. min room height must be less than max rooms height. min room height is: ").append(std::to_string(minRoomHeight)).append(" max room hieght is: ").append(std::to_string(maxDiagLineHeight)));
 			this->setGenError(true);
 			this->setBaseFunctionExit(true);
 			return;
@@ -2200,7 +2205,7 @@ namespace ookpik {
 							for (int i = 0; i < mapObjects.getCount(); i++) {
 								wm.markForDelete(mapObjects[i]);
 							}
-							this->addErrorMessage(std::string("buildMap: error 8 map Y vector less than configured!").append(" values: map y: ").append(std::to_string(map[x - borderThickness].size())).append(" configured y: ").append(std::to_string(playAreaHeight)).append("!"));
+							this->addErrorMessage(std::string("buildMap: error 9 map Y vector less than configured!").append(" values: map y: ").append(std::to_string(map[x - borderThickness].size())).append(" configured y: ").append(std::to_string(playAreaHeight)).append("!"));
 							this->setGenError(true);
 							return -1;
 						}
@@ -2238,7 +2243,7 @@ namespace ookpik {
 							for (int i = 0; i < mapObjects.getCount(); i++) {
 								wm.markForDelete(mapObjects[i]);
 							}
-							this->addErrorMessage(std::string("buildMap: error 9 invalid tile id!").append(" values: id Value: ").append(std::to_string((int)map[(x)-borderThickness][(y)-borderThickness])).append("!"));
+							this->addErrorMessage(std::string("buildMap: error 10 invalid tile id!").append(" values: id Value: ").append(std::to_string((int)map[(x)-borderThickness][(y)-borderThickness])).append("!"));
 							this->setGenError(true);
 							return -1;
 
@@ -2513,9 +2518,15 @@ namespace ookpik {
 					if (this->getBaseFunctionExit()) {
 						df::GameManager& gm = df::GameManager::getInstance();
 						df::LogManager& lm = df::LogManager::getInstance();
+						m_genThread->join();
+						if (m_genThread != nullptr) {
+							delete m_genThread;
+							m_genThread = nullptr;
+						}
+
 						std::vector < std::string> errorMessages = this->getErrorMessages();
 						for (int i = 0; i < errorMessages.size(); i++) {
-							lm.writeLog(m_error_messages[i].c_str());
+							lm.writeLog(errorMessages[i].c_str());
 						}
 
 						EventMapGenDone done = EventMapGenDone(errorMessages);
@@ -2530,11 +2541,14 @@ namespace ookpik {
 				else if (!this->getGenerating()) {
 					if (this->getGenDone() && (!this->getBuilding())&&this->getBaseFunctionExit()) {
 						m_genThread->join();
-						delete m_genThread;
-						m_genThread = nullptr;
+						if (m_genThread != nullptr) {
+							delete m_genThread;
+							m_genThread = nullptr;
+						}
+						
 						this->setBuilding(true);
 						this->setCurrentBuildPos(m_configObj.getMapOrigin());
-						m_to_build=(this->m_configObj.getMapWidth() + (this->m_configObj.getMapBorderThickness() * 2)) * (this->m_configObj.getMapHeight() + (this->m_configObj.getMapBorderThickness() * 2));
+						this->setToBuild((this->m_configObj.getMapWidth() + (this->m_configObj.getMapBorderThickness() * 2)) * (this->m_configObj.getMapHeight() + (this->m_configObj.getMapBorderThickness() * 2)));
 
 					}
 					else if ((!this->getBuildDone()) && (this->getBuilding())&&this->getBaseFunctionExit()) {
@@ -2546,7 +2560,7 @@ namespace ookpik {
 							df::LogManager& lm = df::LogManager::getInstance();
 							std::vector < std::string> errorMessages = this->getErrorMessages();
 							for (int i = 0; i < errorMessages.size(); i++) {
-								lm.writeLog(m_error_messages[i].c_str());
+								lm.writeLog(errorMessages[i].c_str());
 							}
 
 							EventMapGenDone done = EventMapGenDone(errorMessages);
@@ -2584,7 +2598,7 @@ namespace ookpik {
 			}
 			else if (this->getGenerating()) {
 				return dm.drawString(this->getPosition(), "generating map!", df::CENTER_JUSTIFIED, df::WHITE);
-			} if (this->getBuilding()) {
+			} else if (this->getBuilding()) {
 				return dm.drawString(this->getPosition(), "building map!", df::CENTER_JUSTIFIED, df::WHITE);
 			}
 			else {
