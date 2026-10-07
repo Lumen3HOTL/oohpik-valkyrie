@@ -1,4 +1,5 @@
 #include "MapBuilder.h"
+#include "EventManager.h"
 
 namespace ookpik {
 	
@@ -305,7 +306,7 @@ namespace ookpik {
 					}
 					newCoord = currentCoord;
 					newCoord.setY(((int)newCoord.getY()) + 1);
-					if ((((int)newCoord.getX()) < map[((int)newCoord.getX())].size()) && (map[((int)newCoord.getX())].size() > ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
+					if ((((int)newCoord.getY()) < map[((int)newCoord.getX())].size()) && (map[((int)newCoord.getX())].size() > ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
 						toVisit.push(newCoord);
 					}
 				}
@@ -374,7 +375,7 @@ namespace ookpik {
 					}
 					newCoord = currentCoord;
 					newCoord.setY(((int)newCoord.getY()) + 1);
-					if ((((int)newCoord.getX()) < map[((int)newCoord.getX())].size()) && (map[((int)newCoord.getX())].size() > ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
+					if ((((int)newCoord.getY()) < map[((int)newCoord.getX())].size()) && (map[((int)newCoord.getX())].size() > ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
 						toVisit.push(newCoord);
 					}
 				}
@@ -1704,8 +1705,8 @@ namespace ookpik {
 			return;
 		}
 		errorNumber++;
-		if (maxRoomHeight > minRoomHeight) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured room height. min room height must be less than max rooms height. min room height is: ").append(std::to_string(minRoomHeight)).append(" max room hieght is: ").append(std::to_string(maxDiagLineHeight)));
+		if (minRoomHeight > maxRoomHeight) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured room height. min room height must be less than max rooms height. min room height is: ").append(std::to_string(minRoomHeight)).append(" max room hieght is: ").append(std::to_string(maxRoomHeight)));
 			this->setGenError(true);
 			this->setBaseFunctionExit(true);
 			return;
@@ -2045,7 +2046,7 @@ namespace ookpik {
 		bool temp = false;
 		m_state_gate.lock();
 		temp = m_genDone;
-		m_state_gate.lock();
+		m_state_gate.unlock();
 
 		return temp;
 	}
@@ -2161,7 +2162,7 @@ namespace ookpik {
 			this->setGenError(true);
 			return -1;
 		}
-		else if (playAreaWidth <= map.size()) {
+		else if (playAreaWidth > map.size()) { // error only if the plan is narrower than configured
 			this->addErrorMessage(std::string("buildMap: error 7 invalid map size of: ").append(std::to_string(map.size())).append(" configured width: ").append(std::to_string(playAreaWidth)).append("!"));
 			this->setGenError(true);
 			return -1;
@@ -2335,6 +2336,7 @@ namespace ookpik {
 			m_lasty = 0;
 			m_building = false;
 			m_RandomEngine = std::mt19937();
+			m_done_sent = false;
 			m_player = owl;
 			m_configObj = config;
 			this->setBuildPerFrame(config.getObjectsConstructedPerFrame());
@@ -2448,13 +2450,19 @@ namespace ookpik {
 		m_lasty = 0;
 		m_building = false;
 		m_RandomEngine = std::mt19937();
+		m_done_sent = false;
 		this->setCameraAffected(false);
-		this->setPosition(df::Vector(40, 12));
+		this->setPosition(df::Vector(57, 15)); // centre of the 115x30 window
 		this->setType("mapBuilder");
+		// Step events drive generation and building; the engine only sends them to registered objects
+		df::EventManager::getInstance().registerEvent(this, df::STEP_EVENT);
 	}
 	MapBuilder::~MapBuilder() {
-		m_genThread->join();
+		// The thread is null if generation never started, or after eventHandler joined it
 		if (m_genThread != nullptr) {
+			if (m_genThread->joinable()) {
+				m_genThread->join();
+			}
 			delete m_genThread;
 			m_genThread = nullptr;
 		}
@@ -2502,9 +2510,9 @@ namespace ookpik {
 		return temp;
 	}
 
-	int MapBuilder::eventHandler(df::Event* m_p) {
+	int MapBuilder::eventHandler(const df::Event* m_p) {
 
-		if (m_p->getType().compare(df::STEP_EVENT)) {
+		if (m_p->getType() == df::STEP_EVENT) {
 			if (!this->getDoneSet()) {
 				if (this->getGenError()) {
 					if (this->getBaseFunctionExit()) {
@@ -2527,6 +2535,7 @@ namespace ookpik {
 				else if (!this->getGenerating()) {
 					if (this->getGenDone() && (!this->getBuilding())&&this->getBaseFunctionExit()) {
 						m_genThread->join();
+						delete m_genThread;
 						m_genThread = nullptr;
 						this->setBuilding(true);
 						this->setCurrentBuildPos(m_configObj.getMapOrigin());
@@ -2556,6 +2565,7 @@ namespace ookpik {
 
 							this->setDoneSent(true);
 							this->setBuilding(false);
+							this->setVisible(false); // stop drawing the status text over the finished map
 
 						}
 
@@ -2586,6 +2596,7 @@ namespace ookpik {
 				return dm.drawString(this->getPosition(), "waiting to generate!", df::CENTER_JUSTIFIED, df::WHITE);
 			}
 		}
+		return 0;
 	}
 
 
