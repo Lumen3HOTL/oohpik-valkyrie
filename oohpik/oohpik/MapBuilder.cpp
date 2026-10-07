@@ -2045,7 +2045,7 @@ namespace ookpik {
 		bool temp = false;
 		m_state_gate.lock();
 		temp = m_genDone;
-		m_state_gate.lock();
+		m_state_gate.unlock();
 
 		return temp;
 	}
@@ -2204,7 +2204,7 @@ namespace ookpik {
 							for (int i = 0; i < mapObjects.getCount(); i++) {
 								wm.markForDelete(mapObjects[i]);
 							}
-							this->addErrorMessage(std::string("buildMap: error 8 map Y vector less than configured!").append(" values: map y: ").append(std::to_string(map[x - borderThickness].size())).append(" configured y: ").append(std::to_string(playAreaHeight)).append("!"));
+							this->addErrorMessage(std::string("buildMap: error 9 map Y vector less than configured!").append(" values: map y: ").append(std::to_string(map[x - borderThickness].size())).append(" configured y: ").append(std::to_string(playAreaHeight)).append("!"));
 							this->setGenError(true);
 							return -1;
 						}
@@ -2242,7 +2242,7 @@ namespace ookpik {
 							for (int i = 0; i < mapObjects.getCount(); i++) {
 								wm.markForDelete(mapObjects[i]);
 							}
-							this->addErrorMessage(std::string("buildMap: error 9 invalid tile id!").append(" values: id Value: ").append(std::to_string((int)map[(x)-borderThickness][(y)-borderThickness])).append("!"));
+							this->addErrorMessage(std::string("buildMap: error 10 invalid tile id!").append(" values: id Value: ").append(std::to_string((int)map[(x)-borderThickness][(y)-borderThickness])).append("!"));
 							this->setGenError(true);
 							return -1;
 
