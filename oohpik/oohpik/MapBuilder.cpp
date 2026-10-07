@@ -750,20 +750,20 @@ namespace ookpik {
 		}
 
 
-		for (int treeIndex = 0; treeIndex < seeds; treeIndex++) {
-			if ((((int)openSpace[treeIndex].getX()) >= map.size())|| (((int)openSpace[treeIndex].getX()) < 0)) {
-				this->addErrorMessage(std::string("sprinkleSeeds: error 3 map x smaller than random open coord x or random open cooord x less than zero! values: map x: ").append(std::to_string(map.size())).append(" coord x: ").append(std::to_string((int)openSpace[treeIndex].getX())).append("!"));
+		for (int seedIndex = 0; seedIndex < seeds; seedIndex++) {
+			if ((((int)openSpace[seedIndex].getX()) >= map.size())|| (((int)openSpace[seedIndex].getX()) < 0)) {
+				this->addErrorMessage(std::string("sprinkleSeeds: error 3 map x smaller than random open coord x or random open cooord x less than zero! values: map x: ").append(std::to_string(map.size())).append(" coord x: ").append(std::to_string((int)openSpace[seedIndex].getX())).append("!"));
 
 				this->setGenError(true);
 				return -1;
 			}
-			if (map[(int)openSpace[treeIndex].getX()].size() <= (int)openSpace[treeIndex].getY()) {
-				this->addErrorMessage(std::string("sprinkleSeeds: error 4 map y smaller than random open coord y! values: small y x:").append(std::to_string((int)openSpace[treeIndex].getX())).append(" map y size: ").append(std::to_string(map[(int)openSpace[treeIndex].getX()].size())).append(" coord y: ").append(std::to_string((int)openSpace[treeIndex].getY())).append("!"));
+			if (map[(int)openSpace[seedIndex].getX()].size() <= (int)openSpace[seedIndex].getY()) {
+				this->addErrorMessage(std::string("sprinkleSeeds: error 4 map y smaller than random open coord y! values: small y x:").append(std::to_string((int)openSpace[seedIndex].getX())).append(" map y size: ").append(std::to_string(map[(int)openSpace[seedIndex].getX()].size())).append(" coord y: ").append(std::to_string((int)openSpace[seedIndex].getY())).append("!"));
 
 				this->setGenError(true);
 				return -1;
 			}
-			map[(int)openSpace[treeIndex].getX()][(int)openSpace[treeIndex].getY()] = seed;
+			map[(int)openSpace[seedIndex].getX()][(int)openSpace[seedIndex].getY()] = seed;
 		}
 		return 0;
 	}
@@ -848,12 +848,12 @@ namespace ookpik {
 			return -1;
 		}
 		if ((((int)location.getX())+1 >= map.size())) {
-			this->addErrorMessage(std::string("squarePlot: error 1 corner 1 x invalid! values: pos x: ").append(std::to_string(((int)location.getX()))).append(" map x: ").append(std::to_string(map.size())).append("!"));
+			this->addErrorMessage(std::string("squarePlot: error 3 corner 1 x invalid! values: pos x: ").append(std::to_string(((int)location.getX()))).append(" map x: ").append(std::to_string(map.size())).append("!"));
 			this->setGenError(true);
 			return -1;
 		}
 		if ((((int)location.getY())+1 >= map[((int)location.getX())].size())) {
-			this->addErrorMessage(std::string("squarePlot: error 2 corner 1 Y invalid! values: pos y: ").append(std::to_string(((int)location.getY()))).append(" map Y: ").append(std::to_string(map[(int)location.getX()].size())).append("!"));
+			this->addErrorMessage(std::string("squarePlot: error 4 corner 1 Y invalid! values: pos y: ").append(std::to_string(((int)location.getY()))).append(" map Y: ").append(std::to_string(map[(int)location.getX()].size())).append("!"));
 			this->setGenError(true);
 			return -1;
 		}
