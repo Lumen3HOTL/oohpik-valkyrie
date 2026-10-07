@@ -33,7 +33,7 @@ namespace ookpik {
 			}
 
 			for (int i = startX; i <= endX; i++) {
-				pathPoints.push_back(df::Vector(y1, i));
+				pathPoints.push_back(df::Vector(i,y1));
 			}
 			return pathPoints;
 		}
@@ -290,22 +290,22 @@ namespace ookpik {
 					map[((int)currentCoord.getX())][((int)currentCoord.getY())] = fillValue;
 					newCoord = currentCoord;
 					newCoord.setX(((int)newCoord.getX()) - 1);
-					if ((((int)newCoord.getX()) >= 0)&&(map[((int)newCoord.getX())].size()>((int)newCoord.getY()))&&map[((int)newCoord.getX())][((int)newCoord.getY())]==emptyValue) {
+					if ((((int)newCoord.getX()) >= 0)&&(map[((int)newCoord.getX())].size()>=((int)newCoord.getY()))&&map[((int)newCoord.getX())][((int)newCoord.getY())]==emptyValue) {
 						toVisit.push(newCoord);
 					}
 					newCoord = currentCoord;
 					newCoord.setX(((int)newCoord.getX()) + 1);
-					if ((((int)newCoord.getX()) <= map.size()) && (map[((int)newCoord.getX())].size() > ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
+					if ((((int)newCoord.getX()) < map.size()) && (map[((int)newCoord.getX())].size() >= ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
 						toVisit.push(newCoord);
 					}
 					newCoord = currentCoord;
 					newCoord.setY(((int)newCoord.getY()) - 1);
-					if ((((int)newCoord.getY()) >= 0) && (map[((int)newCoord.getX())].size() > ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
+					if ((((int)newCoord.getY()) >= 0) && (map[((int)newCoord.getX())].size() >= ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
 						toVisit.push(newCoord);
 					}
 					newCoord = currentCoord;
 					newCoord.setY(((int)newCoord.getY()) + 1);
-					if ((((int)newCoord.getX()) <= map[((int)newCoord.getX())].size()) && (map[((int)newCoord.getX())].size() > ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
+					if ((((int)newCoord.getX()) < map[((int)newCoord.getX())].size()) && (map[((int)newCoord.getX())].size() >= ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
 						toVisit.push(newCoord);
 					}
 				}
@@ -359,22 +359,22 @@ namespace ookpik {
 					foundCoords.push_back(currentCoord);
 					newCoord = currentCoord;
 					newCoord.setX(((int)newCoord.getX()) - 1);
-					if ((((int)newCoord.getX()) >= 0) && (map[((int)newCoord.getX())].size() > ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
+					if ((((int)newCoord.getX()) >= 0) && (map[((int)newCoord.getX())].size() >= ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
 						toVisit.push(newCoord);
 					}
 					newCoord = currentCoord;
 					newCoord.setX(((int)newCoord.getX()) + 1);
-					if ((((int)newCoord.getX()) <= map.size()) && (map[((int)newCoord.getX())].size() > ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
+					if ((((int)newCoord.getX()) < map.size()) && (map[((int)newCoord.getX())].size() >= ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
 						toVisit.push(newCoord);
 					}
 					newCoord = currentCoord;
 					newCoord.setY(((int)newCoord.getY()) - 1);
-					if ((((int)newCoord.getY()) >= 0) && (map[((int)newCoord.getX())].size() > ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
+					if ((((int)newCoord.getY()) >= 0) && (map[((int)newCoord.getX())].size() >= ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
 						toVisit.push(newCoord);
 					}
 					newCoord = currentCoord;
 					newCoord.setY(((int)newCoord.getY()) + 1);
-					if ((((int)newCoord.getX()) <= map[((int)newCoord.getX())].size()) && (map[((int)newCoord.getX())].size() > ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
+					if ((((int)newCoord.getX()) < map[((int)newCoord.getX())].size()) && (map[((int)newCoord.getX())].size() >= ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
 						toVisit.push(newCoord);
 					}
 				}
@@ -418,7 +418,7 @@ namespace ookpik {
 		if (map.empty()) {
 			this->addErrorMessage("FindOpencoordsCount: error 0 map empty!");
 			this->setGenError(true);
-			-1;
+			return -1;
 		}
 		int openCount = 0;
 		for (int x = 0; x < map.size();x++) {
@@ -906,8 +906,8 @@ namespace ookpik {
 			return CoordinatePair();
 		}
 
-		df::Vector closestStartPoint0;
-		df::Vector closestStartPoint1;
+		df::Vector closestStartPoint0= avalablePoint[0];
+		df::Vector closestStartPoint1= avalablePoint[1];
 
 		df::Vector testPoint = avalablePoint[0];
 		df::Vector testPoint2 = avalablePoint[1];
@@ -963,8 +963,8 @@ namespace ookpik {
 			return CoordinatePair();
 		}
 
-		df::Vector closestStartPoint0;
-		df::Vector closestStartPoint1;
+		df::Vector closestStartPoint0= avalablePoint[0];
+		df::Vector closestStartPoint1= avalablePoint[1];
 
 		df::Vector testPoint;
 		df::Vector testPoint2;
@@ -1099,7 +1099,7 @@ namespace ookpik {
 			switch (mode) {
 				case 0:
 					//line mode
-					targetPair = this->findDiagLineClosestToDistance(map, neededOpenSpaces-currentOpen, empty, config);
+					targetPair = this->findDiagLineClosestToDistance(map, neededOpenSpaces-currentOpen, empty);
 					if (this->getGenError()) {
 						this->addErrorMessage(std::string("ensureSpace: error 6 draw points retreival failed!"));
 
@@ -1118,7 +1118,7 @@ namespace ookpik {
 					break;
 				case 1:
 					//xy line mode
-					targetPair = this->findAngleLineClosestToDistance(map, neededOpenSpaces - currentOpen, empty, config);
+					targetPair = this->findAngleLineClosestToDistance(map, neededOpenSpaces - currentOpen, empty);
 					if (this->getGenError()) {
 						this->addErrorMessage(std::string("ensureSpace: error 8 draw points retreival failed!"));
 
@@ -1145,7 +1145,7 @@ namespace ookpik {
 
 				case 2:
 					///rect mode
-					targetPair = this->findAngleLineClosestToDistance(map, neededOpenSpaces - currentOpen, empty, config);
+					targetPair = this->findAngleLineClosestToDistance(map, neededOpenSpaces - currentOpen, empty);
 					if (this->getGenError()) {
 						this->addErrorMessage(std::string("ensureSpace: error 10 draw points retreival failed!"));
 
