@@ -2355,8 +2355,8 @@ namespace ookpik {
 
 
 	int MapBuilder::startGenerateMap(MapGenConfig config, df::Object* owl){
-		if ((!m_generating)&&(!m_building)) {
-			this->setGenerating(true);
+		if ((!this->getGenerating()) && (!this->getBuilding())) {
+			
 			m_configObj = MapGenConfig();
 			m_genDone = false;
 			m_generating = false;
@@ -2384,6 +2384,7 @@ namespace ookpik {
 			m_done_sent = false;
 			m_player = owl;
 			m_configObj = config;
+			this->setGenerating(true);
 			this->setBuildPerFrame(config.getObjectsConstructedPerFrame());
 			
 			m_genThread = new std::thread(&MapBuilder::generateMap, this);
@@ -2621,6 +2622,7 @@ namespace ookpik {
 
 							this->setDoneSent(true);
 							this->setBuilding(false);
+							this->setBuildDone(true);
 							this->setVisible(false); // stop drawing the status text over the finished map
 
 						}
@@ -2640,13 +2642,14 @@ namespace ookpik {
 			if (this->getGenError()) {
 				return dm.drawString(this->getPosition(), "map generation ERROR!", df::CENTER_JUSTIFIED, df::WHITE);
 			}
-			else if (this->getGenDone()) {
-				return dm.drawString(this->getPosition(), "map generation done!", df::CENTER_JUSTIFIED, df::WHITE);
-			}
+			
 			else if (this->getGenerating()) {
 				return dm.drawString(this->getPosition(), "generating map!", df::CENTER_JUSTIFIED, df::WHITE);
 			} else if (this->getBuilding()) {
 				return dm.drawString(this->getPosition(), "building map!", df::CENTER_JUSTIFIED, df::WHITE);
+			}
+			else if (this->getGenDone()) {
+				return dm.drawString(this->getPosition(), "map generation done!", df::CENTER_JUSTIFIED, df::WHITE);
 			}
 			else {
 				return dm.drawString(this->getPosition(), "waiting to generate!", df::CENTER_JUSTIFIED, df::WHITE);
