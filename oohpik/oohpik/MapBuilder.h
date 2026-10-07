@@ -17,7 +17,7 @@
 #include <math.h>
 #include "LogManager.h"
 #include <semaphore>
-
+#include <chrono>
 #include "MapExit.h"
 #include "Tree.h"
 #include "Ground.h"
@@ -61,7 +61,10 @@ namespace ookpik {
 		bool m_base_function_exit;
 		int m_lastx;
 		int m_lasty;
+		std::mt19937 m_RandomEngine;
 
+
+		int getRandom(int low, int high);
 		void setMapReturn(df::ObjectList new_map_return);
 		df::ObjectList getMapReturn()const;
 
@@ -80,6 +83,9 @@ namespace ookpik {
 		void setBuildPerFrame(int new_build_per_frame);
 		void setCurrentBuildPos(df::Vector  new_current_build_pos);
 		df::Vector getCurrentBuildPos()const;
+
+
+		
 
 		void setBuildDone(bool new_build_done);
 		bool getBuildDone()const;
@@ -145,13 +151,13 @@ namespace ookpik {
 
 		CoordinatePair findSmallestConnectionLine(std::vector<df::Vector>& startZone, std::vector<std::vector<df::Vector>>& otherZones);
 
-		std::vector<df::Vector> getRandomCoordListOfValue(std::vector<std::vector<mapTileIds::mapTileId>>& map, mapTileIds::mapTileId open, MapGenConfig config);
+		std::vector<df::Vector> getRandomCoordListOfValue(std::vector<std::vector<mapTileIds::mapTileId>>& map, mapTileIds::mapTileId open);
 
 		df::Vector getRandomCoordOfValue(std::vector<std::vector<mapTileIds::mapTileId>>& map, mapTileIds::mapTileId open);
 
-		int sprinkleTrees(std::vector<std::vector<mapTileIds::mapTileId>>& map,int trees, mapTileIds::mapTileId open, mapTileIds::mapTileId tree, MapGenConfig config);
+		int sprinkleTrees(std::vector<std::vector<mapTileIds::mapTileId>>& map,int trees, mapTileIds::mapTileId open, mapTileIds::mapTileId tree);
 
-		int sprinkleSeeds(std::vector<std::vector<mapTileIds::mapTileId>>& map,int seeds, mapTileIds::mapTileId open, mapTileIds::mapTileId seed, MapGenConfig config);
+		int sprinkleSeeds(std::vector<std::vector<mapTileIds::mapTileId>>& map,int seeds, mapTileIds::mapTileId open, mapTileIds::mapTileId seed);
 
 		int placeOwl(std::vector<std::vector<mapTileIds::mapTileId>>& map, mapTileIds::mapTileId open, mapTileIds::mapTileId);
 
@@ -163,12 +169,12 @@ namespace ookpik {
 
 		df::Vector getXYDistanceBetweenTwoPoint(df::Vector p0, df::Vector p1);
 
-		CoordinatePair findAngleLineClosestToDistance(std::vector<std::vector<mapTileIds::mapTileId>>& map,int dist, mapTileIds::mapTileId pointType, MapGenConfig config);
-		CoordinatePair findDiagLineClosestToDistance(std::vector<std::vector<mapTileIds::mapTileId>>& map,int dist, mapTileIds::mapTileId pointType, MapGenConfig config);
+		CoordinatePair findAngleLineClosestToDistance(std::vector<std::vector<mapTileIds::mapTileId>>& map,int dist, mapTileIds::mapTileId pointType);
+		CoordinatePair findDiagLineClosestToDistance(std::vector<std::vector<mapTileIds::mapTileId>>& map,int dist, mapTileIds::mapTileId pointType);
 
 		
 
-		int ensureSpace(std::vector<std::vector<mapTileIds::mapTileId>>& map, mapTileIds::mapTileId empty, mapTileIds::mapTileId tree, int neededOpen,MapGenConfig config);
+		int ensureSpace(std::vector<std::vector<mapTileIds::mapTileId>>& map, mapTileIds::mapTileId empty, mapTileIds::mapTileId tree, int neededOpen);
 
 		int calculateNeededOpenSpaces(int seeds);
 

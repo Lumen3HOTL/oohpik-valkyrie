@@ -654,7 +654,7 @@ namespace ookpik {
 		return 0;
 	}
 
-	std::vector<df::Vector> MapBuilder::getRandomCoordListOfValue(std::vector<std::vector<mapTileIds::mapTileId>>& map, mapTileIds::mapTileId open, MapGenConfig config) {
+	std::vector<df::Vector> MapBuilder::getRandomCoordListOfValue(std::vector<std::vector<mapTileIds::mapTileId>>& map, mapTileIds::mapTileId open) {
 		if (map.empty()) {
 			this->addErrorMessage(std::string("generateRandomOpenCoordList: error 0 empty map!"));
 			this->setGenError(true);
@@ -671,7 +671,7 @@ namespace ookpik {
 			this->setGenError(true);
 			return std::vector<df::Vector>();
 		}
-		std::shuffle(openSpace.begin(), openSpace.end(), std::default_random_engine(config.getRandomSeed()));
+		std::shuffle(openSpace.begin(), openSpace.end(), m_RandomEngine);
 
 		return openSpace;
 	}
@@ -693,18 +693,18 @@ namespace ookpik {
 			this->setGenError(true);
 			return df::Vector();
 		}
-		return openSpace[rand() % openSpace.size()];
+		return openSpace[this->getRandom(0, openSpace.size()-1)];
 	}
 	
 
-	int MapBuilder::sprinkleTrees(std::vector<std::vector<mapTileIds::mapTileId>>& map, int trees, mapTileIds::mapTileId open, mapTileIds::mapTileId tree, MapGenConfig config) {
+	int MapBuilder::sprinkleTrees(std::vector<std::vector<mapTileIds::mapTileId>>& map, int trees, mapTileIds::mapTileId open, mapTileIds::mapTileId tree) {
 		if (map.empty()) {
 			this->addErrorMessage(std::string("sprinkleTrees: error 0 empty map!"));
 			this->setGenError(true);
 			return -1;
 		}
 		
-		std::vector<df::Vector> openSpace = this->getRandomCoordListOfValue(map, open, config);
+		std::vector<df::Vector> openSpace = this->getRandomCoordListOfValue(map, open);
 		if (this->getGenError()) {
 			this->addErrorMessage(std::string("sprinkleTrees: error 1 random open coord list genration failed!"));
 			return -1;
@@ -735,14 +735,14 @@ namespace ookpik {
 		return 0;
 	}
 
-	int MapBuilder::sprinkleSeeds(std::vector<std::vector<mapTileIds::mapTileId>>& map, int seeds, mapTileIds::mapTileId open, mapTileIds::mapTileId seed, MapGenConfig config){
+	int MapBuilder::sprinkleSeeds(std::vector<std::vector<mapTileIds::mapTileId>>& map, int seeds, mapTileIds::mapTileId open, mapTileIds::mapTileId seed){
 		if (map.empty()) {
 			this->addErrorMessage(std::string("sprinkeSeeds: error 0 empty map!"));
 			this->setGenError(true);
 			return -1;
 		}
 
-		std::vector<df::Vector> openSpace = this->getRandomCoordListOfValue(map, open, config);
+		std::vector<df::Vector> openSpace = this->getRandomCoordListOfValue(map, open);
 		if (this->getGenError()) {
 			this->addErrorMessage(std::string("sprinkleSeeds: error 1 random open coord list genration failed!"));
 			return -1;
@@ -879,7 +879,7 @@ namespace ookpik {
 	}
 
 
-	CoordinatePair  MapBuilder::findAngleLineClosestToDistance(std::vector<std::vector<mapTileIds::mapTileId>>& map, int dist, mapTileIds::mapTileId pointType,  MapGenConfig config) {
+	CoordinatePair  MapBuilder::findAngleLineClosestToDistance(std::vector<std::vector<mapTileIds::mapTileId>>& map, int dist, mapTileIds::mapTileId pointType) {
 		if (map.empty()) {
 
 			this->addErrorMessage(std::string("findAngleLineClosestToDistance: error 0 empty map!"));
@@ -894,7 +894,7 @@ namespace ookpik {
 			return CoordinatePair();
 		}
 
-		std::vector < df::Vector> avalablePoint = this->getRandomCoordListOfValue(map, pointType,config);
+		std::vector < df::Vector> avalablePoint = this->getRandomCoordListOfValue(map, pointType);
 		if (this->getGenError()) {
 			this->addErrorMessage(std::string("findAngleLineClosestToDistance: error 2 avalable point retreival failed!"));
 			return CoordinatePair();
@@ -936,7 +936,7 @@ namespace ookpik {
 		}
 		return CoordinatePair(closestStartPoint0, closestStartPoint1);
 	}
-	CoordinatePair  MapBuilder::findDiagLineClosestToDistance(std::vector<std::vector<mapTileIds::mapTileId>>& map, int dist, mapTileIds::mapTileId pointType, MapGenConfig config) {
+	CoordinatePair  MapBuilder::findDiagLineClosestToDistance(std::vector<std::vector<mapTileIds::mapTileId>>& map, int dist, mapTileIds::mapTileId pointType) {
 		if (map.empty()) {
 
 			this->addErrorMessage(std::string("findAngleLineClosestToDistance: error 0 empty map!"));
@@ -951,7 +951,7 @@ namespace ookpik {
 			return CoordinatePair();
 		}
 
-		std::vector < df::Vector> avalablePoint = this->getRandomCoordListOfValue(map, pointType,config);
+		std::vector < df::Vector> avalablePoint = this->getRandomCoordListOfValue(map, pointType);
 		if (this->getGenError()) {
 			this->addErrorMessage(std::string("findAngleLineClosestToDistance: error 2 avalable point retreival failed!"));
 			return CoordinatePair();
@@ -1031,7 +1031,7 @@ namespace ookpik {
 
 
 
-	int MapBuilder::ensureSpace(std::vector<std::vector<mapTileIds::mapTileId>>& map, mapTileIds::mapTileId empty, mapTileIds::mapTileId tree,  int neededOpenSpaces, MapGenConfig config) {
+	int MapBuilder::ensureSpace(std::vector<std::vector<mapTileIds::mapTileId>>& map, mapTileIds::mapTileId empty, mapTileIds::mapTileId tree,  int neededOpenSpaces) {
 		if (map.empty()) {
 			
 				this->addErrorMessage(std::string("ensureSpace: error 0 empty map!"));
@@ -1075,7 +1075,7 @@ namespace ookpik {
 		while (currentOpen < neededOpenSpaces) {
 
 			
-			ClosedCoordsList= this->getRandomCoordListOfValue(map,tree,config);
+			ClosedCoordsList= this->getRandomCoordListOfValue(map,tree);
 			if (this->getGenError()) {
 				this->addErrorMessage(std::string("ensureSpace: error 3 closed coords retreival failed!"));
 				return -1;
@@ -1094,7 +1094,7 @@ namespace ookpik {
 			bool point1First = false;
 			int area = 0;
 			int addTrees = 0;
-			mode = rand() % 4;
+			mode = this->getRandom(0,4);
 			df::Vector closeCoord;
 			switch (mode) {
 				case 0:
@@ -1127,10 +1127,10 @@ namespace ookpik {
 					}
 					yFirst = false;
 					point1First = false;
-					if ((rand() % 2)==0) {
+					if ((this->getRandom(0,1))==0) {
 						yFirst = true;
 					}
-					if ((rand() % 2) == 0) {
+					if ((this->getRandom(0, 1)) == 0) {
 						point1First = true;
 					}
 					repairSpaces = this->generateXYLine(targetPair.getPoint0().getX(), targetPair.getPoint0().getY(), targetPair.getPoint1().getX(), targetPair.getPoint1().getY(), yFirst, point1First);
@@ -1185,7 +1185,7 @@ namespace ookpik {
 					 area = width * height;
 					 addTrees = area - (neededOpenSpaces - currentOpen);
 
-					this->sprinkleTrees(map, addTrees, empty, tree, config);
+					this->sprinkleTrees(map, addTrees, empty, tree);
 					if (this->getGenError()) {
 						this->addErrorMessage(std::string("ensureSpace: error 12 draw failed!"));
 
@@ -1195,13 +1195,13 @@ namespace ookpik {
 					break;
 				case 3:
 					//random point mode;
-					for (int i = 0; i < neededOpenSpaces; i++) {
+					for (int i = 0; i < neededOpenSpaces-currentOpen; i++) {
 						closeCoord = ClosedCoordsList[i];
 						if ((closeCoord.getX() < 0) || (closeCoord.getX() >= map.size())) {
 							this->addErrorMessage(std::string("ensureSpace: error 13 invalid target coord x: ").append(std::to_string(closeCoord.getX())).append(" map width: ").append(std::to_string(map.size())).append("!"));
 							this->setGenError(true);
 						}
-						if ((closeCoord.getY() < 0) || (closeCoord.getY() >= map.size())) {
+						if ((closeCoord.getY() < 0) || (closeCoord.getY() >= map[(int)closeCoord.getX()].size())) {
 							this->addErrorMessage(std::string("ensureSpace: error 14 invalid target coord y: ").append(std::to_string(closeCoord.getY())).append(" map width: ").append(std::to_string(map[(int)closeCoord.getX()].size())).append("!"));
 							this->setGenError(true);
 						}
@@ -1209,8 +1209,35 @@ namespace ookpik {
 						
 					}
 					break;
+				case 4:
+					//random fat point mode;
+					for (int i = 0; i < (neededOpenSpaces - currentOpen)/4; i++) {
+						closeCoord = ClosedCoordsList[i];
+
+						if ((closeCoord.getX() < 0) || (closeCoord.getX() >= map.size())) {
+							this->addErrorMessage(std::string("ensureSpace: error 13 invalid target coord x: ").append(std::to_string(closeCoord.getX())).append(" map width: ").append(std::to_string(map.size())).append("!"));
+							this->setGenError(true);
+						}
+						if ((closeCoord.getY() < 0) || (closeCoord.getY() >= map[(int)closeCoord.getX()].size())) {
+							this->addErrorMessage(std::string("ensureSpace: error 14 invalid target coord y: ").append(std::to_string(closeCoord.getY())).append(" map width: ").append(std::to_string(map[(int)closeCoord.getX()].size())).append("!"));
+							this->setGenError(true);
+						}
+						if (!(((closeCoord.getX() < 0) || (closeCoord.getX() >= map.size()-1))|| ((closeCoord.getY() < 0) || (closeCoord.getY() >= map[(int)closeCoord.getX()].size() - 1)))) {
+							this->squarePlot(map, closeCoord,empty);
+							if (this->getGenError()) {
+								this->addErrorMessage(std::string("ensureSpace: error 15 square plot failrue!"));
+								this->setGenError(true);
+							}
+						}
+						
+							
+						
+
+					}
+					break;
+
 				default:
-					this->addErrorMessage(std::string("ensureSpace: error 15 invalid random repair mode!"));
+					this->addErrorMessage(std::string("ensureSpace: error 16 invalid random repair mode!"));
 					this->setGenError(true);
 					return -1;
 			}
@@ -1218,22 +1245,27 @@ namespace ookpik {
 			currentOpen = this->findCoordsOfValueCount(map, empty);
 
 			if (this->getGenError()) {
-				this->addErrorMessage(std::string("ensureSpace: error 16 open count retreival failed!"));
+				this->addErrorMessage(std::string("ensureSpace: error 17 open count retreival failed!"));
 				return -1;
 			}
 		}
 
 		return 0;
 	}
-
+	//inclusve of both limits
+	int MapBuilder::getRandom(int min, int max) {
+		std::uniform_int_distribution<int> dist(min, max);
+		return dist(m_RandomEngine);
+	
+	}
 
 	void MapBuilder::generateMap() {
 		if (m_configObj.getRandomSeed() != 0) {
-			srand(m_configObj.getRandomSeed());
+			m_RandomEngine = std::mt19937(m_configObj.getRandomSeed());
 			
 		}
 		else {
-			m_configObj.setRandomSeed(rand());
+			m_configObj.setRandomSeed(std::chrono::high_resolution_clock().now().time_since_epoch().count());
 		}
 
 		int errorNumber = 0;
@@ -1264,7 +1296,7 @@ namespace ookpik {
 		}
 		errorNumber++;
 		int mapObjectAltitude = this->m_configObj.getMapObjectAltitude();
-		if ((mapObjectAltitude < 0 )||(mapObjectAltitude <= df::MAX_ALTITUDE)) {
+		if ((mapObjectAltitude < 0 )||(mapObjectAltitude > df::MAX_ALTITUDE)) {
 			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured map object altitude. must be between 0 and ").append(std::to_string(df::MAX_ALTITUDE)).append(". value is: ").append(std::to_string(mapObjectAltitude)));
 			this->setGenError(true);
 			this->setBaseFunctionExit(true);
@@ -1688,7 +1720,8 @@ namespace ookpik {
 			neededSeeds = minSeeds;
 		}
 		else {
-			neededSeeds = minSeeds + (rand() % (maxSeeds - minSeeds));
+		
+			neededSeeds = this->getRandom(minSeeds,maxSeeds);
 		}
 
 		int requestedDiagLines = 0;
@@ -1711,26 +1744,31 @@ namespace ookpik {
 			
 			}
 			else {
-				requestedDiagLines = (minDiagLines)+(rand() % (maxDiagLines - minDiagLines));
+			
+				requestedDiagLines = this->getRandom(minDiagLines,maxDiagLines);
 			}
 		}
 		
 		if ((minRightAngleLines >= 0) && (maxRightAngleLine > 0)) {
+			
 			if (minRightAngleLines == maxRightAngleLine) {
 				requestedRightAngleLines = minRightAngleLines;
 			}
 			else {
-				requestedRightAngleLines = (minRightAngleLines)+(rand() % (maxRightAngleLine - minRightAngleLines));
+				
+				requestedRightAngleLines = this->getRandom(minRightAngleLines,maxRightAngleLine);
 			}
 		}
 
 		if ((minRooms >= 0) && (maxRooms > 0)) {
+			
 			if (minRooms == maxRooms) {
 				requestedRooms = minRooms;
 
 			}
 			else {
-				requestedRooms = (minRooms)+(rand() % (maxRooms - minRooms));
+				
+				requestedRooms = this->getRandom(minRooms,maxRooms);
 			}
 		}
 
@@ -1752,24 +1790,9 @@ namespace ookpik {
 		}
 		errorNumber++;
 		if (requestedRooms > 0) {
-			int roomWidthLimiter = (minRoomsWidth - 1);
-			if (roomWidthLimiter <= 0) {
-				roomWidthLimiter = 1;
-			}
-			int roomHeightLimiter = (minRoomHeight - 1);
-			if (roomHeightLimiter <= 0) {
-				roomHeightLimiter = 1;
-			}
-			int adjustedRoomWidth = (maxRoomWidth - minRoomsWidth);
-			if(adjustedRoomWidth<=0){
-				adjustedRoomWidth = 1;
-			}
-			int adjustedRoomHeight = (maxRoomHeight - minRoomHeight);
-			if (adjustedRoomHeight <= 0) {
-				adjustedRoomHeight = 1;
-			}
+			
 			for (int index = 0; index < requestedRooms; index++) {
-				df::Box room = df::Box(df::Vector((rand()%roomWidthLimiter), (rand()%roomHeightLimiter)),(minRoomsWidth+(rand()%adjustedRoomWidth)), (minRoomHeight + (rand() % adjustedRoomHeight)));
+				df::Box room = df::Box(df::Vector((this->getRandom(0,minRoomsWidth)), (this->getRandom(0,minRoomHeight))),(this->getRandom(minRoomsWidth,maxRoomWidth)), (this->getRandom(minRoomHeight,maxRoomHeight)));
 				this->drawRectangle(protomap, room, mapTileIds::EMPTY);
 				if (this->getGenError()) {
 					this->addErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" room draw failed! box number: ").append(std::to_string(index)).append(" out of ").append(std::to_string(requestedRooms)));
@@ -1793,10 +1816,10 @@ namespace ookpik {
 			int startY = 0;
 			std::vector<df::Vector> toDraw;
 			for (int index = 0; index < requestedDiagLines; index++) {
-				width= minDiagLineWidth + (rand() % abs((maxDiagLinesWidth - minDiagLineWidth)-1));
-				height= minDiagLineHeight + (rand() % abs((maxDiagLineHeight - minDiagLineWidth)-1));
-				startX= rand() % abs((mapWidth - width) - 1);
-				startY= rand() % abs((mapHeight - height) - 1);
+				width = this->getRandom(minDiagLineWidth,maxDiagLinesWidth);
+				height = this->getRandom(minDiagLineHeight,maxDiagLineHeight);
+				startX= this->getRandom(0,(mapWidth-1)-width);
+				startY= this->getRandom(0, (mapHeight-1) - height);
 
 				toDraw = this->generateBresenhamLine(startX, startY, startX + width, startY + width);
 
@@ -1823,18 +1846,18 @@ namespace ookpik {
 			int height = 0;
 			int startX = 0;
 			int startY = 0;
-			bool yfirst = false;
-			bool point1First = false;
+			bool yfirst=false;
+			bool point1First=false;
 			std::vector<df::Vector> toDraw;
 			for (int index = 0; index < requestedRightAngleLines; index++) {
-				width = minRightAngleLinesWidth + abs(rand() % ((maxRightAngleLineWidth - minRightAngleLinesWidth)-1));
-				height = minRightAngleLineHeight + abs(rand() % ((maxRightAngleLineHeight - minDiagLineWidth)-1));
-				startX = rand() % abs((mapWidth - width) - 1);
-				startY = rand() % abs((mapHeight - height) - 1);
-				if ((rand() % 2) == 0) {
+				width = this->getRandom(minRightAngleLinesWidth,maxRightAngleLineWidth);
+				height = this->getRandom(minRightAngleLineHeight, maxRightAngleLineHeight);
+				startX = this->getRandom(0, (mapWidth-1) - width);
+				startY = this->getRandom(0,(mapHeight-1)-height);
+				if (this->getRandom(0,1) == 0) {
 					yfirst = true;
 				}
-				if ((rand() % 2) == 0) {
+				if (this->getRandom(0, 1) == 0) {
 					point1First = true;
 				}
 				toDraw = this->generateXYLine(startX, startY, startX + width, startY + width,yfirst,point1First);
@@ -1856,7 +1879,7 @@ namespace ookpik {
 			this->setBaseFunctionExit(true);
 			return;
 		}
-		this->ensureSpace(protomap, mapTileIds::EMPTY, mapTileIds::TREE, neededOpen, m_configObj);
+		this->ensureSpace(protomap, mapTileIds::EMPTY, mapTileIds::TREE, neededOpen);
 		errorNumber++;
 		if (this->getGenError()) {
 			this->addErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" space ensurance failed!"));
@@ -1886,8 +1909,12 @@ namespace ookpik {
 		}
 		int requestedRandomTrees = 0;
 		if (openCount > neededOpen) {
-			requestedRandomTrees = minRandTrees + (rand() % (maxRandTrees - minRandTrees)) - neededOpen;
-			this->sprinkleTrees(protomap, requestedRandomTrees, mapTileIds::EMPTY, mapTileIds::TREE, m_configObj);
+			int requestedTreesLimiter = (maxRandTrees - minRandTrees) - neededOpen;
+			if (requestedTreesLimiter <= 0) {
+				requestedTreesLimiter = 1;
+			}
+			requestedRandomTrees = minRandTrees + (rand() % requestedTreesLimiter);
+			this->sprinkleTrees(protomap, requestedRandomTrees, mapTileIds::EMPTY, mapTileIds::TREE);
 			errorNumber++;
 			if (this->getGenError()) {
 				this->addErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" tree sprinkle failed!"));
@@ -1952,7 +1979,7 @@ namespace ookpik {
 			this->setBaseFunctionExit(true);
 		}
 		
-		this->sprinkleSeeds(protomap, neededSeeds, mapTileIds::EMPTY, mapTileIds::SEED, m_configObj);
+		this->sprinkleSeeds(protomap, neededSeeds, mapTileIds::EMPTY, mapTileIds::SEED);
 		if (this->getGenError()) {
 			this->addErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" seed sprinkle failed!"));
 			this->setBaseFunctionExit(true);
@@ -2239,7 +2266,7 @@ namespace ookpik {
 			m_lastx = 0;
 			m_lasty = 0;
 			m_building = false;
-			
+			m_RandomEngine = std::mt19937();
 			this->setBuildPerFrame(config.getObjectsConstructedPerFrame());
 			
 			m_genThread = new std::thread(&MapBuilder::generateMap, this);
@@ -2316,6 +2343,7 @@ namespace ookpik {
 		m_lastx = 0;
 		m_lasty = 0;
 		m_building = false;
+		m_RandomEngine = std::mt19937();
 		this->setCameraAffected(false);
 		this->setPosition(df::Vector(40, 12));
 		this->setType("mapBuilder");
