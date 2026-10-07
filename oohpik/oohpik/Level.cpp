@@ -9,10 +9,10 @@ namespace {
 	ookpik::MapGenConfig makeMapConfig() {
 		ookpik::MapGenConfig config;
 		config.setMapOrigin(df::Vector(0, 0));
-		config.setMapWidth(113);
+		config.setMapWidth(56);
 		config.setMapHeight(27);
 		config.setMapBorderThickness(1);
-		config.setMapObjectWidth(1);
+		config.setMapObjectWidth(2);
 		config.setMapObjectHeight(1);
 		config.setMapObjectAltitude(0);
 		config.setObjectsConstructedPerFrame(4000); // build the whole map in one frame
@@ -20,20 +20,20 @@ namespace {
 		config.setRandomSeed(0); // 0 = pick a new random seed each run
 
 		// Open structures carved out of the forest
-		config.setMinRooms(3);
-		config.setMaxRooms(6);
+		config.setMinRooms(6);
+		config.setMaxRooms(10);
 		config.setMinRoomWidth(4);
 		config.setMaxRoomWidth(12);
 		config.setMinRoomHeight(3);
 		config.setMaxRoomHeight(6);
-		config.setMinRightAngleLines(4);
-		config.setMaxRightAngleLine(8);
+		config.setMinRightAngleLines(20);
+		config.setMaxRightAngleLine(30);
 		config.setMinRightAngleLineWidth(10);
 		config.setMaxRightAngleLineWidth(40);
 		config.setMinRightAngleLineHeight(3);
 		config.setMaxRightAngleLineHeight(12);
-		config.setMinDiagLines(3);
-		config.setMaxDiagLine(6);
+		config.setMinDiagLines(20);
+		config.setMaxDiagLine(30);
 		config.setMinDiagLineWidth(10);
 		config.setMaxDiagLineWidth(30);
 		config.setMinDiagLineHeight(3);

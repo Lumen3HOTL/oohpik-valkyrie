@@ -79,7 +79,7 @@ void Hero::turn(int delta) {
 // Hop one cell in the facing direction.
 void Hero::forward() {
 	// Movement per direction: 0 = up, 1 = right, 2 = down, 3 = left
-	const int dx[] = { 0, 1, 0, -1 };
+	const int dx[] = { 0, 2, 0, -2 };
 	const int dy[] = { -1, 0, 1, 0 };
 
 	// Work out where we would land
