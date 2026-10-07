@@ -265,7 +265,7 @@ namespace ookpik {
 			return -1;
 		}
 		
-		std::unordered_set<df::Vector> visited;
+		std::unordered_set<unsigned long long> visited;
 
 		std::queue<df::Vector> toVisit;
 
@@ -277,10 +277,11 @@ namespace ookpik {
 		while (!toVisit.empty()) {
 			currentCoord = toVisit.front();
 			toVisit.pop();
-			if (!visited.contains(currentCoord)) {
+			if (!visited.contains(((((unsigned long long)(currentCoord.getX())) << 32) | ((unsigned long long)currentCoord.getY())))) {
 				if ((((int)currentCoord.getX()) < 0) || (((int)currentCoord.getX()) >= map.size()) || (((int)currentCoord.getY()) < 0) || (((int)currentCoord.getY()) >= map[((int)currentCoord.getX())].size())) {
 					this->addErrorMessage("floodfill: error 1 point outside map!");
 					this->setGenError(true);
+					return -1;
 				}
 
 				if (map.at(((int)currentCoord.getX())).at(((int)currentCoord.getY())) == emptyValue) {
@@ -307,7 +308,7 @@ namespace ookpik {
 					}
 				}
 
-				visited.insert(currentCoord);
+				visited.insert(((((unsigned long long)(currentCoord.getX())) << 32) | ((unsigned long long)currentCoord.getY())));
 			}
 			
 		}
@@ -329,7 +330,7 @@ namespace ookpik {
 			return std::vector<df::Vector>();
 		}
 
-		std::unordered_set<df::Vector> visited;
+		std::unordered_set<unsigned long long> visited;
 
 		std::queue<df::Vector> toVisit;
 
@@ -343,8 +344,11 @@ namespace ookpik {
 		while (!toVisit.empty()) {
 			currentCoord = toVisit.front();
 			toVisit.pop();
-			if (!visited.contains(currentCoord)) {
+			if (!visited.contains(((((unsigned long long)(currentCoord.getX())) << 32) | ((unsigned long long)currentCoord.getY())))) {
 				if ((((int)currentCoord.getX()) < 0) || (((int)currentCoord.getX()) >= map.size()) || (((int)currentCoord.getY()) < 0) || (((int)currentCoord.getY()) >= map[((int)currentCoord.getX())].size())) {
+					this->addErrorMessage("floodfillreturnCoords: error 1 point outside map!");
+					this->setGenError(true);
+					
 					return std::vector<df::Vector>();
 				}
 
@@ -373,7 +377,7 @@ namespace ookpik {
 					}
 				}
 
-				visited.insert(currentCoord);
+				visited.insert(((((unsigned long long)(currentCoord.getX())) << 32) | ((unsigned long long)currentCoord.getY())));
 			}
 
 		}
@@ -907,14 +911,14 @@ namespace ookpik {
 		df::Vector closestStartPoint0;
 		df::Vector closestStartPoint1;
 
-		df::Vector testPoint;
-		df::Vector testPoint2;
+		df::Vector testPoint = avalablePoint[0];
+		df::Vector testPoint2 = avalablePoint[1];
 
-		df::Vector resultPoint;
+		df::Vector resultPoint= this->getXYDistanceBetweenTwoPoint(testPoint, testPoint2);
 
-		float closestDistance;
+		float closestDistance = resultPoint.getX()+resultPoint.getY();
 
-		float testDistance;
+		float testDistance=0;
 
 		for (int point0 = 0; point0 < avalablePoint.size(); point0++) {
 			for (int point1 = 0; point1 < avalablePoint.size(); point1++) {
@@ -1005,6 +1009,30 @@ namespace ookpik {
 		return CoordinatePair(closestStartPoint0, closestStartPoint1);
 	}
 
+
+	void MapBuilder::resetTimer() {
+		m_timer.delta();
+	}
+	bool MapBuilder::checkTimer() {
+		return ((m_timer.split() / 1000) >= (m_timeout * 33 * 30));
+	
+	}
+	unsigned long long MapBuilder::getTimerTime() {
+		return m_timer.split();
+	}
+	int MapBuilder::getTimeout()const {
+		return m_timeout;
+	}
+	int MapBuilder::setTimeout(int new_timeout) {
+		if (new_timeout < 1) {
+			return -1;
+		}
+		m_timeout = new_timeout;
+		return 0;
+	}
+
+
+
 	int MapBuilder::ensureSpace(std::vector<std::vector<mapTileIds::mapTileId>>& map, mapTileIds::mapTileId empty, mapTileIds::mapTileId tree,  int neededOpenSpaces, MapGenConfig config) {
 		if (map.empty()) {
 			
@@ -1039,7 +1067,13 @@ namespace ookpik {
 
 		df::Box repairbox;
 
-
+		int startx = 0;
+		int endx = 0;
+		int starty = 0;
+		int endy = 0;
+		int width = 0;
+		int height = 0;
+		int temp = 0;
 		while (currentOpen < neededOpenSpaces) {
 
 			
@@ -1058,7 +1092,10 @@ namespace ookpik {
 				this->setGenError(true);
 				return -1;
 			}
-			
+			bool yFirst = false;
+			bool point1First = false;
+			int area = 0;
+			int addTrees = 0;
 			mode = rand() % 4;
 			df::Vector closeCoord;
 			switch (mode) {
@@ -1090,8 +1127,8 @@ namespace ookpik {
 
 						return -1;
 					}
-					bool yFirst = false;
-					bool point1First = false;
+					yFirst = false;
+					point1First = false;
 					if ((rand() % 2)==0) {
 						yFirst = true;
 					}
@@ -1117,13 +1154,13 @@ namespace ookpik {
 
 						return -1;
 					}
-					int startx = targetPair.getPoint0().getX();
-					int endx = targetPair.getPoint1().getX();
-					int starty = targetPair.getPoint0().getY();
-					int endy = targetPair.getPoint1().getX();
-					int width = 0;
-					int height = 0;
-					int temp = 0;
+					startx = targetPair.getPoint0().getX();
+					endx = targetPair.getPoint1().getX();
+					starty = targetPair.getPoint0().getY();
+					endy = targetPair.getPoint1().getX();
+					width = 0;
+					height = 0;
+					temp = 0;
 					if (startx > endx) {
 						temp = startx;
 						startx = endx;
@@ -1147,8 +1184,8 @@ namespace ookpik {
 
 						return -1;
 					}
-					int area = width * height;
-					int addTrees = area - (neededOpenSpaces - currentOpen);
+					 area = width * height;
+					 addTrees = area - (neededOpenSpaces - currentOpen);
 
 					this->sprinkleTrees(map, addTrees, empty, tree, config);
 					if (this->getGenError()) {
@@ -1200,38 +1237,813 @@ namespace ookpik {
 		else {
 			m_configObj.setRandomSeed(rand());
 		}
-		int mapBorderThickness = this->m_configObj.getMapBorderThickness();
-		if (mapBorderThickness < 1) {
-			this->addErrorMessage(std::string("error: invalid configured map border thickeness. value is: ").append(std::to_string(mapBorderThickness)));
+
+		int errorNumber = 0;
+		errorNumber++;
+		int timeout = this->m_configObj.getTimeoutSeconds();
+		if (timeout < 1) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured timeout. must be at least 1 second. value is: ").append(std::to_string(timeout)));
 			this->setGenError(true);
 			this->setBaseFunctionExit(true);
 			return;
 		}
+		this->setTimeout(timeout);
+		this->resetTimer();
+		int mapBorderThickness = this->m_configObj.getMapBorderThickness();
+		if (mapBorderThickness < 1) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append("invalid configured map border thickeness.must be at least 1. value is : ").append(std::to_string(mapBorderThickness)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		errorNumber++;
 		int mapHeight = this->m_configObj.getMapHeight();
 		if (mapHeight < 1) {
-			this->addErrorMessage(std::string("error: invalid configured map border thickeness. value is: ").append(std::to_string(mapHeight)));
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured map height. must be at least 1. value is: ").append(std::to_string(mapHeight)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		errorNumber++;
+		int mapObjectAltitude = this->m_configObj.getMapObjectAltitude();
+		if ((mapObjectAltitude < 0 )||(mapObjectAltitude <= df::MAX_ALTITUDE)) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured map object altitude. must be between 0 and ").append(std::to_string(df::MAX_ALTITUDE)).append(". value is: ").append(std::to_string(mapObjectAltitude)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		errorNumber++;
+		int mapWidth=this->m_configObj.getMapWidth();
+		if (mapWidth < 1) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured map width. must be at least 1. value is: ").append(std::to_string(mapWidth)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		errorNumber++;
+		int maxRightAngleLine = this->m_configObj.getMaxRightAngleLine();
+		if (maxRightAngleLine < 0) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max right angle line. must be at least 0. value is: ").append(std::to_string(maxRightAngleLine)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		errorNumber++;
+		int maxRightAngleLineHeight = this->m_configObj.getMaxAngleLineHeight();
+		if (maxRightAngleLineHeight < 1) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max right angle line height. must be at least 1. value is: ").append(std::to_string(maxRightAngleLineHeight)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		errorNumber++;
+		int maxRightAngleLineWidth = this->m_configObj.getMaxAngleLineWidth();
+		if (maxRightAngleLineWidth < 1) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max right angle line width. must be at least 1. value is: ").append(std::to_string(maxRightAngleLineWidth)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		errorNumber++;
+		int maxDiagLineHeight = this->m_configObj.getMaxDiagLineHeight();
+		if (maxDiagLineHeight < 1) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max diag line height. must be at least 1. value is: ").append(std::to_string(maxDiagLineHeight)));
 			this->setGenError(true);
 			this->setBaseFunctionExit(true);
 			return;
 		}
 
+		errorNumber++;
+		int maxDiagLines = this->m_configObj.getMaxDiagLines();
+		if (maxDiagLines < 0) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max diag lines. must be at least 0. value is: ").append(std::to_string(maxDiagLines)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+
+		errorNumber++;
+		int maxDiagLinesWidth = this->m_configObj.getMaxDiagLineWidth();
+		if (maxDiagLinesWidth < 1) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max diag line width. must be at least 1. value is: ").append(std::to_string(maxDiagLinesWidth)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+
+		errorNumber++;
+		int maxRandTrees = this->m_configObj.getMaxRandTrees();
+		if (maxRandTrees < 0) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max rand trees. must be at least 0. value is: ").append(std::to_string(maxRandTrees)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+
+		errorNumber++;
+		int maxRoomHeight = this->m_configObj.getMaxRoomHeight();
+		if (maxRoomHeight < 1) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured room height. must be at least 1. value is: ").append(std::to_string(maxRoomHeight)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+
+		errorNumber++;
+		int maxRooms = this->m_configObj.getMaxRooms();
+		if (maxRooms < 0) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max rooms. must be at least 0. value is: ").append(std::to_string(maxRooms)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+
+		errorNumber++;
+		int maxRoomWidth = this->m_configObj.getMaxRoomWidth();
+		if (maxRoomWidth < 1) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max room width. must be at least 1. value is: ").append(std::to_string(maxRoomWidth)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+
+		errorNumber++;
+		int maxSeeds = this->m_configObj.getMaxSeeds();
+		if (maxSeeds < 1) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max seeds. must be at least 1. value is: ").append(std::to_string(maxSeeds)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+
+		errorNumber++;
+		int minRightAngleLines = this->m_configObj.getMinRightAngleLines();
+		if (minRightAngleLines < 0) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured min angle lines. must be at least 0. value is: ").append(std::to_string(minRightAngleLines)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+
+
+		errorNumber++;
+		int minRightAngleLineHeight = this->m_configObj.getMinAngleLineHeight();
+		if (minRightAngleLineHeight < 1) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured min right angle lines height. must be at least 1. value is: ").append(std::to_string(minRightAngleLineHeight)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+
+		errorNumber++;
+		int minRightAngleLinesWidth = this->m_configObj.getMinAngleLineWidth();
+		if (minRightAngleLinesWidth < 1) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured min angle line width. must be at least 1. value is: ").append(std::to_string(minRightAngleLinesWidth)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+
+		errorNumber++;
+		int minDiagLineHeight = this->m_configObj.getMinDiagLineHeight();
+		if (minDiagLineHeight < 1) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured min diag line height. must be at least 1. value is: ").append(std::to_string(minDiagLineHeight)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+
+		errorNumber++;
+		int minDiagLines = this->m_configObj.getMinDiagLines();
+		if (minDiagLines < 0) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured min diag lines. must be at least 0. value is: ").append(std::to_string(minDiagLines)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+
+		errorNumber++;
+		int minDiagLineWidth = this->m_configObj.getMinDiagLineWidth();
+		if (minDiagLineWidth < 1) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured min diag line width. must be at least 1. value is: ").append(std::to_string(minDiagLineWidth)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+
+		errorNumber++;
+		int minRandTrees = this->m_configObj.getMinRandTrees();
+		if (minRandTrees < 0) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured min randTrees. must be at least 0. value is: ").append(std::to_string(minRandTrees)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+
+		errorNumber++;
+		int minRoomHeight = this->m_configObj.getMinRoomHeight();
+		if (minRoomHeight < 1) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured min room height. must be at least 1. value is: ").append(std::to_string(minRoomHeight)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+
+		errorNumber++;
+		int minRooms = this->m_configObj.getMinRooms();
+		if (minRooms < 0) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured min rooms. must be at least 0. value is: ").append(std::to_string(minRooms)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+
+		errorNumber++;
+		int minRoomsWidth = this->m_configObj.getMinRoomWidth();
+		if (minRoomsWidth < 1) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured min room width. must be at least 1. value is: ").append(std::to_string(minRoomsWidth)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+
+		errorNumber++;
+		int minSeeds = this->m_configObj.getMinSeeds();
+		if (minSeeds < 1) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured min seeds. must be at least 1. value is: ").append(std::to_string(minSeeds)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		errorNumber++;
+		if (this->checkTimer()) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime()/1000))/33)/30))).append(" seconds!"));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+
+
+
+
+		
+		
+		int mapArea = mapHeight * mapWidth;
+
+		int neededSeeds = 0;
+
+
+
+
+		
+		errorNumber++;
+		if (minSeeds > maxSeeds) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured seeds. min seeds must be less than max seeds. min seeds is: ").append(std::to_string(minSeeds)).append(" max seeds is: ").append(std::to_string(maxSeeds)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		errorNumber++;
+		if (minSeeds + 2 >= mapArea) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured seeds. must be less than map area -2. min seeds is: ").append(std::to_string(minSeeds)).append(" map area is: ").append(std::to_string(mapArea)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		errorNumber++;
+		if (minRandTrees > (mapArea-2) - maxSeeds) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured random trees. min random trees must be less than map area-maxSeeds-2. map area is: ").append(std::to_string(mapArea)).append(" max seeds is: ").append(std::to_string(maxSeeds)).append(" min rand trees is: ").append(std::to_string(minRandTrees)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		errorNumber++;
+		if (maxRandTrees > (mapArea - 2) - maxSeeds) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured random trees. max random trees must be less than map area-maxSeeds-2. map area is: ").append(std::to_string(mapArea)).append(" max seeds is: ").append(std::to_string(maxSeeds)).append(" max rand trees is: ").append(std::to_string(maxRandTrees)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+
+
+		errorNumber++;
+		if (minRightAngleLines > maxRightAngleLine) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured right angle lines. min right angle lines  must be less than max right angle lines. min right angle lines  is: ").append(std::to_string(minRightAngleLinesWidth)).append(" max right angle lines is: ").append(std::to_string(maxRightAngleLineWidth)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		errorNumber++;
+		if (minRightAngleLinesWidth > maxRightAngleLineWidth) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured right angle lines width. min angle lines width must be less than max angle lines width. min right angle lines width is: ").append(std::to_string(minRightAngleLinesWidth)).append(" max right angle line width is: ").append(std::to_string(maxRightAngleLineWidth)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		errorNumber++;
+		if (maxRightAngleLineWidth >= mapWidth) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max right angle line width.max right angle line width must be less than map width. max right angle lines width is: ").append(std::to_string(maxRightAngleLineWidth)).append(" map width is: ").append(std::to_string(mapWidth)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		errorNumber++;
+		if (minRightAngleLinesWidth >= mapWidth) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured right agnle lines width. min right angle lines width must be less than map width. min right angle lines width is: ").append(std::to_string(minRightAngleLinesWidth)).append(" map width is: ").append(std::to_string(mapWidth)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		errorNumber++;
+		if (minRightAngleLineHeight > maxRightAngleLineHeight) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured angle lines height. min angle lines height must be less than max angle lines height. min right angle lines height is: ").append(std::to_string(minRightAngleLineHeight)).append(" max right angle line hieght is: ").append(std::to_string(maxRightAngleLineHeight)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		errorNumber++;
+		if (maxRightAngleLineHeight >= mapHeight) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max right angle line hieght. must be less than map heigth. max right angle lines height is: ").append(std::to_string(maxRightAngleLineHeight)).append(" map hieght is: ").append(std::to_string(mapHeight)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+		}
+		errorNumber++;
+		if (minRightAngleLineHeight >= mapHeight) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid min right angle line height. min right angle line height must be less than map height. min right angle line hieght is: ").append(std::to_string(minRightAngleLineHeight)).append(" map height is: ").append(std::to_string(mapHeight)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		
+		errorNumber++;
+		if (minDiagLines > maxDiagLines) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured daig lines. min daig lines  must be less than max daig lines. min diag lines  is: ").append(std::to_string(minDiagLines)).append(" max diag lines is: ").append(std::to_string(maxDiagLines)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		errorNumber++;
+		if (minDiagLineWidth > maxDiagLinesWidth) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured diag lines width. mindiag lines width must be less than maxdaig lines width. min daig lines width is: ").append(std::to_string(minDiagLineWidth)).append(" max diag line width is: ").append(std::to_string(maxDiagLinesWidth)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		errorNumber++;
+		if (minDiagLineWidth >= mapWidth) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured diag lines width. mindiag lines width must be less than map width. min daig lines width is: ").append(std::to_string(minDiagLineWidth)).append(" map width is: ").append(std::to_string(mapWidth)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		errorNumber++;
+		if (maxDiagLinesWidth >= mapWidth) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max diag line width. must be less than map width. max daig lines width is: ").append(std::to_string(maxDiagLinesWidth)).append(" map width is: ").append(std::to_string(mapWidth)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		errorNumber++;
+		if (minDiagLineHeight > maxDiagLineHeight) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured diag lines height. min daig lines height must be less than max diag lines height. min daig lines height is: ").append(std::to_string(minDiagLineHeight)).append(" max diag line hieght is: ").append(std::to_string(maxDiagLineHeight)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		errorNumber++;
+		if (maxDiagLineHeight >= mapHeight) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max diag line hieght. must be less than map heigth. max daig lines height is: ").append(std::to_string(maxDiagLineHeight)).append(" map hieght is: ").append(std::to_string(mapHeight)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		errorNumber++;
+		if (minDiagLineHeight >= mapHeight) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid min diag line height. min diag line height must be less than map height. min daig line hieght is: ").append(std::to_string(minDiagLineHeight)).append(" map height is: ").append(std::to_string(mapHeight)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+
+
+		errorNumber++;
+		if (minRooms > maxRooms) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured rooms lines. min rooms must be less thanmax rooms. min rooms is: ").append(std::to_string(minDiagLines)).append(" max rooms is: ").append(std::to_string(maxDiagLines)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		errorNumber++;
+		if (minRoomsWidth > maxRoomWidth) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured rooms width. min rooms width must be less thanmax rooms width. min room width is: ").append(std::to_string(minRoomsWidth)).append(" max roome width is: ").append(std::to_string(maxRoomWidth)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		errorNumber++;
+		if (minRoomsWidth >= mapWidth) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured min rooms width. min rooms width must be less than map width. min rooms width is: ").append(std::to_string(minRoomsWidth)).append(" map width is: ").append(std::to_string(mapWidth)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		errorNumber++;
+		if (maxRoomWidth >= mapWidth) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max room width. must be less than map width. max rooms width is: ").append(std::to_string(maxRoomWidth)).append(" map width is: ").append(std::to_string(mapWidth)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		errorNumber++;
+		if (maxRoomHeight > maxDiagLineHeight) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured room height. min room height must be less than max rooms height. min room height is: ").append(std::to_string(minRoomHeight)).append(" max room hieght is: ").append(std::to_string(maxDiagLineHeight)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		errorNumber++;
+		if (maxRoomHeight >= mapHeight) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max room hieght. must be less than map heigth. max room height is: ").append(std::to_string(maxRoomHeight)).append(" map hieght is: ").append(std::to_string(mapHeight)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		errorNumber++;
+		if (minRoomHeight >= mapHeight) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid min room height. min room height must be less than map height. min room hieght is: ").append(std::to_string(minRoomHeight)).append(" map height is: ").append(std::to_string(mapHeight)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+
+
+		errorNumber++;
+		if (this->checkTimer()) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime() / 1000)) / 33) / 30))).append(" seconds!"));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		
+
+		if (minSeeds == maxSeeds) {
+			neededSeeds = minSeeds;
+		}
+		else {
+			neededSeeds = minSeeds + (rand() % (maxSeeds - minSeeds));
+		}
+
+		int requestedDiagLines = 0;
+		int requestedRooms = 0;
+		int requestedRightAngleLines = 0;
+
+		
+		int neededOpen = this->calculateNeededOpenSpaces(neededSeeds);
+		errorNumber++;
+		if (this->checkTimer()) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime() / 1000)) / 33) / 30))).append(" seconds!"));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		
+		if ((minDiagLines >= 0)&&(maxDiagLines > 0 )) {
+			if (minDiagLines == maxDiagLines) {
+				requestedDiagLines = minDiagLines;
+			
+			}
+			else {
+				requestedDiagLines = (minDiagLines)+(rand() % (maxDiagLines - minDiagLines));
+			}
+		}
+		
+		if ((minRightAngleLines >= 0) && (maxRightAngleLine > 0)) {
+			if (minRightAngleLines == maxRightAngleLine) {
+				requestedRightAngleLines = minRightAngleLines;
+			}
+			else {
+				requestedRightAngleLines = (minRightAngleLines)+(rand() % (maxRightAngleLine - minRightAngleLines));
+			}
+		}
+
+		if ((minRooms >= 0) && (maxRooms > 0)) {
+			if (minRooms == maxRooms) {
+				requestedRooms = minRooms;
+
+			}
+			else {
+				requestedRooms = (minRooms)+(rand() % (maxRooms - minRooms));
+			}
+		}
+
+		errorNumber++;
+		if (requestedDiagLines + requestedRooms + requestedRightAngleLines <= 0) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid open area. collective generated number of open structure (right angle lines, rooms, diag lines) must be greater than 0!"));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+
+		std::vector<std::vector<mapTileIds::mapTileId>> protomap = this->createStartingMap(mapWidth, mapHeight, mapTileIds::TREE);
+		errorNumber++;
+		if (this->checkTimer()) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime() / 1000)) / 33) / 30))).append(" seconds!"));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		errorNumber++;
+		if (requestedRooms > 0) {
+			int roomWidthLimiter = (minRoomsWidth - 1);
+			if (roomWidthLimiter <= 0) {
+				roomWidthLimiter = 1;
+			}
+			int roomHeightLimiter = (minRoomHeight - 1);
+			if (roomHeightLimiter <= 0) {
+				roomHeightLimiter = 1;
+			}
+			int adjustedRoomWidth = (maxRoomWidth - minRoomsWidth);
+			if(adjustedRoomWidth<=0){
+				adjustedRoomWidth = 1;
+			}
+			int adjustedRoomHeight = (maxRoomHeight - minRoomHeight);
+			if (adjustedRoomHeight <= 0) {
+				adjustedRoomHeight = 1;
+			}
+			for (int index = 0; index < requestedRooms; index++) {
+				df::Box room = df::Box(df::Vector((rand()%roomWidthLimiter), (rand()%roomHeightLimiter)),(minRoomsWidth+(rand()%adjustedRoomWidth)), (minRoomHeight + (rand() % adjustedRoomHeight)));
+				this->drawRectangle(protomap, room, mapTileIds::EMPTY);
+				if (this->getGenError()) {
+					this->addErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" room draw failed! box number: ").append(std::to_string(index)).append(" out of ").append(std::to_string(requestedRooms)));
+					this->setBaseFunctionExit(true);
+					return;
+				}
+			}
+		}
+		errorNumber++;
+		if (this->checkTimer()) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime() / 1000)) / 33) / 30))).append(" seconds!"));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		errorNumber++;
+		if (requestedDiagLines > 0) {
+			int width = 0;
+			int height = 0;
+			int startX = 0;
+			int startY = 0;
+			std::vector<df::Vector> toDraw;
+			for (int index = 0; index < requestedDiagLines; index++) {
+				width= minDiagLineWidth + (rand() % abs((maxDiagLinesWidth - minDiagLineWidth)-1));
+				height= minDiagLineHeight + (rand() % abs((maxDiagLineHeight - minDiagLineWidth)-1));
+				startX= rand() % abs((mapWidth - width) - 1);
+				startY= rand() % abs((mapHeight - height) - 1);
+
+				toDraw = this->generateBresenhamLine(startX, startY, startX + width, startY + width);
+
+				this->drawLine(protomap, toDraw, mapTileIds::EMPTY);
+
+				if (this->getGenError()) {
+					this->addErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" diag line draw failed! diag line number: ").append(std::to_string(index)).append(" out of ").append(std::to_string(requestedDiagLines)));
+					this->setBaseFunctionExit(true);
+					return;
+				}
+				
+			}
+		}
+		errorNumber++;
+		if (this->checkTimer()) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime() / 1000)) / 33) / 30))).append(" seconds!"));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		errorNumber++;
+		if (requestedRightAngleLines > 0) {
+			int width = 0;
+			int height = 0;
+			int startX = 0;
+			int startY = 0;
+			bool yfirst = false;
+			bool point1First = false;
+			std::vector<df::Vector> toDraw;
+			for (int index = 0; index < requestedRightAngleLines; index++) {
+				width = minRightAngleLinesWidth + abs(rand() % ((maxRightAngleLineWidth - minRightAngleLinesWidth)-1));
+				height = minRightAngleLineHeight + abs(rand() % ((maxRightAngleLineHeight - minDiagLineWidth)-1));
+				startX = rand() % abs((mapWidth - width) - 1);
+				startY = rand() % abs((mapHeight - height) - 1);
+				if ((rand() % 2) == 0) {
+					yfirst = true;
+				}
+				if ((rand() % 2) == 0) {
+					point1First = true;
+				}
+				toDraw = this->generateXYLine(startX, startY, startX + width, startY + width,yfirst,point1First);
+
+				this->drawLine(protomap, toDraw, mapTileIds::EMPTY);
+
+				if (this->getGenError()) {
+					this->addErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" diag line draw failed! diag line number: ").append(std::to_string(index)).append(" out of ").append(std::to_string(requestedDiagLines)));
+					this->setBaseFunctionExit(true);
+					return;
+				}
+
+			}
+		}
+		errorNumber++;
+		if (this->checkTimer()) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime() / 1000)) / 33) / 30))).append(" seconds!"));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		this->ensureSpace(protomap, mapTileIds::EMPTY, mapTileIds::TREE, neededOpen, m_configObj);
+		errorNumber++;
+		if (this->getGenError()) {
+			this->addErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" space ensurance failed!"));
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		errorNumber++;
+		if (this->checkTimer()) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime() / 1000)) / 33) / 30))).append(" seconds!"));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		int openCount = this->findCoordsOfValueCount(protomap, mapTileIds::EMPTY);
+		errorNumber++;
+		if (this->getGenError()) {
+			this->addErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" open space count failed!"));
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		errorNumber++;
+		if (this->checkTimer()) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime() / 1000)) / 33) / 30))).append(" seconds!"));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		int requestedRandomTrees = 0;
+		if (openCount > neededOpen) {
+			requestedRandomTrees = minRandTrees + (rand() % (maxRandTrees - minRandTrees)) - neededOpen;
+			this->sprinkleTrees(protomap, requestedRandomTrees, mapTileIds::EMPTY, mapTileIds::TREE, m_configObj);
+			errorNumber++;
+			if (this->getGenError()) {
+				this->addErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" tree sprinkle failed!"));
+				this->setBaseFunctionExit(true);
+				return;
+			}
+		}
+		errorNumber++;
+		if (this->checkTimer()) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime() / 1000)) / 33) / 30))).append(" seconds!"));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		std::vector<std::vector<df::Vector>> zones;
+		zones = this->findZones(protomap, mapTileIds::EMPTY);
+		errorNumber++;
+		if (this->getGenError()) {
+			this->addErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" zone search failed!"));
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		errorNumber++;
+		if (this->checkTimer()) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime() / 1000)) / 33) / 30))).append(" seconds!"));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		int zoneCount = 0;
+		zoneCount = zones.size();
+
+		if (zoneCount <= 0) {
+			errorNumber++;
+			
+			
+			this->addErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append("map gen failed! invalid zone count zone must be at least 1! zone count: ").append(std::to_string(zoneCount)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+
+		if (zoneCount > 1) {
+			this->eliminateDisperateZones(protomap, mapTileIds::EMPTY, m_configObj);
+			if (this->getGenError()) {
+				this->addErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" zone search failed!"));
+				this->setBaseFunctionExit(true);
+				return;
+			}
+		}
+		errorNumber++;
+		if (this->checkTimer()) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime() / 1000)) / 33) / 30))).append(" seconds!"));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		int openSpaceCount = this->findCoordsOfValueCount(protomap, mapTileIds::EMPTY);
+		if (openSpaceCount < neededOpen) {
+			this->addErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append("map gen failed! too few emtpy spaces! empty space count: ").append(std::to_string(openSpaceCount)).append(" needed oepn spaces: ").append(std::to_string(neededOpen)).append("!"));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+		}
+		
+		this->sprinkleSeeds(protomap, neededSeeds, mapTileIds::EMPTY, mapTileIds::SEED, m_configObj);
+		if (this->getGenError()) {
+			this->addErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" seed sprinkle failed!"));
+			this->setBaseFunctionExit(true);
+			return;
+		}
+
+		this->placeExit(protomap, mapTileIds::EMPTY, mapTileIds::EXIT);
+		if (this->getGenError()) {
+			this->addErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" exit place failed!"));
+			this->setBaseFunctionExit(true);
+			return;
+		}
+
+		this->placeOwl(protomap, mapTileIds::EMPTY, mapTileIds::OWL);
+		if (this->getGenError()) {
+			this->addErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" owl place failed!"));
+			this->setBaseFunctionExit(true);
+			return;
+		}
+
+		if (this->checkTimer()) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime() / 1000)) / 33) / 30))).append(" seconds!"));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		
+		this->m_map_plan = protomap;
+		this->setGenTime(this->getTimerTime());
+		this->setGenerating(false);
+		this->setGenDone(true);
 		//put this before every return, otherwise bad things start happening
 		this->setBaseFunctionExit(true);
 		return;
 	}
+	
+	void MapBuilder::setGenDone(bool new_gen_done) {
+		m_genDone = new_gen_done;
+	}
+	bool MapBuilder::getGenDone()const {
+		return m_genDone;
+	}
 
-	df::ObjectList MapBuilder::buildMap(MapGenConfig config, std::vector<std::vector<mapTileIds::mapTileId>>& map, df::Object* owl) {
+	void MapBuilder::setGenTime(unsigned long long new_gen_time) {
+		m_genTime = new_gen_time;
+	}
+	unsigned long long MapBuilder::getGenTime()const {
+		return m_genTime;
+	}
+
+
+	void MapBuilder::setGenerating(bool new_genrating) {
+		m_generating = new_genrating;
+	}
+	bool MapBuilder::getGenerating()const {
+		return m_generating;
+	}
+	void MapBuilder::setDoneSent(bool new_done_set) {
+		m_done_sent = new_done_set;
+	}
+	bool MapBuilder::getDoneSet()const {
+		return m_done_sent;
+	}
+
+
+
+
+	void MapBuilder::setMapReturn(df::ObjectList new_map_return) {
+		m_mapReturn = new_map_return;
+	}
+	df::ObjectList MapBuilder::getMapReturn()const {
+		return m_mapReturn;
+	}
+
+	//this is the important function to change to swap out the different game objects the gnerator instances
+	int MapBuilder::buildMap(MapGenConfig config, std::vector<std::vector<mapTileIds::mapTileId>>& map, df::Object* owl) {
 
 		if (map.empty()) {
 			this->addErrorMessage("buildMap: error 0 map empty!");
 			this->setGenError(true);
-			return df::ObjectList();
+			return -1;
 		}
 
 		df::ObjectList mapObjects;
+		mapObjects = this->getMapReturn();
 		int borderThickness = config.getMapBorderThickness();
 		df::Vector start = config.getMapOrigin();
 		df::Vector currentPos = df::Vector();
+		currentPos = this->getCurrentBuildPos();
 		int tileWidth = config.getMapObjectWidth();
 		int tileHeight = config.getMapObjectHeight();
 
@@ -1243,70 +2055,84 @@ namespace ookpik {
 		if ((playAreaWidth <= 0)) {
 			this->addErrorMessage(std::string("buildMap: error 1 invalid play area width of: ").append(std::to_string(playAreaWidth)).append("!"));
 			this->setGenError(true);
-			return df::ObjectList();
+			return -1;
 		}
 		else if ((playAreaHeight <= 0)) {
 			this->addErrorMessage(std::string("buildMap: error 2 invalid play area height of: ").append(std::to_string(playAreaHeight)).append("!"));
 			this->setGenError(true);
-			return df::ObjectList();
+			return -1;
 		}
 		else if ((borderThickness < 0)) {
 			this->addErrorMessage(std::string("buildMap: error 3 invalid border thickness of: ").append(std::to_string(borderThickness)).append("!"));
 			this->setGenError(true);
-			return df::ObjectList();
+			return -1;
 		}
 		else if ((tileWidth < 1)) {
 			this->addErrorMessage(std::string("buildMap: error 4 invalid tile width of: ").append(std::to_string(tileWidth)).append("!"));
 			this->setGenError(true);
-			return df::ObjectList();
+			return -1;
 		}
 		else if ((tileHeight < 1)) {
 			this->addErrorMessage(std::string("buildMap: error 5 invalid tile height of: ").append(std::to_string(tileHeight)).append("!"));
 			this->setGenError(true);
-			return df::ObjectList();
+			return -1;
 		}
 		else if ((altitude < 0) || (altitude > df::MAX_ALTITUDE)) {
 			this->addErrorMessage(std::string("buildMap: error 6 invalid tile height of: ").append(std::to_string(altitude)).append("!"));
 			this->setGenError(true);
-			return df::ObjectList();
+			return -1;
 		}
 		else if (playAreaWidth <= map.size()) {
 			this->addErrorMessage(std::string("buildMap: error 7 invalid map size of: ").append(std::to_string(map.size())).append(" configured width: ").append(std::to_string(playAreaWidth)).append("!"));
 			this->setGenError(true);
-			return df::ObjectList();
+			return -1;
+		}
+		else if (this->getBuildPerFrame() <= 0) {
+			this->addErrorMessage(std::string("buildMap: error 8 invalid per frame object construction count, must be at least one, give count of: ").append(std::to_string(this->getBuildPerFrame())).append("!"));
+			this->setGenError(true);
+			return -1;
 		}
 		df::Object* newGround=nullptr;
 		df::Object* newTree=nullptr;
 		df::Object* newExit = nullptr;
 		df::Object* newSeed = nullptr;
-		for (int x = 0; x < playAreaWidth + (borderThickness * 2);x++) {
-			
+		int framePorgressCount = 0;
+		int startX = this->getLastX();
+		int startY = this->getlastY();
+		if (startY >= playAreaHeight + (borderThickness * 2) - 1) {
+			startY = 0;
+		}
+		if (this->getBuildProgress() < this->getToBuild()) {
+			for (int x = startX; x < playAreaWidth + (borderThickness * 2);x++) {
 
-			for (int y = 0; y < playAreaHeight + (borderThickness * 2); y++) {
-				currentPos.setY(currentPos.getY() + tileHeight);
-				if (((x < borderThickness) || (x > borderThickness + playAreaWidth)) || ((y < borderThickness) || (y > borderThickness + playAreaHeight))) {
-					
-					newTree= new Tree();
-					newTree->setAltitude(0);
-					newTree->setPosition(start + currentPos);
-					mapObjects.insert(newTree);
-					
-				}
-				else {
 
-					if (map[x - borderThickness].size()>=playAreaHeight) {
-						df::WorldManager& wm = df::WorldManager::getInstance();
-						for (int i = 0; i < mapObjects.getCount(); i++) {
-							wm.markForDelete(mapObjects[i]);
-						}
-						this->addErrorMessage(std::string("buildMap: error 8 map Y vector less than configured!").append(" values: map y: ").append(std::to_string(map[x - borderThickness].size())).append(" configured y: ").append(std::to_string(playAreaHeight)).append("!"));
-						this->setGenError(true);
-						return df::ObjectList();
+				for (int y = startY; y < playAreaHeight + (borderThickness * 2); y++) {
+
+					framePorgressCount++;
+					currentPos.setY(currentPos.getY() + tileHeight);
+					if (((x < borderThickness) || (x > borderThickness + playAreaWidth)) || ((y < borderThickness) || (y > borderThickness + playAreaHeight))) {
+
+						newTree = new Tree();
+						newTree->setAltitude(0);
+						newTree->setPosition(start + currentPos);
+						mapObjects.insert(newTree);
+
 					}
+					else {
 
-					switch (map[(x) - borderThickness][(y) - borderThickness]) {
+						if (map[x - borderThickness].size() >= playAreaHeight) {
+							df::WorldManager& wm = df::WorldManager::getInstance();
+							for (int i = 0; i < mapObjects.getCount(); i++) {
+								wm.markForDelete(mapObjects[i]);
+							}
+							this->addErrorMessage(std::string("buildMap: error 8 map Y vector less than configured!").append(" values: map y: ").append(std::to_string(map[x - borderThickness].size())).append(" configured y: ").append(std::to_string(playAreaHeight)).append("!"));
+							this->setGenError(true);
+							return -1;
+						}
+						//if you want to swap out the gameobjects the object instances, this switch statement is where you do that
+						switch (map[(x)-borderThickness][(y)-borderThickness]) {
 						case mapTileIds::EMPTY:
-							newGround =new Ground();
+							newGround = new Ground();
 							newGround->setAltitude(0);
 							newGround->setPosition(currentPos + start);
 							mapObjects.insert(newGround);
@@ -1315,14 +2141,14 @@ namespace ookpik {
 							owl->setPosition(currentPos + start);
 							break;
 						case mapTileIds::EXIT:
-							newExit= new MapExit();
+							newExit = new MapExit();
 							newExit->setAltitude(0);
 							newExit->setPosition(currentPos + start);
 							mapObjects.insert(newExit);
 							break;
 						case mapTileIds::SEED:
 							newSeed = new Seed();
-							newSeed-> setAltitude(0);
+							newSeed->setAltitude(0);
 							newSeed->setPosition(currentPos + start);
 							mapObjects.insert(newSeed);
 							break;
@@ -1339,31 +2165,88 @@ namespace ookpik {
 							}
 							this->addErrorMessage(std::string("buildMap: error 9 invalid tile id!").append(" values: id Value: ").append(std::to_string((int)map[(x)-borderThickness][(y)-borderThickness])).append("!"));
 							this->setGenError(true);
-							return df::ObjectList();
+							return -1;
+
+						}
+					}
+					if (framePorgressCount >= this->getBuildPerFrame()) {
+						if (y >= playAreaHeight + (borderThickness * 2) - 1) {
+							currentPos.setY(start.getY());
+							currentPos.setX(currentPos.getX() + tileWidth);
+							this->setLastX(this->getLastX() + 1);
+							this->setLastY(0);
+						}
+						else {
+							this->setLastY(y + 1);
+							this->setCurrentBuildPos(currentPos);
+
+						}
+						this->setMapReturn(mapObjects);
+						this->setBuildProgress(this->getBuildProgress() + framePorgressCount);
+						return 0;
 
 					}
 				}
+				startY = 0;
+				currentPos.setY(start.getY());
+				currentPos.setX(currentPos.getX() + tileWidth);
 			}
-			currentPos.setY(0);
-			currentPos.setX(currentPos.getX() + tileWidth);
 		}
-
+		
+		
 		mapObjects.insert(owl);
-		return mapObjects;
+		this->setBuildProgress(this->getBuildProgress() + framePorgressCount);
+		this->setMapReturn(mapObjects);
+		
+		this->setBuildDone(true);
+		return 0;
+	}
+
+
+	void  MapBuilder::setLastX(int new_last_x) {
+		m_lastx = new_last_x;
+	}
+	int  MapBuilder::getLastX()const {
+		return m_lastx;
+	}
+	void  MapBuilder::setLastY(int new_last_y) {
+		m_lasty = new_last_y;
+	}
+	int  MapBuilder::getlastY()const {
+		return m_lasty;
 	}
 
 
 	int MapBuilder::startGenerateMap(MapGenConfig config, df::Object* owl){
 		if (!m_generating) {
+			m_configObj = MapGenConfig();
 			m_genDone = false;
-			m_generating = true;
-			m_configObj = config;
-			m_player = owl;
-			m_gen_error = false;
-			m_error_messages = std::vector < std::string>();
+			m_generating = false;
+			m_build_done = false;
+			m_build_per_frame = 0;
+			m_to_build = 0;
+			m_build_progress = 0;
+			m_current_build_pos = df::Vector();
+			m_mapReturn = df::ObjectList();
+			m_timer = df::Clock();
+			m_map_plan = std::vector<std::vector<mapTileIds::mapTileId>>();
 			m_error_gate.release();
+			m_error_messages = std::vector<std::string>();
+			m_player = nullptr;
+			m_genThread = nullptr;
+			m_genTime = 0;
+			m_gen_error = false;
 			m_base_function_exit = false;
-			m_genThread = &std::thread(generateMap, this);
+			m_timeout = 0;
+			m_lastx = 0;
+			m_lasty = 0;
+			m_building = false;
+			
+			this->setBuildPerFrame(config.getObjectsConstructedPerFrame());
+			
+			m_genThread = new std::thread(&MapBuilder::generateMap, this);
+
+			
 			return 0;
 			
 			
@@ -1373,17 +2256,54 @@ namespace ookpik {
 	}
 
 	bool MapBuilder::isMapGenFinished()const {
-		return m_genDone;
+		return this->getGenDone();
 	}
 
+	bool MapBuilder::isMapBuildFinished()const {
+		return this->getBuildDone();
+	}
 
+	int  MapBuilder::getBuildProgress()const {
+		return m_build_progress;
+	}
+	void  MapBuilder::setBuildProgress(int new_build_progress) {
+		m_build_progress = new_build_progress;
+	}
+	int  MapBuilder::getToBuild()const {
+		return m_to_build;
+	}
+	void  MapBuilder::setToBuild(int new_to_build) {
+		m_to_build = new_to_build;
+	}
+	int  MapBuilder::getBuildPerFrame()const {
+		return m_build_per_frame;
+	}
+	void  MapBuilder::setBuildPerFrame(int new_build_per_frame) {
+		m_build_per_frame = new_build_per_frame;
+	}
+	void  MapBuilder::setCurrentBuildPos(df::Vector new_current_build_pos) {
+		m_current_build_pos = new_current_build_pos;
+	}
+	df::Vector  MapBuilder::getCurrentBuildPos()const {
+		return m_current_build_pos;
+	}
 
+	void MapBuilder::setBuildDone(bool new_build_done) {
+		m_build_done = new_build_done;
+	}
+	bool MapBuilder::getBuildDone()const {
+		return m_build_done;
+	}
 
 	MapBuilder::MapBuilder() {
 		m_configObj = MapGenConfig();
 		m_genDone = false;
 		m_generating = false;
-		m_needed_empty_spaces=0;
+		m_build_done = false;
+		m_build_per_frame = 0;
+		m_to_build = 0;
+		m_build_progress = 0;
+		m_current_build_pos = df::Vector();
 		m_mapReturn=df::ObjectList();
 		m_timer = df::Clock();
 		m_map_plan = std::vector<std::vector<mapTileIds::mapTileId>>();
@@ -1394,6 +2314,10 @@ namespace ookpik {
 		m_genTime = 0;
 		m_gen_error = false;
 		m_base_function_exit = false;
+		m_timeout = 0;
+		m_lastx = 0;
+		m_lasty = 0;
+		m_building = false;
 		this->setCameraAffected(false);
 		this->setPosition(df::Vector(40, 12));
 		this->setType("mapBuilder");
@@ -1420,16 +2344,27 @@ namespace ookpik {
 
 	int MapBuilder::destroyMap(df::ObjectList map) {
 		df::WorldManager& wm = df::WorldManager::getInstance();
+		if (map.isEmpty()) {
+			return 0;
+		}
 		for (int index = 0; index < map.getCount(); index++) {
 			wm.markForDelete(map[index]);
 		}
+		return 0;
+	}
+
+	void MapBuilder::setBuilding(bool new_building) {
+		m_building = new_building;
+	}
+	bool MapBuilder::getBuilding()const {
+		return m_building;
 	}
 
 	int MapBuilder::eventHandler(df::Event* m_p) {
 
 		if (m_p->getType().compare(df::STEP_EVENT)) {
-			if (!m_done_sent) {
-				if(m_gen_error){
+			if (!this->getDoneSet()) {
+				if (this->getGenError()) {
 					if (this->getBaseFunctionExit()) {
 						df::GameManager& gm = df::GameManager::getInstance();
 						df::LogManager& lm = df::LogManager::getInstance();
@@ -1440,17 +2375,27 @@ namespace ookpik {
 
 						EventMapGenDone done = EventMapGenDone(errorMessages);
 						gm.onEvent(&done);
-						m_done_sent = true;
+						this->setDoneSent(true);
 					}
-					
+
 				}
 
-				else if (!m_generating) {
-					if (m_genDone) {
+
+
+				else if (!this->getGenerating()) {
+					if (this->getGenDone() && (!this->getBuilding())&&this->getBaseFunctionExit()) {
 						m_genThread->join();
 						m_genThread = nullptr;
-						m_mapReturn = this->buildMap(m_configObj,m_map_plan, m_player);
-						if (m_gen_error) {
+						this->setBuilding(true);
+						this->setCurrentBuildPos(m_configObj.getMapOrigin());
+						m_to_build=(this->m_configObj.getMapWidth() + (this->m_configObj.getMapBorderThickness() * 2)) * (this->m_configObj.getMapHeight() + (this->m_configObj.getMapBorderThickness() * 2));
+
+					}
+					else if ((!this->getBuildDone()) && (this->getBuilding())&&this->getBaseFunctionExit()) {
+
+						this->buildMap(m_configObj, m_map_plan, m_player);
+
+						if (this->getGenError()) {
 							df::GameManager& gm = df::GameManager::getInstance();
 							df::LogManager& lm = df::LogManager::getInstance();
 							std::vector < std::string> errorMessages = this->getErrorMessages();
@@ -1459,19 +2404,23 @@ namespace ookpik {
 							}
 
 							EventMapGenDone done = EventMapGenDone(errorMessages);
-							gm.onEvent(&done);
-							m_done_sent = true;
+							this->setDoneSent(true);
+							this->setBuilding(false);
 						}
-						else {
+						else if (this->getBuildDone()) {
 							df::GameManager& gm = df::GameManager::getInstance();
 							EventMapGenDone done = EventMapGenDone(m_mapReturn, m_genTime);
 							gm.onEvent(&done);
-							m_done_sent = true;
+
+							this->setDoneSent(true);
+							this->setBuilding(false);
+
 						}
-						
+
 					}
 				}
 			}
+			
 			return 1;
 		}
 		return 0;
@@ -1480,14 +2429,16 @@ namespace ookpik {
 	int MapBuilder::draw() {
 		if (this->getVisible()) {
 			df::DisplayManager& dm = df::DisplayManager::getInstance();
-			if (m_gen_error) {
+			if (this->getGenError()) {
 				return dm.drawString(this->getPosition(), "map generation ERROR!", df::CENTER_JUSTIFIED, df::WHITE);
 			}
-			else if (m_genDone) {
+			else if (this->getGenDone()) {
 				return dm.drawString(this->getPosition(), "map generation done!", df::CENTER_JUSTIFIED, df::WHITE);
 			}
-			else if (m_generating) {
+			else if (this->getGenerating()) {
 				return dm.drawString(this->getPosition(), "generating map!", df::CENTER_JUSTIFIED, df::WHITE);
+			} if (this->getBuilding()) {
+				return dm.drawString(this->getPosition(), "building map!", df::CENTER_JUSTIFIED, df::WHITE);
 			}
 			else {
 				return dm.drawString(this->getPosition(), "waiting to generate!", df::CENTER_JUSTIFIED, df::WHITE);

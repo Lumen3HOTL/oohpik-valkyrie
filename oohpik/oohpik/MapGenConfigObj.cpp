@@ -13,7 +13,7 @@ namespace ookpik {
 
 		m_min_rand_diag_lines=0;
 		m_max_rand_diag_lines=0;
-
+		m_objects_construct_per_frame = 0;
 		m_min_rand_angle_lines=0;
 		m_max_rand_angle_lines=0;
 
@@ -44,7 +44,12 @@ namespace ookpik {
 		m_min_seeds=0;
 		m_max_seeds=0;
 	}
-
+	void MapGenConfig::setObjectsConstructedPerFrame(int new_objects_constructed_per_frame) {
+		m_objects_construct_per_frame = new_objects_constructed_per_frame;
+	}
+	int MapGenConfig::getObjectsConstructedPerFrame()const {
+		return m_objects_construct_per_frame;
+	}
 	void MapGenConfig::setTimeoutSeconds(int new_timeout) {
 		m_timeout_seconds = new_timeout;
 	}
@@ -124,17 +129,17 @@ namespace ookpik {
 		m_min_rand_diag_lines = new_min_diags;
 	}
 
-	int MapGenConfig::getMaxAngleLine()const {
+	int MapGenConfig::getMaxRightAngleLine()const {
 		return m_max_rand_angle_lines;
 	}
-	int MapGenConfig::getMinAngleines()const {
+	int MapGenConfig::getMinRightAngleLines()const {
 		return m_min_rand_angle_lines;
 	}
 
-	void MapGenConfig::setMaxAngleLine(int new_max_angles) {
+	void MapGenConfig::setMaxRightAngleLine(int new_max_angles) {
 		m_max_rand_angle_lines = new_max_angles;
 	}
-	void MapGenConfig::setMinAngleLines(int new_min_Angles) {
+	void MapGenConfig::setMinRightAngleLines(int new_min_Angles) {
 		m_min_rand_angle_lines = new_min_Angles;
 	}
 
@@ -218,17 +223,17 @@ namespace ookpik {
 		return m_min_rand_angle_line_height;
 	}
 
-	int MapGenConfig::setMaxAngleLineWidth(int new_max_angle_line_width) {
+	void MapGenConfig::setMaxRightAngleLineWidth(int new_max_angle_line_width) {
 		m_max_rand_angle_line_width = new_max_angle_line_width;
 	}
-	int MapGenConfig::setMaxAngleLineHeight(int new_max_angle_line_height) {
+	void MapGenConfig::setMaxRightAngleLineHeight(int new_max_angle_line_height) {
 		m_max_rand_angle_line_height = new_max_angle_line_height;
 	}
 
-	int MapGenConfig::setMinAngleLineWidth(int new_min_angle_line_width) {
+	void MapGenConfig::setMinRightAngleLineWidth(int new_min_angle_line_width) {
 		m_min_rand_angle_line_width = new_min_angle_line_width;
 	}
-	int MapGenConfig::setMinAngleLineHeight(int new_min_angle_line_height) {
+	void MapGenConfig::setMinRightAngleLineHeight(int new_min_angle_line_height) {
 		m_min_rand_angle_line_height = new_min_angle_line_height;
 	}
 
@@ -247,17 +252,17 @@ namespace ookpik {
 		return m_min_rand_diag_line_height;
 	}
 
-	int MapGenConfig::setMaxDiagLineWidth(int new_max_diag_line_width) {
+	void MapGenConfig::setMaxDiagLineWidth(int new_max_diag_line_width) {
 		m_max_rand_daig_line_width = new_max_diag_line_width;
 	}
-	int MapGenConfig::setMaxDiagLineHeight(int new_max_diag_line_height) {
+	void MapGenConfig::setMaxDiagLineHeight(int new_max_diag_line_height) {
 		m_max_rand_diag_line_height = new_max_diag_line_height;
 	}
 
-	int MapGenConfig::setMinDiagLineWidth(int new_min_diag_line_width) {
+	void MapGenConfig::setMinDiagLineWidth(int new_min_diag_line_width) {
 		m_min_rand_daig_line_width = new_min_diag_line_width;
 	}
-	int MapGenConfig::setMinDiagLineHeight(int new_min_diag_line_height) {
+	void MapGenConfig::setMinDiagLineHeight(int new_min_diag_line_height) {
 		m_min_rand_diag_line_height = new_min_diag_line_height;
 	}
 

@@ -38,21 +38,69 @@ namespace ookpik {
 	class MapBuilder : public df::Object {
 	private:
 		MapGenConfig m_configObj;
-		int m_needed_empty_spaces;
+		
 		df::ObjectList m_mapReturn;
 		bool m_generating;
 		bool m_genDone;
 		bool m_done_sent;
+		bool m_build_done;
+		bool m_building;
 		std::thread* m_genThread;
 		unsigned long long m_genTime;
+		int m_timeout;
 		df::Clock m_timer;
 		df::Object* m_player;
 		std::vector<std::vector<mapTileIds::mapTileId>> m_map_plan;
 		bool m_gen_error;
 		std::vector<std::string> m_error_messages;
 		std::binary_semaphore m_error_gate=std::binary_semaphore(1);
+		int m_build_progress;
+		int m_to_build;
+		int m_build_per_frame;
+		df::Vector m_current_build_pos;
 		bool m_base_function_exit;
+		int m_lastx;
+		int m_lasty;
 
+		void setMapReturn(df::ObjectList new_map_return);
+		df::ObjectList getMapReturn()const;
+
+		bool isMapBuildFinished()const;
+		
+		void setLastX(int new_last_x);
+		int getLastX()const;
+		void setLastY(int new_last_y);
+		int getlastY()const;
+
+		int getBuildProgress()const;
+		void setBuildProgress(int new_build_progress);
+		int getToBuild()const;
+		void setToBuild(int new_to_build);
+		int getBuildPerFrame()const;
+		void setBuildPerFrame(int new_build_per_frame);
+		void setCurrentBuildPos(df::Vector  new_current_build_pos);
+		df::Vector getCurrentBuildPos()const;
+
+		void setBuildDone(bool new_build_done);
+		bool getBuildDone()const;
+		void setGenDone(bool new_gen_done);
+		bool getGenDone()const;
+		void setBuilding(bool new_building);
+		bool getBuilding()const;
+
+		void setGenTime(unsigned long long new_gen_time);
+		unsigned long long getGenTime()const;
+
+		void resetTimer();
+		bool checkTimer();
+		unsigned long long getTimerTime();
+		int getTimeout()const;
+		int setTimeout(int new_timeout);
+
+		void setGenerating(bool new_genrating);
+		bool getGenerating()const;
+		void setDoneSent(bool new_done_set);
+		bool getDoneSet()const;
 
 		void setBaseFunctionExit(bool new_base_function_exit);
 		bool getBaseFunctionExit();
@@ -111,7 +159,7 @@ namespace ookpik {
 
 		int squarePlot(std::vector<std::vector<mapTileIds::mapTileId>>& map, df::Vector location, mapTileIds::mapTileId value);
 
-		df::ObjectList buildMap(MapGenConfig config,std::vector<std::vector<mapTileIds::mapTileId>>& map, df::Object* owl);
+		int buildMap(MapGenConfig config,std::vector<std::vector<mapTileIds::mapTileId>>& map, df::Object* owl);
 
 		df::Vector getXYDistanceBetweenTwoPoint(df::Vector p0, df::Vector p1);
 

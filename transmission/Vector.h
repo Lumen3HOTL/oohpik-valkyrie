@@ -1,6 +1,8 @@
 #pragma once
-
+#include <xhash>
+#include <bit>
 namespace df {
+	
 	const float DEFUALT_VECTOR_COMPAIRISON_TOLLERANCE = 0.001;
 	class Vector {
 	private:
@@ -59,4 +61,5 @@ namespace df {
 
 
 	};
+
 }

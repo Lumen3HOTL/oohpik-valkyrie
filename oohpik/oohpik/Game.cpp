@@ -10,7 +10,8 @@ int main(int argc, char* argv[]) {
 	df::GameManager& game_manager = df::GameManager::getInstance();
 
 	// Start up the game engine.
-	if (game_manager.startUp()) {
+	if (!game_manager.startUp()) {
+		df::LogManager::getInstance().startUp();
 		df::LogManager::getInstance().writeLog("Error starting game manager!");
 		game_manager.shutDown();
 		return 1;

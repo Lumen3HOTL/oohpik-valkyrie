@@ -9,6 +9,8 @@ namespace ookpik {
 
 		int m_timeout_seconds;
 
+		int m_objects_construct_per_frame;
+
 		int m_map_object_altitude;
 
 		int m_min_rand_trees;
@@ -58,6 +60,10 @@ namespace ookpik {
 		
 		MapGenConfig();
 
+		void setObjectsConstructedPerFrame(int new_objects_constructed_per_frame);
+		int getObjectsConstructedPerFrame()const;
+	
+
 		void setRandomSeed(int new_seed);
 		int getRandomSeed()const;
 
@@ -86,11 +92,11 @@ namespace ookpik {
 		void setMaxDiagLine(int new_max_daigs);
 		void setMinDiagLines(int new_min_diags);
 
-		int getMaxAngleLine()const;
-		int getMinAngleines()const;
+		int getMaxRightAngleLine()const;
+		int getMinRightAngleLines()const;
 
-		void setMaxAngleLine(int new_max_angles);
-		void setMinAngleLines(int new_min_Angles);
+		void setMaxRightAngleLine(int new_max_right_angles);
+		void setMinRightAngleLines(int new_min_right_angles);
 
 
 		int getMinRooms()const;
@@ -127,11 +133,11 @@ namespace ookpik {
 		int getMinAngleLineWidth()const;
 		int getMinAngleLineHeight()const;
 
-		int setMaxAngleLineWidth(int new_max_angle_line_width);
-		int setMaxAngleLineHeight(int new_max_angle_line_height);
+		void setMaxRightAngleLineWidth(int new_max_right_angle_line_width);
+		void setMaxRightAngleLineHeight(int new_max_right_angle_line_height);
 
-		int setMinAngleLineWidth(int new_min_angle_line_width);
-		int setMinAngleLineHeight(int new_min_angle_line_height);
+		void setMinRightAngleLineWidth(int new_min_right_angle_line_width);
+		void setMinRightAngleLineHeight(int new_min_right_angle_line_height);
 
 
 		int getMaxDiagLineWidth()const;
@@ -140,11 +146,11 @@ namespace ookpik {
 		int getMinDiagLineWidth()const;
 		int getMinDiagLineHeight()const;
 
-		int setMaxDiagLineWidth(int new_max_diag_line_width);
-		int setMaxDiagLineHeight(int new_max_diag_line_height);
+		void setMaxDiagLineWidth(int new_max_diag_line_width);
+		void setMaxDiagLineHeight(int new_max_diag_line_height);
 
-		int setMinDiagLineWidth(int new_min_diag_line_width);
-		int setMinDiagLineHeight(int new_min_diag_line_height);
+		void setMinDiagLineWidth(int new_min_diag_line_width);
+		void setMinDiagLineHeight(int new_min_diag_line_height);
 
 		int getMapObjectAltitude()const;
 		void setMapObjectAltitude(int new_map_object_altitude);
