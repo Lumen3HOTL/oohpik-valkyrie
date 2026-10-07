@@ -150,14 +150,28 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CoordinatePair.cpp" />
+    <ClCompile Include="EventMapGenDone.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GameOver.cpp" />
+    <ClCompile Include="Ground.cpp" />
     <ClCompile Include="Hero.cpp" />
+    <ClCompile Include="MapBuilder.cpp" />
+    <ClCompile Include="MapExit.cpp" />
+    <ClCompile Include="MapGenConfigObj.cpp" />
+    <ClCompile Include="Seed.cpp" />
     <ClCompile Include="Tree.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CoordinatePair.h" />
+    <ClInclude Include="EventMapGenDone.h" />
     <ClInclude Include="GameOver.h" />
+    <ClInclude Include="Ground.h" />
     <ClInclude Include="Hero.h" />
+    <ClInclude Include="MapBuilder.h" />
+    <ClInclude Include="MapExit.h" />
+    <ClInclude Include="MapGenConfigObj.h" />
+    <ClInclude Include="Seed.h" />
     <ClInclude Include="Tree.h" />
   </ItemGroup>
   <ItemGroup>
