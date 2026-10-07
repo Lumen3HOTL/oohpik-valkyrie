@@ -207,12 +207,12 @@ namespace ookpik {
 		for (int pointIndex = 0; pointIndex < line.size(); pointIndex++) {
 
 			point = line[pointIndex];
-			if ((((int)point.getX()) > map.size()) || (((int)point.getX()) < 0) ){
+			if ((((int)point.getX()) >= map.size()) || (((int)point.getX()) < 0) ){
 				this->addErrorMessage(std::string("drawLineError: error 2 line extends outside map!").append(" invalid point is x: ").append(std::to_string(point.getX())).append(" map size is: Width: ").append(std::to_string(map.size())).append("!"));
 				this->setGenError(true);
 				return -1;
 			}
-			if ((((int)point.getY()) > map[((int)point.getX())].size()) || (((int)point.getY()) < 0)) {
+			if ((((int)point.getY()) >= map[((int)point.getX())].size()) || (((int)point.getY()) < 0)) {
 				this->addErrorMessage(std::string("drawLineError: error 2 line extends outside map!").append(" invalid point is ").append(" y: ").append(std::to_string(point.getY())).append(" map size is: ").append(" height: ").append(std::to_string(map[((int)point.getX())].size())).append("!"));
 				this->setGenError(true);
 				return -1;
