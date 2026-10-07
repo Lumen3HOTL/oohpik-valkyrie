@@ -1096,6 +1096,7 @@ namespace ookpik {
 			int addTrees = 0;
 			mode = this->getRandom(0,4);
 			df::Vector closeCoord;
+			int fatCount = 0;
 			switch (mode) {
 				case 0:
 					//line mode
@@ -1211,7 +1212,11 @@ namespace ookpik {
 					break;
 				case 4:
 					//random fat point mode;
-					for (int i = 0; i < (neededOpenSpaces - currentOpen)/4; i++) {
+					fatCount = (neededOpenSpaces - currentOpen) / 4;
+					if (fatCount <= 0) {
+						fatCount = 1;
+					}
+					for (int i = 0; i < fatCount; i++) {
 						closeCoord = ClosedCoordsList[i];
 
 						if ((closeCoord.getX() < 0) || (closeCoord.getX() >= map.size())) {
@@ -1222,7 +1227,7 @@ namespace ookpik {
 							this->addErrorMessage(std::string("ensureSpace: error 14 invalid target coord y: ").append(std::to_string(closeCoord.getY())).append(" map width: ").append(std::to_string(map[(int)closeCoord.getX()].size())).append("!"));
 							this->setGenError(true);
 						}
-						if (!(((closeCoord.getX() < 0) || (closeCoord.getX() >= map.size()-1))|| ((closeCoord.getY() < 0) || (closeCoord.getY() >= map[(int)closeCoord.getX()].size() - 1)))) {
+						if (!(((closeCoord.getX() < 0) || (closeCoord.getX() >= ((int)map.size())-1))|| ((closeCoord.getY() < 0) || (closeCoord.getY() >= ((int)map[(int)closeCoord.getX()].size()) - 1)))) {
 							this->squarePlot(map, closeCoord,empty);
 							if (this->getGenError()) {
 								this->addErrorMessage(std::string("ensureSpace: error 15 square plot failrue!"));
@@ -1266,6 +1271,7 @@ namespace ookpik {
 		}
 		else {
 			m_configObj.setRandomSeed(std::chrono::high_resolution_clock().now().time_since_epoch().count());
+			m_RandomEngine = std::mt19937(m_configObj.getRandomSeed());
 		}
 
 		int errorNumber = 0;
@@ -1821,7 +1827,7 @@ namespace ookpik {
 				startX= this->getRandom(0,(mapWidth-1)-width);
 				startY= this->getRandom(0, (mapHeight-1) - height);
 
-				toDraw = this->generateBresenhamLine(startX, startY, startX + width, startY + width);
+				toDraw = this->generateBresenhamLine(startX, startY, startX + width, startY + height);
 
 				this->drawLine(protomap, toDraw, mapTileIds::EMPTY);
 
@@ -1860,7 +1866,7 @@ namespace ookpik {
 				if (this->getRandom(0, 1) == 0) {
 					point1First = true;
 				}
-				toDraw = this->generateXYLine(startX, startY, startX + width, startY + width,yfirst,point1First);
+				toDraw = this->generateXYLine(startX, startY, startX + width, startY + height,yfirst,point1First);
 
 				this->drawLine(protomap, toDraw, mapTileIds::EMPTY);
 
@@ -1909,11 +1915,12 @@ namespace ookpik {
 		}
 		int requestedRandomTrees = 0;
 		if (openCount > neededOpen) {
-			int requestedTreesLimiter = (maxRandTrees - minRandTrees) - neededOpen;
-			if (requestedTreesLimiter <= 0) {
-				requestedTreesLimiter = 1;
+			
+			requestedRandomTrees = this->getRandom(minRandTrees,maxRandTrees);
+			if (openCount - requestedRandomTrees <neededOpen) {
+				requestedRandomTrees = openCount - neededOpen;
 			}
-			requestedRandomTrees = minRandTrees + (rand() % requestedTreesLimiter);
+
 			this->sprinkleTrees(protomap, requestedRandomTrees, mapTileIds::EMPTY, mapTileIds::TREE);
 			errorNumber++;
 			if (this->getGenError()) {
