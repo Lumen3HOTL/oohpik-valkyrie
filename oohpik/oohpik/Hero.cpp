@@ -5,6 +5,8 @@
 #include "GameManager.h"
 #include "EventCollision.h"
 #include "GameOver.h"
+#include "Seed.h"
+#include <string>
 
 Hero::Hero() {
 	// initialize general system params
@@ -18,6 +20,7 @@ Hero::Hero() {
 	setPosition(p);
 
 	m_moves = 0;
+	m_seeds = 0;
 	m_direction = 1;
 	updateFrame();
 	df::EventManager::getInstance().registerEvent(this, df::KEYBOARD_EVENT);
@@ -46,6 +49,11 @@ int Hero::eventHandler(const df::Event* p_e) {
 		auto* c = static_cast<const df::EventCollision*>(p_e);
 		if (c->getObject2()->getType() == "Tree") {
 			die();
+		} else if (c->getObject2()->getType() == "Seed") {
+			// collect() returns false if this seed was already picked up by an earlier event this move
+			if (static_cast<ookpik::Seed*>(c->getObject2())->collect()) {
+				m_seeds++;
+			}
 		}
 		return 1;
 	}
@@ -86,6 +94,18 @@ void Hero::updateFrame() {
 	a.setIndex(m_direction);
 	a.setSlowdownCount(-1); // -1 stops the animation so the frame stays on our facing
 	setAnimation(a);
+}
+
+// Draw the owl, then the status line on the top row (the map starts at row 1)
+int Hero::draw() {
+	int result = df::Object::draw();
+
+	std::string status = "seeds: " + std::to_string(m_seeds)
+		+ "    remaining: " + std::to_string(WM.objectsOfTypeCount("Seed"))
+		+ "    moves: " + std::to_string(m_moves);
+	df::DisplayManager::getInstance().drawString(df::Vector(1, 0), status, df::LEFT_JUSTIFIED, df::WHITE);
+
+	return result;
 }
 
 void Hero::die() {
