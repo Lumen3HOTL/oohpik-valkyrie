@@ -1155,7 +1155,7 @@ namespace ookpik {
 					startx = targetPair.getPoint0().getX();
 					endx = targetPair.getPoint1().getX();
 					starty = targetPair.getPoint0().getY();
-					endy = targetPair.getPoint1().getX();
+					endy = targetPair.getPoint1().getY();
 					width = 0;
 					height = 0;
 					temp = 0;
