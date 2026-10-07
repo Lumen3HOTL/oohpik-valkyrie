@@ -2289,44 +2289,76 @@ namespace ookpik {
 		
 	}
 
-	bool MapBuilder::isMapGenFinished()const {
+	bool MapBuilder::isMapGenFinished() {
+		
 		return this->getGenDone();
 	}
 
-	bool MapBuilder::isMapBuildFinished()const {
+	bool MapBuilder::isMapBuildFinished() {
+		
 		return this->getBuildDone();
 	}
 
-	int  MapBuilder::getBuildProgress()const {
-		return m_build_progress;
+	int  MapBuilder::getBuildProgress() {
+		int temp = 0;
+		m_state_gate.acquire();
+		temp = m_build_progress;
+		m_state_gate.release();
+		return temp;
 	}
 	void  MapBuilder::setBuildProgress(int new_build_progress) {
+		m_state_gate.acquire();
 		m_build_progress = new_build_progress;
+		m_state_gate.release();
 	}
-	int  MapBuilder::getToBuild()const {
-		return m_to_build;
+	int  MapBuilder::getToBuild() {
+		int temp = 0;
+		m_state_gate.acquire();
+		temp = m_to_build;
+		m_state_gate.release();
+		return temp;
 	}
 	void  MapBuilder::setToBuild(int new_to_build) {
+		m_state_gate.acquire();
 		m_to_build = new_to_build;
+		m_state_gate.release();
 	}
-	int  MapBuilder::getBuildPerFrame()const {
-		return m_build_per_frame;
+	int  MapBuilder::getBuildPerFrame() {
+		int temp = 0;
+		m_state_gate.acquire();
+		temp = m_build_per_frame;
+		m_state_gate.release();
+		return temp;
 	}
 	void  MapBuilder::setBuildPerFrame(int new_build_per_frame) {
+		m_state_gate.acquire();
 		m_build_per_frame = new_build_per_frame;
+		m_state_gate.release();
 	}
 	void  MapBuilder::setCurrentBuildPos(df::Vector new_current_build_pos) {
+		m_state_gate.acquire();
 		m_current_build_pos = new_current_build_pos;
+		m_state_gate.release();
 	}
-	df::Vector  MapBuilder::getCurrentBuildPos()const {
-		return m_current_build_pos;
+	df::Vector  MapBuilder::getCurrentBuildPos() {
+		df::Vector temp;
+		m_state_gate.acquire();
+		temp= m_current_build_pos;
+		m_state_gate.release();
+		return temp;
 	}
 
 	void MapBuilder::setBuildDone(bool new_build_done) {
+		m_state_gate.acquire();
 		m_build_done = new_build_done;
+		m_state_gate.release();
 	}
-	bool MapBuilder::getBuildDone()const {
-		return m_build_done;
+	bool MapBuilder::getBuildDone() {
+		bool temp = false;
+		m_state_gate.acquire();
+		temp = m_build_done;
+		m_state_gate.release();
+		return temp;
 	}
 
 	MapBuilder::MapBuilder() {
@@ -2342,6 +2374,7 @@ namespace ookpik {
 		m_timer = df::Clock();
 		m_map_plan = std::vector<std::vector<mapTileIds::mapTileId>>();
 		m_error_gate.release();
+		m_state_gate.release();
 		m_error_messages=std::vector<std::string>();
 		m_player = nullptr;
 		m_genThread = nullptr;
@@ -2390,9 +2423,12 @@ namespace ookpik {
 	}
 
 	void MapBuilder::setBuilding(bool new_building) {
+		m_state_gate.acquire();
 		m_building = new_building;
+		m_state_gate.release();
 	}
-	bool MapBuilder::getBuilding()const {
+	bool MapBuilder::getBuilding() {
+		bool temp = false;
 		return m_building;
 	}
 

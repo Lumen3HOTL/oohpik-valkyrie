@@ -54,6 +54,7 @@ namespace ookpik {
 		bool m_gen_error;
 		std::vector<std::string> m_error_messages;
 		std::binary_semaphore m_error_gate=std::binary_semaphore(1);
+		std::binary_semaphore m_state_gate= std::binary_semaphore(1);
 		int m_build_progress;
 		int m_to_build;
 		int m_build_per_frame;
@@ -66,47 +67,47 @@ namespace ookpik {
 
 		int getRandom(int low, int high);
 		void setMapReturn(df::ObjectList new_map_return);
-		df::ObjectList getMapReturn()const;
+		df::ObjectList getMapReturn();
 
-		bool isMapBuildFinished()const;
+		bool isMapBuildFinished();
 		
 		void setLastX(int new_last_x);
-		int getLastX()const;
+		int getLastX();
 		void setLastY(int new_last_y);
-		int getlastY()const;
+		int getlastY();
 
-		int getBuildProgress()const;
+		int getBuildProgress();
 		void setBuildProgress(int new_build_progress);
-		int getToBuild()const;
+		int getToBuild();
 		void setToBuild(int new_to_build);
-		int getBuildPerFrame()const;
+		int getBuildPerFrame();
 		void setBuildPerFrame(int new_build_per_frame);
 		void setCurrentBuildPos(df::Vector  new_current_build_pos);
-		df::Vector getCurrentBuildPos()const;
+		df::Vector getCurrentBuildPos();
 
 
 		
 
 		void setBuildDone(bool new_build_done);
-		bool getBuildDone()const;
+		bool getBuildDone();
 		void setGenDone(bool new_gen_done);
-		bool getGenDone()const;
+		bool getGenDone();
 		void setBuilding(bool new_building);
-		bool getBuilding()const;
+		bool getBuilding();
 
 		void setGenTime(unsigned long long new_gen_time);
-		unsigned long long getGenTime()const;
+		unsigned long long getGenTime();
 
 		void resetTimer();
 		bool checkTimer();
 		unsigned long long getTimerTime();
-		int getTimeout()const;
+		int getTimeout();
 		int setTimeout(int new_timeout);
 
 		void setGenerating(bool new_genrating);
-		bool getGenerating()const;
+		bool getGenerating();
 		void setDoneSent(bool new_done_set);
-		bool getDoneSet()const;
+		bool getDoneSet();
 
 		void setBaseFunctionExit(bool new_base_function_exit);
 		bool getBaseFunctionExit();
@@ -190,7 +191,7 @@ namespace ookpik {
 		
 		int startGenerateMap(MapGenConfig config, df::Object* owl);
 
-		bool isMapGenFinished()const;
+		bool isMapGenFinished();
 
 		int destroyMap(df::ObjectList map);
 
