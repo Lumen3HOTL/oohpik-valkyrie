@@ -124,4 +124,4 @@ namespace df {
 	};
 }
 
-#define DM df::ResourceManager::getInstance()
+#define DM df::DisplayManager::getInstance()
