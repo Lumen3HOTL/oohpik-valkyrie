@@ -159,7 +159,7 @@ namespace ookpik {
 		int getMapObjectHeight()const;
 
 		void setMapObjectWidth(int new_object_width);
-		void setMapObjectheight(int new_object_height);
+		void setMapObjectHeight(int new_object_height);
 
 
 	};
