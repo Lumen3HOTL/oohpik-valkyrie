@@ -9,14 +9,26 @@ namespace {
 	ookpik::MapGenConfig makeMapConfig() {
 		ookpik::MapGenConfig config;
 		config.setMapOrigin(df::Vector(0, 0));
+
+
 		config.setMapWidth(56);
 		config.setMapHeight(27);
 		config.setMapBorderThickness(1);
+		config.setObjectsConstructedPerFrame(1000); // build the whole map in one frame
+
+		/*
+		config.setMapWidth(500);
+		config.setMapHeight(500);
+		config.setMapBorderThickness(50);
+		config.setObjectsConstructedPerFrame(100); 
+		*/
+		
+		
 		config.setMapObjectWidth(2);
 		config.setMapObjectHeight(1);
 		config.setMapObjectAltitude(0);
-		config.setObjectsConstructedPerFrame(4000); // build the whole map in one frame
-		config.setTimeoutSeconds(10);
+		
+		config.setTimeoutSeconds(60);
 		config.setRandomSeed(0); // 0 = pick a new random seed each run
 
 		// Open structures carved out of the forest

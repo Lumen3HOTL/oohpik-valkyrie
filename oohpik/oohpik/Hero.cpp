@@ -9,6 +9,7 @@
 #include "MapExit.h"
 #include "Level.h"
 #include <string>
+#include "EventStep.h"
 
 Hero::Hero() {
 	// initialize general system params
@@ -20,6 +21,26 @@ Hero::Hero() {
 	// initialize position vector
 	df::Vector p(40, 12);
 	setPosition(p);
+	m_statusSubstring0 = "seeds: ";
+	m_statusSubstring2 = "    remaining: ";
+	m_statusSubstring4 = "    moves: ";
+	m_statusSubstring6 = "    maps: ";
+	m_statusSubstring1 = "";
+	m_statusSubstring3 = "";
+	m_statusSubstring5 = "";
+	m_statusSubstring7 = "";
+	m_statusSubstring8 = " second(s)";
+	m_statusSubstring9 = "    Level Time: ";
+	m_statusChange0= false;
+	m_statusChange1 = false;
+	m_statusChange2 = false;
+	m_statusChange3 = false;
+	m_timeString = "";
+	m_statusChangeCount = 0;
+
+	m_timer = df::Clock();
+
+	m_started = false;
 
 	m_moves = 0;
 	m_seeds = 0;
@@ -28,6 +49,7 @@ Hero::Hero() {
 	updateFrame();
 	df::EventManager::getInstance().registerEvent(this, df::KEYBOARD_EVENT);
 	df::EventManager::getInstance().registerEvent(this, df::COLLISION_EVENT);
+	df::EventManager::getInstance().registerEvent(this, df::STEP_EVENT);
 }
 
 // Placeholder so the game links; Object's destructor is virtual.
@@ -47,6 +69,8 @@ int Hero::eventHandler(const df::Event* p_e) {
 			default: return 0;
 		}
 		m_moves++;
+		m_statusChangeCount++;
+		m_statusChange2 = true;
 		return 1;
 	} else if (p_e->getType() == df::COLLISION_EVENT) {
 		auto* c = static_cast<const df::EventCollision*>(p_e);
@@ -56,15 +80,24 @@ int Hero::eventHandler(const df::Event* p_e) {
 			// collect() returns false if this seed was already picked up by an earlier event this move
 			if (static_cast<ookpik::Seed*>(c->getObject2())->collect()) {
 				m_seeds++;
+				m_statusChange0 = true;
+				m_statusChange1 = true;
+				m_statusChangeCount+=2;
+				
 			}
 		} else if (c->getObject2()->getType() == "mapExit") {
 			// use() returns false if this exit already fired earlier this move
 			if (static_cast<ookpik::MapExit*>(c->getObject2())->use()) {
 				m_maps++;
+				m_statusChangeCount++;
+				m_statusChange3 = true;
 				startNewMap(this); // old map is removed at the end of this frame
 			}
 		}
 		return 1;
+	}
+	else if (p_e->getType().compare(ookpik::GEN_DONE_EVENT) == 0) {
+		m_timer.delta();
 	}
 	return 0;
 }
@@ -109,12 +142,43 @@ void Hero::updateFrame() {
 int Hero::draw() {
 	int result = df::Object::draw();
 
-	std::string status = "seeds: " + std::to_string(m_seeds)
-		+ "    remaining: " + std::to_string(WM.objectsOfTypeCount("Seed"))
-		+ "    moves: " + std::to_string(m_moves)
-		+ "    maps: " + std::to_string(m_maps);
-	df::DisplayManager::getInstance().drawString(df::Vector(1, 0), status, df::LEFT_JUSTIFIED, df::WHITE);
-
+	if (m_statusChangeCount > 0) {
+		if (m_statusChange0) {
+			m_statusSubstring1= std::to_string(m_seeds);
+		}
+		if (m_statusChange1) {
+			m_statusSubstring3 = std::to_string(WM.objectsOfTypeCount("Seed"));
+		}
+		if (m_statusChange2) {
+			m_statusSubstring5 = std::to_string(m_moves);
+		}
+		if (m_statusChange3) {
+			m_statusSubstring7=std::to_string(m_maps);
+		}
+	}
+		
+	int currentPos = 1;
+	df::DisplayManager::getInstance().drawString(df::Vector(currentPos, 0), m_statusSubstring0, df::LEFT_JUSTIFIED, df::WHITE);
+	currentPos += m_statusSubstring0.length();
+	df::DisplayManager::getInstance().drawString(df::Vector(currentPos, 0), m_statusSubstring1, df::LEFT_JUSTIFIED, df::WHITE);
+	currentPos += m_statusSubstring1.length();
+	df::DisplayManager::getInstance().drawString(df::Vector(currentPos, 0), m_statusSubstring2, df::LEFT_JUSTIFIED, df::WHITE);
+	currentPos += m_statusSubstring2.length();
+	df::DisplayManager::getInstance().drawString(df::Vector(currentPos, 0), m_statusSubstring3, df::LEFT_JUSTIFIED, df::WHITE);
+	currentPos += m_statusSubstring3.length();
+	df::DisplayManager::getInstance().drawString(df::Vector(currentPos, 0), m_statusSubstring4, df::LEFT_JUSTIFIED, df::WHITE);
+	currentPos += m_statusSubstring4.length();
+	df::DisplayManager::getInstance().drawString(df::Vector(currentPos, 0), m_statusSubstring5, df::LEFT_JUSTIFIED, df::WHITE);
+	currentPos += m_statusSubstring5.length();
+	df::DisplayManager::getInstance().drawString(df::Vector(currentPos, 0), m_statusSubstring6, df::LEFT_JUSTIFIED, df::WHITE);
+	currentPos += m_statusSubstring6.length();
+	df::DisplayManager::getInstance().drawString(df::Vector(currentPos, 0), m_statusSubstring7, df::LEFT_JUSTIFIED, df::WHITE);
+	currentPos += m_statusSubstring7.length();
+	m_timeString = std::to_string((((double)((double)((double)(m_timer.split() / 1000)) / 33) / 30)));
+	df::DisplayManager::getInstance().drawString(df::Vector(currentPos, 0), m_timeString, df::LEFT_JUSTIFIED, df::WHITE);
+	currentPos += m_timeString.length();
+	df::DisplayManager::getInstance().drawString(df::Vector(currentPos, 0), m_statusSubstring8, df::LEFT_JUSTIFIED, df::WHITE);
+	currentPos += m_statusSubstring8.length();
 	return result;
 }
 

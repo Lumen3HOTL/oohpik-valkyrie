@@ -1,4 +1,4 @@
-#include "MapBuilder.h"
+  #include "MapBuilder.h"
 #include "EventManager.h"
 
 namespace ookpik {
@@ -77,7 +77,7 @@ namespace ookpik {
 
 		if (xDistance > yDistance) {
 
-			float vectorError = (int)(xDistance / 2);
+			int vectorError = xDistance / 2;
 
 			while (currentX != x2) {
 				pathPoints.push_back(df::Vector(currentX, currentY));
@@ -95,7 +95,7 @@ namespace ookpik {
 			}
 		}
 		else {
-			float vectorError = (int)(yDistance / 2);
+			int vectorError = yDistance / 2;
 
 			while (currentY != y2) {
 				pathPoints.push_back(df::Vector(currentX, currentY));
@@ -635,7 +635,7 @@ namespace ookpik {
 		std::vector<df::Vector> startZone = zones[zones.size() - 1];
 		zones.pop_back();
 		std::vector<df::Vector> fixLine;
-		
+		bool started = false;
 		
 		if (this->getGenError()) {
 			this->addErrorMessage(std::string("eliminateDisperateZones: error 1 zone search failed!"));
@@ -643,35 +643,42 @@ namespace ookpik {
 		}
 		int timeout = configObj.getTimeoutSeconds();
 
+		
+
 		CoordinatePair fixPoints;
-		while (zones.size() > 1) {
+		while ((zones.size() > 1)||(!started)) {
 			if ((timer.split() / 1000) >= (33 * timeout * 30)) {
-				this->addErrorMessage(std::string("eliminateDisperateZones: error 2 process timeout!"));
+				this->addErrorMessage(std::string("eliminateDisperateZones: error 3 process timeout!"));
 				return -1;
 			}
 
 			fixPoints = this->findSmallestConnectionLine(startZone, zones);
 			if (this->getGenError()) {
-				this->addErrorMessage(std::string("eliminateDisperateZones: error 3 connection line search failed!"));
+				this->addErrorMessage(std::string("eliminateDisperateZones: error 4 connection line search failed!"));
 				return -1;
 			}
 
 
 			fixLine = this->generateBresenhamLine(fixPoints.getPoint0().getX(), fixPoints.getPoint0().getY(), fixPoints.getPoint1().getX(), fixPoints.getPoint1().getY());
-
+			if (this->getGenError()) {
+				this->addErrorMessage(std::string("eliminateDisperateZones: error 5 zone search failed!"));
+				return -1;
+			}
 			this->drawLine(map, fixLine, empty);
 			if (this->getGenError()) {
-				this->addErrorMessage(std::string("eliminateDisperateZones: error 4 connection line draw failed!"));
+				this->addErrorMessage(std::string("eliminateDisperateZones: error 6 connection line draw failed!"));
 				return -1;
 			}
 			zones = this->findZones(map, flood, empty);
 			if (zones.empty()) {
-				this->addErrorMessage(std::string("eliminateDisperateZones: error 6 no open zones found after joining!"));
+				this->addErrorMessage(std::string("eliminateDisperateZones: error 7 no open zones found after joining!"));
 				this->setGenError(true);
 				return -1;
 			}
+			started = true;
 			startZone = zones[zones.size() - 1];
 			zones.pop_back();
+			
 		}
 		return 0;
 	}
@@ -2348,8 +2355,8 @@ namespace ookpik {
 
 
 	int MapBuilder::startGenerateMap(MapGenConfig config, df::Object* owl){
-		if ((!m_generating)&&(!m_building)) {
-			this->setGenerating(true);
+		if ((!this->getGenerating()) && (!this->getBuilding())) {
+			
 			m_configObj = MapGenConfig();
 			m_genDone = false;
 			m_generating = false;
@@ -2377,6 +2384,7 @@ namespace ookpik {
 			m_done_sent = false;
 			m_player = owl;
 			m_configObj = config;
+			this->setGenerating(true);
 			this->setBuildPerFrame(config.getObjectsConstructedPerFrame());
 			
 			m_genThread = new std::thread(&MapBuilder::generateMap, this);
@@ -2614,6 +2622,7 @@ namespace ookpik {
 
 							this->setDoneSent(true);
 							this->setBuilding(false);
+							this->setBuildDone(true);
 							this->setVisible(false); // stop drawing the status text over the finished map
 
 						}
@@ -2633,13 +2642,14 @@ namespace ookpik {
 			if (this->getGenError()) {
 				return dm.drawString(this->getPosition(), "map generation ERROR!", df::CENTER_JUSTIFIED, df::WHITE);
 			}
-			else if (this->getGenDone()) {
-				return dm.drawString(this->getPosition(), "map generation done!", df::CENTER_JUSTIFIED, df::WHITE);
-			}
+			
 			else if (this->getGenerating()) {
 				return dm.drawString(this->getPosition(), "generating map!", df::CENTER_JUSTIFIED, df::WHITE);
 			} else if (this->getBuilding()) {
 				return dm.drawString(this->getPosition(), "building map!", df::CENTER_JUSTIFIED, df::WHITE);
+			}
+			else if (this->getGenDone()) {
+				return dm.drawString(this->getPosition(), "map generation done!", df::CENTER_JUSTIFIED, df::WHITE);
 			}
 			else {
 				return dm.drawString(this->getPosition(), "waiting to generate!", df::CENTER_JUSTIFIED, df::WHITE);
