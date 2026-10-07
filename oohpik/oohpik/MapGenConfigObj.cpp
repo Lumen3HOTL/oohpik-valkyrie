@@ -242,7 +242,7 @@ namespace ookpik {
 		return m_max_rand_daig_line_width;
 	}
 	int MapGenConfig::getMaxDiagLineHeight()const {
-		return m_max_rand_daig_line_width;
+		return m_max_rand_diag_line_height;
 	}
 
 	int MapGenConfig::getMinDiagLineWidth()const {
