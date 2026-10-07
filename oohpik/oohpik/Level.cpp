@@ -13,7 +13,7 @@ namespace {
 		config.setMapHeight(27);
 		config.setMapBorderThickness(1);
 		config.setMapObjectWidth(1);
-		config.setMapObjectheight(1);
+		config.setMapObjectHeight(1);
 		config.setMapObjectAltitude(0);
 		config.setObjectsConstructedPerFrame(4000); // build the whole map in one frame
 		config.setTimeoutSeconds(10);
