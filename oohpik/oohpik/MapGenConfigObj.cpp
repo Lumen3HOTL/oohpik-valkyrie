@@ -75,8 +75,8 @@ namespace ookpik {
 	void MapGenConfig::setMapObjectWidth(int new_object_width) {
 		m_map_object_width = new_object_width;
 	}
-	void MapGenConfig::setMapObjectheight(int new_object_height) {
-		m_map_height = new_object_height;
+	void MapGenConfig::setMapObjectHeight(int new_object_height) {
+		m_map_object_height = new_object_height;
 	}
 
 	df::Vector MapGenConfig::getMapOrigin()const {
