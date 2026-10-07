@@ -7,5 +7,6 @@ namespace ookpik {
 		//put any needed privates here
 	public:
 	Tree(df::Vector position);
+	Tree();
 	};
 }
