@@ -146,7 +146,7 @@ namespace ookpik {
 			
 
 			for (int i = startX; i <= endX; i++) {
-				pathPoints.push_back(df::Vector(y1, i));
+				pathPoints.push_back(df::Vector( i,y1));
 			}
 			return pathPoints;
 		}
@@ -157,10 +157,16 @@ namespace ookpik {
 				for (int i = startY; i <= endY; i++) {
 					pathPoints.push_back(df::Vector(x1, i));
 				}
+				for (int i = startX; i <= endX; i++) {
+					pathPoints.push_back(df::Vector(i, y2));
+				}
 			}
 			else {
 				for (int i = startY; i <= endY; i++) {
 					pathPoints.push_back(df::Vector(x2, i));
+				}
+				for (int i = startX; i <= endX; i++) {
+					pathPoints.push_back(df::Vector(i, y1));
 				}
 			}
 		}
@@ -169,10 +175,16 @@ namespace ookpik {
 				for (int i = startX; i <= endX; i++) {
 					pathPoints.push_back(df::Vector(i, y1));
 				}
+				for (int i = startY; i <= endY; i++) {
+					pathPoints.push_back(df::Vector(x2, i));
+				}
 			}
 			else {
 				for (int i = startX; i <= endX; i++) {
 					pathPoints.push_back(df::Vector(i, y2));
+				}
+				for (int i = startY; i <= endY; i++) {
+					pathPoints.push_back(df::Vector(x1, i));
 				}
 			}
 		}
@@ -646,7 +658,7 @@ namespace ookpik {
 		
 
 		CoordinatePair fixPoints;
-		while ((zones.size() > 1)||(!started)) {
+		while ((zones.size() > 0)||(!started)) {
 			if ((timer.split() / 1000) >= (33 * timeout * 30)) {
 				this->addErrorMessage(std::string("eliminateDisperateZones: error 3 process timeout!"));
 				return -1;
@@ -676,6 +688,7 @@ namespace ookpik {
 				return -1;
 			}
 			started = true;
+			
 			startZone = zones.at(zones.size() - 1);
 			zones.pop_back();
 			
@@ -1210,15 +1223,16 @@ namespace ookpik {
 						temp = startx;
 						startx = endx;
 						endx = temp;
-						width = endx - startx;
+						
 					}
+					width = endx - startx;
 					if (starty > endy) {
 						temp = starty;
 						starty = endy;
 						endy = temp;
-						height = endy - starty;
+						
 					}
-					
+					height = endy - starty;
 					repairbox = df::Box(df::Vector(startx, starty), width, height);
 
 					this->drawRectangle(map, repairbox, empty);
@@ -1604,6 +1618,13 @@ namespace ookpik {
 			return;
 		}
 		errorNumber++;
+		if (maxSeeds + 2 >= mapArea) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured seeds. must be less than map area -2. max seeds is: ").append(std::to_string(maxSeeds)).append(" map area is: ").append(std::to_string(mapArea)));
+			this->setGenError(true);
+			this->setBaseFunctionExit(true);
+			return;
+		}
+		errorNumber++;
 		if (minRandTrees > (mapArea-2) - maxSeeds) {
 			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured random trees. min random trees must be less than map area-maxSeeds-2. map area is: ").append(std::to_string(mapArea)).append(" max seeds is: ").append(std::to_string(maxSeeds)).append(" min rand trees is: ").append(std::to_string(minRandTrees)));
 			this->setGenError(true);
@@ -1659,6 +1680,7 @@ namespace ookpik {
 			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max right angle line hieght. must be less than map heigth. max right angle lines height is: ").append(std::to_string(maxRightAngleLineHeight)).append(" map hieght is: ").append(std::to_string(mapHeight)));
 			this->setGenError(true);
 			this->setBaseFunctionExit(true);
+			return;
 		}
 		errorNumber++;
 		if (minRightAngleLineHeight >= mapHeight) {
@@ -1854,11 +1876,21 @@ namespace ookpik {
 		errorNumber++;
 		if (requestedRooms > 0) {
 			
+			
+			int width = 0;
+			int height = 0;
+			int startx = 0;
+			int starty = 0;
 			for (int index = 0; index < requestedRooms; index++) {
-				df::Box room = df::Box(df::Vector((this->getRandom(0,minRoomsWidth)), (this->getRandom(0,minRoomHeight))),(this->getRandom(minRoomsWidth,maxRoomWidth)), (this->getRandom(minRoomHeight,maxRoomHeight)));
+				width = this->getRandom(minRoomsWidth, maxRoomWidth);
+				height = this->getRandom(minRoomHeight, maxRoomHeight);
+				startx = this->getRandom(0, (mapWidth - width) - 1);
+				starty = (this->getRandom(0, (mapHeight - height) - 1));
+				df::Box room = df::Box(df::Vector(startx,startx),(width), (height));
 				this->drawRectangle(protomap, room, mapTileIds::EMPTY);
 				if (this->getGenError()) {
-					this->addErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" room draw failed! box number: ").append(std::to_string(index)).append(" out of ").append(std::to_string(requestedRooms)));
+					
+					this->addErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" room draw failed! box number: ").append(std::to_string(index)).append(" out of ").append(std::to_string(requestedRooms)).append("x: ").append(std::to_string(startx)).append(" y: ").append(std::to_string(starty)).append(" width: ").append(std::to_string(width)).append("height").append(std::to_string(height)).append(" map height: ").append(std::to_string(mapHeight)).append(" map width:").append(std::to_string(mapWidth)));
 					this->setBaseFunctionExit(true);
 					return;
 				}
@@ -1917,9 +1949,11 @@ namespace ookpik {
 				height = this->getRandom(minRightAngleLineHeight, maxRightAngleLineHeight);
 				startX = this->getRandom(0, (mapWidth-1) - width);
 				startY = this->getRandom(0,(mapHeight-1)-height);
+				yfirst - false;
 				if (this->getRandom(0,1) == 0) {
 					yfirst = true;
 				}
+				point1First = false;
 				if (this->getRandom(0, 1) == 0) {
 					point1First = true;
 				}
@@ -2041,6 +2075,7 @@ namespace ookpik {
 			this->addErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append("map gen failed! too few emtpy spaces! empty space count: ").append(std::to_string(openSpaceCount)).append(" needed oepn spaces: ").append(std::to_string(neededOpen)).append("!"));
 			this->setGenError(true);
 			this->setBaseFunctionExit(true);
+			return;
 		}
 		
 		this->sprinkleSeeds(protomap, neededSeeds, mapTileIds::EMPTY, mapTileIds::SEED);
@@ -2232,7 +2267,7 @@ namespace ookpik {
 				for (int y = startY; y < playAreaHeight + (borderThickness * 2); y++) {
 
 					framePorgressCount++;
-					currentPos.setY(currentPos.getY() + tileHeight);
+					
 					if (((x < borderThickness) || (x >= borderThickness + playAreaWidth)) || ((y < borderThickness) || (y >= borderThickness + playAreaHeight))) {
 
 						newTree = new Tree();
@@ -2257,7 +2292,7 @@ namespace ookpik {
 						case mapTileIds::EMPTY:
 							if (CREATE_GROUND_OBJECTS) {
 								newGround = new Ground();
-								newGround->setAltitude(0);
+								newGround->setAltitude(altitude);
 								newGround->setPosition(currentPos + start);
 								mapObjects.insert(newGround);
 							}
@@ -2267,19 +2302,19 @@ namespace ookpik {
 							break;
 						case mapTileIds::EXIT:
 							newExit = new MapExit();
-							newExit->setAltitude(0);
+							newExit->setAltitude(altitude);
 							newExit->setPosition(currentPos + start);
 							mapObjects.insert(newExit);
 							break;
 						case mapTileIds::SEED:
 							newSeed = new Seed();
-							newSeed->setAltitude(0);
+							newSeed->setAltitude(altitude);
 							newSeed->setPosition(currentPos + start);
 							mapObjects.insert(newSeed);
 							break;
 						case mapTileIds::TREE:
 							newTree = new Tree();
-							newTree->setAltitude(0);
+							newTree->setAltitude(altitude);
 							newTree->setPosition(start + currentPos);
 							mapObjects.insert(newTree);
 							break;
@@ -2294,6 +2329,7 @@ namespace ookpik {
 
 						}
 					}
+					currentPos.setY(currentPos.getY() + tileHeight);
 					if (framePorgressCount >= this->getBuildPerFrame()) {
 						if (y >= playAreaHeight + (borderThickness * 2) - 1) {
 							currentPos.setY(start.getY());
@@ -2593,7 +2629,7 @@ namespace ookpik {
 						}
 						
 						this->setBuilding(true);
-						this->setCurrentBuildPos(m_configObj.getMapOrigin());
+						this->setCurrentBuildPos(df::Vector());
 						this->setToBuild((this->m_configObj.getMapWidth() + (this->m_configObj.getMapBorderThickness() * 2)) * (this->m_configObj.getMapHeight() + (this->m_configObj.getMapBorderThickness() * 2)));
 						this->resetTimer();
 
@@ -2611,6 +2647,9 @@ namespace ookpik {
 							}
 
 							EventMapGenDone done = EventMapGenDone(errorMessages);
+							
+							gm.onEvent(&done);
+							
 							this->setDoneSent(true);
 							this->setBuilding(false);
 						}
