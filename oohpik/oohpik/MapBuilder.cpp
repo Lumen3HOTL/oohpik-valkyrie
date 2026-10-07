@@ -1945,7 +1945,7 @@ namespace ookpik {
 			return;
 		}
 		std::vector<std::vector<df::Vector>> zones;
-		zones = this->findZones(protomap, mapTileIds::EMPTY);
+		zones = this->findZones(protomap,mapTileIds::FLOOD, mapTileIds::EMPTY);
 		errorNumber++;
 		if (this->getGenError()) {
 			this->addErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" zone search failed!"));
