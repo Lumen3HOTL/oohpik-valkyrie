@@ -305,7 +305,7 @@ namespace ookpik {
 					}
 					newCoord = currentCoord;
 					newCoord.setY(((int)newCoord.getY()) + 1);
-					if ((((int)newCoord.getX()) < map[((int)newCoord.getX())].size()) && (map[((int)newCoord.getX())].size() > ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
+					if ((((int)newCoord.getY()) < map[((int)newCoord.getX())].size()) && (map[((int)newCoord.getX())].size() > ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
 						toVisit.push(newCoord);
 					}
 				}
@@ -374,7 +374,7 @@ namespace ookpik {
 					}
 					newCoord = currentCoord;
 					newCoord.setY(((int)newCoord.getY()) + 1);
-					if ((((int)newCoord.getX()) < map[((int)newCoord.getX())].size()) && (map[((int)newCoord.getX())].size() > ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
+					if ((((int)newCoord.getY()) < map[((int)newCoord.getX())].size()) && (map[((int)newCoord.getX())].size() > ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
 						toVisit.push(newCoord);
 					}
 				}
