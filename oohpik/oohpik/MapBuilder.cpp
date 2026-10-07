@@ -1,5 +1,4 @@
 #include "MapBuilder.h"
-#include "EventManager.h"
 
 namespace ookpik {
 	
@@ -291,22 +290,22 @@ namespace ookpik {
 					map[((int)currentCoord.getX())][((int)currentCoord.getY())] = fillValue;
 					newCoord = currentCoord;
 					newCoord.setX(((int)newCoord.getX()) - 1);
-					if ((((int)newCoord.getX()) >= 0)&&(map[((int)newCoord.getX())].size()>=((int)newCoord.getY()))&&map[((int)newCoord.getX())][((int)newCoord.getY())]==emptyValue) {
+					if ((((int)newCoord.getX()) >= 0)&&(map[((int)newCoord.getX())].size()>((int)newCoord.getY()))&&map[((int)newCoord.getX())][((int)newCoord.getY())]==emptyValue) {
 						toVisit.push(newCoord);
 					}
 					newCoord = currentCoord;
 					newCoord.setX(((int)newCoord.getX()) + 1);
-					if ((((int)newCoord.getX()) < map.size()) && (map[((int)newCoord.getX())].size() >= ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
+					if ((((int)newCoord.getX()) < map.size()) && (map[((int)newCoord.getX())].size() > ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
 						toVisit.push(newCoord);
 					}
 					newCoord = currentCoord;
 					newCoord.setY(((int)newCoord.getY()) - 1);
-					if ((((int)newCoord.getY()) >= 0) && (map[((int)newCoord.getX())].size() >= ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
+					if ((((int)newCoord.getY()) >= 0) && (map[((int)newCoord.getX())].size() > ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
 						toVisit.push(newCoord);
 					}
 					newCoord = currentCoord;
 					newCoord.setY(((int)newCoord.getY()) + 1);
-					if ((((int)newCoord.getY()) < map[((int)newCoord.getX())].size()) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) { // bounds-check Y (was X) so the fill can move down
+					if ((((int)newCoord.getX()) < map[((int)newCoord.getX())].size()) && (map[((int)newCoord.getX())].size() > ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
 						toVisit.push(newCoord);
 					}
 				}
@@ -360,22 +359,22 @@ namespace ookpik {
 					foundCoords.push_back(currentCoord);
 					newCoord = currentCoord;
 					newCoord.setX(((int)newCoord.getX()) - 1);
-					if ((((int)newCoord.getX()) >= 0) && (map[((int)newCoord.getX())].size() >= ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
+					if ((((int)newCoord.getX()) >= 0) && (map[((int)newCoord.getX())].size() > ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
 						toVisit.push(newCoord);
 					}
 					newCoord = currentCoord;
 					newCoord.setX(((int)newCoord.getX()) + 1);
-					if ((((int)newCoord.getX()) < map.size()) && (map[((int)newCoord.getX())].size() >= ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
+					if ((((int)newCoord.getX()) < map.size()) && (map[((int)newCoord.getX())].size() > ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
 						toVisit.push(newCoord);
 					}
 					newCoord = currentCoord;
 					newCoord.setY(((int)newCoord.getY()) - 1);
-					if ((((int)newCoord.getY()) >= 0) && (map[((int)newCoord.getX())].size() >= ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
+					if ((((int)newCoord.getY()) >= 0) && (map[((int)newCoord.getX())].size() >((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
 						toVisit.push(newCoord);
 					}
 					newCoord = currentCoord;
 					newCoord.setY(((int)newCoord.getY()) + 1);
-					if ((((int)newCoord.getY()) < map[((int)newCoord.getX())].size()) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) { // bounds-check Y (was X) so the fill can move down
+					if ((((int)newCoord.getX()) < map[((int)newCoord.getX())].size()) && (map[((int)newCoord.getX())].size() > ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
 						toVisit.push(newCoord);
 					}
 				}
@@ -1020,13 +1019,20 @@ namespace ookpik {
 		return m_timer.split();
 	}
 	int MapBuilder::getTimeout() {
-		return m_timeout;
+		int temp = 0;
+		m_state_gate.lock();
+		temp = m_timeout;
+		m_state_gate.unlock();
+		return temp;
 	}
 	int MapBuilder::setTimeout(int new_timeout) {
 		if (new_timeout < 1) {
+
 			return -1;
 		}
+		m_state_gate.lock();
 		m_timeout = new_timeout;
+		m_state_gate.unlock();
 		return 0;
 	}
 
@@ -1265,7 +1271,11 @@ namespace ookpik {
 	
 	}
 
+
+
 	void MapBuilder::generateMap() {
+
+		
 		if (m_configObj.getRandomSeed() != 0) {
 			m_RandomEngine = std::mt19937(m_configObj.getRandomSeed());
 			
@@ -1274,6 +1284,8 @@ namespace ookpik {
 			m_configObj.setRandomSeed(std::chrono::high_resolution_clock().now().time_since_epoch().count());
 			m_RandomEngine = std::mt19937(m_configObj.getRandomSeed());
 		}
+
+
 
 		int errorNumber = 0;
 		errorNumber++;
@@ -1692,8 +1704,8 @@ namespace ookpik {
 			return;
 		}
 		errorNumber++;
-		if (minRoomHeight > maxRoomHeight) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured room height. min room height must be less than max rooms height. min room height is: ").append(std::to_string(minRoomHeight)).append(" max room hieght is: ").append(std::to_string(maxRoomHeight)));
+		if (maxRoomHeight > minRoomHeight) {
+			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured room height. min room height must be less than max rooms height. min room height is: ").append(std::to_string(minRoomHeight)).append(" max room hieght is: ").append(std::to_string(maxDiagLineHeight)));
 			this->setGenError(true);
 			this->setBaseFunctionExit(true);
 			return;
@@ -2025,41 +2037,75 @@ namespace ookpik {
 	}
 	
 	void MapBuilder::setGenDone(bool new_gen_done) {
+		m_state_gate.lock();
 		m_genDone = new_gen_done;
+		m_state_gate.unlock();
 	}
 	bool MapBuilder::getGenDone() {
-		return m_genDone;
+		bool temp = false;
+		m_state_gate.lock();
+		temp = m_genDone;
+		m_state_gate.lock();
+
+		return temp;
 	}
 
 	void MapBuilder::setGenTime(unsigned long long new_gen_time) {
+		m_state_gate.lock();
 		m_genTime = new_gen_time;
+		m_state_gate.unlock();
 	}
 	unsigned long long MapBuilder::getGenTime() {
-		return m_genTime;
+		unsigned long long temp = 0;
+		m_state_gate.lock();
+		temp = m_genTime;
+		m_state_gate.unlock();
+		return temp;
 	}
 
 
 	void MapBuilder::setGenerating(bool new_genrating) {
+
+		m_state_gate.lock();
 		m_generating = new_genrating;
+		m_state_gate.unlock();
 	}
 	bool MapBuilder::getGenerating() {
-		return m_generating;
+		bool temp = false;
+		m_state_gate.lock();
+		temp = m_generating;
+		m_state_gate.unlock();
+		return temp;
 	}
 	void MapBuilder::setDoneSent(bool new_done_set) {
+		m_state_gate.lock();
 		m_done_sent = new_done_set;
+		m_state_gate.unlock();
 	}
 	bool MapBuilder::getDoneSet() {
-		return m_done_sent;
+		bool temp = false;
+		m_state_gate.lock();
+		temp = m_done_sent;
+		m_state_gate.unlock();
+		return temp;
 	}
 
 
 
 
 	void MapBuilder::setMapReturn(df::ObjectList new_map_return) {
+		m_state_gate.lock();
 		m_mapReturn = new_map_return;
+		m_state_gate.unlock();
 	}
 	df::ObjectList MapBuilder::getMapReturn() {
-		return m_mapReturn;
+		df::ObjectList temp;
+		m_state_gate.lock();
+		temp = m_mapReturn;
+		m_state_gate.unlock();
+
+		return temp;
+
 	}
 
 	//this is the important function to change to swap out the different game objects the gnerator instances
@@ -2115,7 +2161,7 @@ namespace ookpik {
 			this->setGenError(true);
 			return -1;
 		}
-		else if (playAreaWidth > map.size()) { // error only if the plan is narrower than configured
+		else if (playAreaWidth <= map.size()) {
 			this->addErrorMessage(std::string("buildMap: error 7 invalid map size of: ").append(std::to_string(map.size())).append(" configured width: ").append(std::to_string(playAreaWidth)).append("!"));
 			this->setGenError(true);
 			return -1;
@@ -2143,7 +2189,7 @@ namespace ookpik {
 
 					framePorgressCount++;
 					currentPos.setY(currentPos.getY() + tileHeight);
-					if (((x < borderThickness) || (x >= borderThickness + playAreaWidth)) || ((y < borderThickness) || (y >= borderThickness + playAreaHeight))) { // >= so the last column/row is border, not past the end of the plan
+					if (((x < borderThickness) || (x >= borderThickness + playAreaWidth)) || ((y < borderThickness) || (y >= borderThickness + playAreaHeight))) {
 
 						newTree = new Tree();
 						newTree->setAltitude(0);
@@ -2153,7 +2199,7 @@ namespace ookpik {
 					}
 					else {
 
-						if (map[x - borderThickness].size() < playAreaHeight) { // error only if the column is shorter than configured
+						if (map[x - borderThickness].size() < playAreaHeight) {
 							df::WorldManager& wm = df::WorldManager::getInstance();
 							for (int i = 0; i < mapObjects.getCount(); i++) {
 								wm.markForDelete(mapObjects[i]);
@@ -2237,21 +2283,34 @@ namespace ookpik {
 
 
 	void  MapBuilder::setLastX(int new_last_x) {
+		m_state_gate.lock();
 		m_lastx = new_last_x;
+		m_state_gate.unlock();
 	}
 	int  MapBuilder::getLastX() {
-		return m_lastx;
+		int temp = 0;
+		m_state_gate.lock();
+		temp = m_lastx;
+		m_state_gate.unlock();
+		return temp;
 	}
 	void  MapBuilder::setLastY(int new_last_y) {
+		m_state_gate.lock();
 		m_lasty = new_last_y;
+		m_state_gate.unlock();
 	}
 	int  MapBuilder::getlastY() {
-		return m_lasty;
+		int temp = 0;
+		m_state_gate.lock();
+		temp = m_lasty;
+		m_state_gate.unlock();
+		return temp;
 	}
 
 
 	int MapBuilder::startGenerateMap(MapGenConfig config, df::Object* owl){
-		if (!m_generating) {
+		if ((!m_generating)&&(!m_building)) {
+			this->setGenerating(true);
 			m_configObj = MapGenConfig();
 			m_genDone = false;
 			m_generating = false;
@@ -2263,7 +2322,8 @@ namespace ookpik {
 			m_mapReturn = df::ObjectList();
 			m_timer = df::Clock();
 			m_map_plan = std::vector<std::vector<mapTileIds::mapTileId>>();
-			m_error_gate.release();
+		
+			
 			m_error_messages = std::vector<std::string>();
 			m_player = nullptr;
 			m_genThread = nullptr;
@@ -2275,7 +2335,6 @@ namespace ookpik {
 			m_lasty = 0;
 			m_building = false;
 			m_RandomEngine = std::mt19937();
-			m_done_sent = false;
 			m_player = owl;
 			m_configObj = config;
 			this->setBuildPerFrame(config.getObjectsConstructedPerFrame());
@@ -2303,63 +2362,64 @@ namespace ookpik {
 
 	int  MapBuilder::getBuildProgress() {
 		int temp = 0;
-		m_state_gate.acquire();
+		m_state_gate.lock();
 		temp = m_build_progress;
-		m_state_gate.release();
+		m_state_gate.unlock();
 		return temp;
 	}
 	void  MapBuilder::setBuildProgress(int new_build_progress) {
-		m_state_gate.acquire();
+		m_state_gate.lock();
 		m_build_progress = new_build_progress;
-		m_state_gate.release();
+		m_state_gate.unlock();
+		
 	}
 	int  MapBuilder::getToBuild() {
 		int temp = 0;
-		m_state_gate.acquire();
+		m_state_gate.lock();
 		temp = m_to_build;
-		m_state_gate.release();
+		m_state_gate.unlock();
 		return temp;
 	}
 	void  MapBuilder::setToBuild(int new_to_build) {
-		m_state_gate.acquire();
+		m_state_gate.lock();
 		m_to_build = new_to_build;
-		m_state_gate.release();
+		m_state_gate.unlock();
 	}
 	int  MapBuilder::getBuildPerFrame() {
 		int temp = 0;
-		m_state_gate.acquire();
+		m_state_gate.lock();
 		temp = m_build_per_frame;
-		m_state_gate.release();
+		m_state_gate.unlock();
 		return temp;
 	}
 	void  MapBuilder::setBuildPerFrame(int new_build_per_frame) {
-		m_state_gate.acquire();
+		m_state_gate.lock();
 		m_build_per_frame = new_build_per_frame;
-		m_state_gate.release();
+		m_state_gate.unlock();
 	}
 	void  MapBuilder::setCurrentBuildPos(df::Vector new_current_build_pos) {
-		m_state_gate.acquire();
+		m_state_gate.lock();
 		m_current_build_pos = new_current_build_pos;
-		m_state_gate.release();
+		m_state_gate.unlock();
 	}
 	df::Vector  MapBuilder::getCurrentBuildPos() {
 		df::Vector temp;
-		m_state_gate.acquire();
+		m_state_gate.lock();
 		temp= m_current_build_pos;
-		m_state_gate.release();
+		m_state_gate.unlock();
 		return temp;
 	}
 
 	void MapBuilder::setBuildDone(bool new_build_done) {
-		m_state_gate.acquire();
+		m_state_gate.lock();
 		m_build_done = new_build_done;
-		m_state_gate.release();
+		m_state_gate.unlock();
 	}
 	bool MapBuilder::getBuildDone() {
 		bool temp = false;
-		m_state_gate.acquire();
+		m_state_gate.lock();
 		temp = m_build_done;
-		m_state_gate.release();
+		m_state_gate.unlock();
 		return temp;
 	}
 
@@ -2368,6 +2428,7 @@ namespace ookpik {
 		m_genDone = false;
 		m_generating = false;
 		m_build_done = false;
+		m_done_sent = false;
 		m_build_per_frame = 0;
 		m_to_build = 0;
 		m_build_progress = 0;
@@ -2375,8 +2436,7 @@ namespace ookpik {
 		m_mapReturn=df::ObjectList();
 		m_timer = df::Clock();
 		m_map_plan = std::vector<std::vector<mapTileIds::mapTileId>>();
-		m_error_gate.release();
-		m_state_gate.release();
+
 		m_error_messages=std::vector<std::string>();
 		m_player = nullptr;
 		m_genThread = nullptr;
@@ -2388,34 +2448,30 @@ namespace ookpik {
 		m_lasty = 0;
 		m_building = false;
 		m_RandomEngine = std::mt19937();
-		m_done_sent = false;
 		this->setCameraAffected(false);
-		this->setPosition(df::Vector(57, 15)); // centre of the 115x30 window
+		this->setPosition(df::Vector(40, 12));
 		this->setType("mapBuilder");
-		// Step events drive generation and building; the engine only sends them to registered objects
-		df::EventManager::getInstance().registerEvent(this, df::STEP_EVENT);
 	}
 	MapBuilder::~MapBuilder() {
-		// The thread is null if generation never started, or after eventHandler joined it
+		m_genThread->join();
 		if (m_genThread != nullptr) {
-			if (m_genThread->joinable()) {
-				m_genThread->join();
-			}
 			delete m_genThread;
+			m_genThread = nullptr;
 		}
+		
 	}
 
 
 	void MapBuilder::setBaseFunctionExit(bool new_base_function_exit) {
-		m_error_gate.acquire();
+		m_error_gate.lock();
 		m_base_function_exit = new_base_function_exit;
-		m_error_gate.release();
+		m_error_gate.unlock();
 	}
 	bool MapBuilder::getBaseFunctionExit() {
 		bool exitStateTemp;
-		m_error_gate.acquire();
+		m_error_gate.lock();
 		exitStateTemp = m_base_function_exit;
-		m_error_gate.release();
+		m_error_gate.unlock();
 		return exitStateTemp;
 	}
 		
@@ -2433,18 +2489,22 @@ namespace ookpik {
 	}
 
 	void MapBuilder::setBuilding(bool new_building) {
-		m_state_gate.acquire();
+		m_state_gate.lock();
 		m_building = new_building;
-		m_state_gate.release();
+		m_state_gate.unlock();
 	}
 	bool MapBuilder::getBuilding() {
+
 		bool temp = false;
-		return m_building;
+		m_state_gate.lock();
+		temp = m_building;
+		m_state_gate.unlock();
+		return temp;
 	}
 
-	int MapBuilder::eventHandler(const df::Event* m_p) {
+	int MapBuilder::eventHandler(df::Event* m_p) {
 
-		if (m_p->getType() == df::STEP_EVENT) {
+		if (m_p->getType().compare(df::STEP_EVENT)) {
 			if (!this->getDoneSet()) {
 				if (this->getGenError()) {
 					if (this->getBaseFunctionExit()) {
@@ -2467,7 +2527,6 @@ namespace ookpik {
 				else if (!this->getGenerating()) {
 					if (this->getGenDone() && (!this->getBuilding())&&this->getBaseFunctionExit()) {
 						m_genThread->join();
-						delete m_genThread;
 						m_genThread = nullptr;
 						this->setBuilding(true);
 						this->setCurrentBuildPos(m_configObj.getMapOrigin());
@@ -2497,7 +2556,6 @@ namespace ookpik {
 
 							this->setDoneSent(true);
 							this->setBuilding(false);
-							this->setVisible(false); // stop drawing the status text over the finished map
 
 						}
 
@@ -2528,45 +2586,44 @@ namespace ookpik {
 				return dm.drawString(this->getPosition(), "waiting to generate!", df::CENTER_JUSTIFIED, df::WHITE);
 			}
 		}
-		return 0;
 	}
 
 
 	void MapBuilder::addErrorMessage(std::string new_error_message) {
-		m_error_gate.acquire();
+		m_error_gate.lock();
 		m_error_messages.push_back(new_error_message);
-		m_error_gate.release();
+		m_error_gate.unlock();
 	}
 
 	void MapBuilder::resetErrorMessage() {
-		m_error_gate.acquire();
+		m_error_gate.lock();
 		m_error_messages.clear();
-		m_error_gate.release();
+		m_error_gate.unlock();
 	}
 	void MapBuilder::setErrorMessages(std::vector<std::string> new_error_messages) {
-		m_error_gate.acquire();
+		m_error_gate.lock();
 		m_error_messages=new_error_messages;
-		m_error_gate.release();
+		m_error_gate.unlock();
 	}
 	std::vector<std::string> MapBuilder::getErrorMessages() {
 		std::vector<std::string> errorMessageCache;
-		m_error_gate.acquire();
+		m_error_gate.lock();
 		errorMessageCache = m_error_messages;
-		m_error_gate.release();
+		m_error_gate.unlock();
 		return errorMessageCache;
 	}
 
 	void MapBuilder::setGenError(bool new_gen_error) {
-		m_error_gate.acquire();
+		m_error_gate.lock();
 		m_gen_error = new_gen_error;
-		m_error_gate.release();
+		m_error_gate.unlock();
 		
 	}
 	bool MapBuilder::getGenError() {
 		bool tempError;
-		m_error_gate.acquire();
+		m_error_gate.lock();
 		tempError = m_gen_error;
-		m_error_gate.release();
+		m_error_gate.unlock();
 
 		return tempError;
 	}

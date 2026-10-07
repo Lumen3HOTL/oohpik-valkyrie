@@ -16,7 +16,7 @@
 #include <queue>
 #include <math.h>
 #include "LogManager.h"
-#include <semaphore>
+#include <mutex>
 #include <chrono>
 #include "MapExit.h"
 #include "Tree.h"
@@ -53,8 +53,9 @@ namespace ookpik {
 		std::vector<std::vector<mapTileIds::mapTileId>> m_map_plan;
 		bool m_gen_error;
 		std::vector<std::string> m_error_messages;
-		std::binary_semaphore m_error_gate=std::binary_semaphore(1);
-		std::binary_semaphore m_state_gate= std::binary_semaphore(1);
+		std::mutex m_error_gate=std::mutex();
+		std::mutex m_state_gate=std::mutex();
+		
 		int m_build_progress;
 		int m_to_build;
 		int m_build_per_frame;
