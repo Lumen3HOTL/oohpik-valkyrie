@@ -1,4 +1,4 @@
-#include "MapBuilder.h"
+  #include "MapBuilder.h"
 #include "EventManager.h"
 
 namespace ookpik {
@@ -77,7 +77,7 @@ namespace ookpik {
 
 		if (xDistance > yDistance) {
 
-			float vectorError = (int)(xDistance / 2);
+			int vectorError = xDistance / 2;
 
 			while (currentX != x2) {
 				pathPoints.push_back(df::Vector(currentX, currentY));
@@ -95,7 +95,7 @@ namespace ookpik {
 			}
 		}
 		else {
-			float vectorError = (int)(yDistance / 2);
+			int vectorError = yDistance / 2;
 
 			while (currentY != y2) {
 				pathPoints.push_back(df::Vector(currentX, currentY));
