@@ -3,6 +3,7 @@
 #include "ObjectList.h"
 #include <string>
 namespace ookpik {
+	const std::string GEN_DONE_EVENT = "ookpik::mapGenDone";
 	class EventMapGenDone :public df::Event {
 	private:
 		df::ObjectList m_map_objects;

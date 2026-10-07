@@ -1,7 +1,7 @@
 #pragma once
 #include "Object.h"
 #include "EventKeyboard.h"
-
+#include "EventMapGenDone.h"
 class Hero : public df::Object {
 private:
     void turn(int delta);
@@ -13,6 +13,30 @@ private:
     int m_moves; // Move counter
     int m_seeds; // Seeds collected
     int m_maps; // Maps completed (exits reached)
+
+    std::string m_statusSubstring0;
+    bool m_statusChange0;
+    std::string m_statusSubstring1;
+    bool m_statusChange1;
+    std::string m_statusSubstring2;
+    bool m_statusChange2;
+    std::string m_statusSubstring3;
+    bool m_statusChange3;
+    std::string m_statusSubstring4;
+    std::string m_statusSubstring5;
+    std::string m_statusSubstring6;
+    std::string m_statusSubstring7;
+
+    std::string m_statusSubstring8;
+    std::string m_statusSubstring9;
+    
+    int m_statusChangeCount;
+
+    std::string m_timeString;
+
+    df::Clock m_timer;
+
+    bool m_started;
 
 public:
     Hero();

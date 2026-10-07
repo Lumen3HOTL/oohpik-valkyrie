@@ -2,7 +2,7 @@
 
 namespace ookpik {
 	EventMapGenDone::EventMapGenDone() {
-		this->setType("ookpik::mapGenDone");
+		this->setType(GEN_DONE_EVENT);
 		m_genTime = 0;
 		m_map_objects = df::ObjectList();
 		m_error = false;
