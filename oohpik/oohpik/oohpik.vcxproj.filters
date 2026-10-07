@@ -91,5 +91,11 @@
     <None Include="Resources\Sprites\tree.sprite">
       <Filter>Resource Files\Sprites</Filter>
     </None>
+    <None Include="Resources\Sprites\seed.sprite">
+      <Filter>Resource Files\Sprites</Filter>
+    </None>
+    <None Include="Resources\Sprites\exit.sprite">
+      <Filter>Resource Files\Sprites</Filter>
+    </None>
   </ItemGroup>
 </Project>

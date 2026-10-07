@@ -10,10 +10,10 @@
 
 namespace df {
 	// Defaults for SFML window.
-	const int WINDOW_HORIZONTAL_PIXELS_DEFAULT = 1024;
-	const int WINDOW_VERTICAL_PIXELS_DEFAULT = 768;
-	const int WINDOW_HORIZONTAL_CHARS_DEFAULT = 80;
-	const int WINDOW_VERTICAL_CHARS_DEFAULT = 24;
+	const int WINDOW_HORIZONTAL_PIXELS_DEFAULT = 1472; // 115 chars * 12.8 px, same cell size as the original 1024/80
+	const int WINDOW_VERTICAL_PIXELS_DEFAULT = 960; // 30 chars * 32 px, same cell size as the original 768/24
+	const int WINDOW_HORIZONTAL_CHARS_DEFAULT = 115; // matches the original ookpik map width
+	const int WINDOW_VERTICAL_CHARS_DEFAULT = 30; // matches the original ookpik map height
 	const int WINDOW_STYLE_DEFAULT = sf::Style::Titlebar;
 	const sf::Color WINDOW_BACKGROUND_COLOR_DEFAULT = sf::Color::Black;
 	const std::string WINDOW_TITLE_DEFAULT = "dragonfly";

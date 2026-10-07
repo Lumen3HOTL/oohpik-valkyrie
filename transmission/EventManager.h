@@ -2,13 +2,14 @@
 #include "Event.h"
 #include "EventRegistrationKeeper.h"
 #include "Manager.h"
+#include <deque>
 
 namespace df {
 	class EventManager : public Manager {
 		EventManager(); // Private (a singleton).
 		EventManager(EventManager const&); // Don't allow copy.
 		void operator =(EventManager const&); // Don't allow assignment.
-		std::vector<EventRegistrationKeeper> m_eventRegistrationKeepers;
+		std::deque<EventRegistrationKeeper> m_eventRegistrationKeepers;
 		
 	public:
 		static EventManager& getInstance();

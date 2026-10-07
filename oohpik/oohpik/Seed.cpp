@@ -3,7 +3,7 @@
 namespace ookpik {
 	Seed::Seed() {
 		this->setType("Seed");
-		//put texture and collison stuff here
+		this->setSprite("seed");
 	}
 	//placeholder for game logic
 }

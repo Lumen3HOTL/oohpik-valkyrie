@@ -76,7 +76,7 @@ namespace ookpik {
 		m_map_object_width = new_object_width;
 	}
 	void MapGenConfig::setMapObjectheight(int new_object_height) {
-		m_map_height = new_object_height;
+		m_map_object_height = new_object_height;
 	}
 
 	df::Vector MapGenConfig::getMapOrigin()const {
@@ -242,7 +242,7 @@ namespace ookpik {
 		return m_max_rand_daig_line_width;
 	}
 	int MapGenConfig::getMaxDiagLineHeight()const {
-		return m_max_rand_daig_line_width;
+		return m_max_rand_diag_line_height;
 	}
 
 	int MapGenConfig::getMinDiagLineWidth()const {

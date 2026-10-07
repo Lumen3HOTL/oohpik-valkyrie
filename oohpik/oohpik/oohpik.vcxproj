@@ -177,6 +177,8 @@
   <ItemGroup>
     <None Include="Resources\Sprites\player.sprite" />
     <None Include="Resources\Sprites\tree.sprite" />
+    <None Include="Resources\Sprites\seed.sprite" />
+    <None Include="Resources\Sprites\exit.sprite" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\transmission\MakeADragonFly.vcxproj">

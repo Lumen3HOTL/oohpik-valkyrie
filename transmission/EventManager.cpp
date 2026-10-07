@@ -3,7 +3,7 @@
 namespace df {
 	EventManager::EventManager() {
 		this->setType("EventManager");
-		m_eventRegistrationKeepers = std::vector<EventRegistrationKeeper>();
+		m_eventRegistrationKeepers = std::deque<EventRegistrationKeeper>();
 	}
 	
 	EventManager& EventManager::getInstance() {

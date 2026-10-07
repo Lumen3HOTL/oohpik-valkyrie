@@ -195,9 +195,9 @@ namespace ookpik {
 
 		int destroyMap(df::ObjectList map);
 
-		int eventHandler(df::Event* m_p);
+		int eventHandler(const df::Event* m_p) override;
 
-		int draw();
+		int draw() override;
 	
 		MapBuilder();
 		~MapBuilder();
