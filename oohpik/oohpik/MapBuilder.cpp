@@ -2324,6 +2324,7 @@ namespace ookpik {
 	}
 	MapBuilder::~MapBuilder() {
 		m_genThread->join();
+		delete m_genThread;
 	}
 
 
