@@ -16,12 +16,12 @@ namespace {
 		config.setMapBorderThickness(1);
 		config.setObjectsConstructedPerFrame(1000); // build the whole map in one frame
 
-		/*
-		config.setMapWidth(500);
-		config.setMapHeight(500);
-		config.setMapBorderThickness(50);
-		config.setObjectsConstructedPerFrame(100); 
-		*/
+		
+		//config.setMapWidth(500);
+		//config.setMapHeight(500);
+		//config.setMapBorderThickness(50);
+		//config.setObjectsConstructedPerFrame(100); 
+		
 		
 		
 		config.setMapObjectWidth(2);
