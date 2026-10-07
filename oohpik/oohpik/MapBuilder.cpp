@@ -176,15 +176,10 @@ namespace ookpik {
 
 	}
 
-	std::vector<std::vector<mapTileIds::mapTileId>> MapBuilder::copyMap(std::vector<std::vector<mapTileIds::mapTileId>>& map) {
-		std::vector<std::vector<mapTileIds::mapTileId>> mapCopy = std::vector<std::vector<mapTileIds::mapTileId>>();
-		for (int x = 0; x < map.size(); x++) {
-			mapCopy.push_back(std::vector<mapTileIds::mapTileId>());
-			for (int y = 0; y < map[x].size(); y++) {
-				mapCopy[x].push_back(map[x][y]);
-			}
-		}
-		return mapCopy;
+	std::vector<std::vector<mapTileIds::mapTileId>> MapBuilder::copyMap(std::vector<std::vector<mapTileIds::mapTileId>> map) {
+		
+		
+		return map;
 	}
 
 	int MapBuilder::drawLine(std::vector<std::vector<mapTileIds::mapTileId>>& map, std::vector<df::Vector>& line, mapTileIds::mapTileId type) {
@@ -438,7 +433,7 @@ namespace ookpik {
 		return openCount;
 	}
 
-	std::vector<std::vector<df::Vector>> MapBuilder::findZones(std::vector<std::vector<mapTileIds::mapTileId>>& map, mapTileIds::mapTileId open) {
+	std::vector<std::vector<df::Vector>> MapBuilder::findZones(std::vector<std::vector<mapTileIds::mapTileId>>& map, mapTileIds::mapTileId flood, mapTileIds::mapTileId open) {
 		if (map.empty()) {
 			this->addErrorMessage("FindZones: error 0 map empty!");
 			this->setGenError(true);
@@ -467,7 +462,7 @@ namespace ookpik {
 
 		while (!openCoords.empty()) {
 			floodSeed = openCoords.at(0);
-			currentZone = this->floodFillReturnCoords(tempMap, floodSeed, mapTileIds::FLOOD, mapTileIds::EMPTY);
+			currentZone = this->floodFillReturnCoords(tempMap, floodSeed, mapTileIds::FLOOD,open);
 			if (this->getGenError()) {
 				this->addErrorMessage("FindZones: error 2 flood fill failure!");
 				return std::vector<std::vector<df::Vector>>();
@@ -605,7 +600,7 @@ namespace ookpik {
 
 	}
 
-	int MapBuilder::eliminateDisperateZones(std::vector<std::vector<mapTileIds::mapTileId>>& map, mapTileIds::mapTileId empty, MapGenConfig configObj) {
+	int MapBuilder::eliminateDisperateZones(std::vector<std::vector<mapTileIds::mapTileId>>& map, mapTileIds::mapTileId flood, mapTileIds::mapTileId empty, MapGenConfig configObj) {
 		if (map.empty()) {
 			this->addErrorMessage(std::string("eliminateDisperateZones: error 0 empty map!"));
 			this->setGenError(true);
@@ -614,7 +609,7 @@ namespace ookpik {
 		df::Clock timer;
 		timer.delta();
 
-		std::vector<std::vector<df::Vector>> zones=this->findZones(map,empty);
+		std::vector<std::vector<df::Vector>> zones=this->findZones(map,empty,flood);
 		std::vector<df::Vector> startZone = zones[zones.size() - 1];
 		zones.pop_back();
 		std::vector<df::Vector> fixLine;
@@ -647,7 +642,7 @@ namespace ookpik {
 				this->addErrorMessage(std::string("eliminateDisperateZones: error 4 connection line draw failed!"));
 				return -1;
 			}
-			zones = this->findZones(map, empty);
+			zones = this->findZones(map, empty,flood);
 			startZone = zones[zones.size() - 1];
 			zones.pop_back();
 		}
@@ -1978,7 +1973,7 @@ namespace ookpik {
 		}
 
 		if (zoneCount > 1) {
-			this->eliminateDisperateZones(protomap, mapTileIds::EMPTY, m_configObj);
+			this->eliminateDisperateZones(protomap, mapTileIds::FLOOD, mapTileIds::EMPTY, m_configObj);
 			if (this->getGenError()) {
 				this->addErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" zone search failed!"));
 				this->setBaseFunctionExit(true);

@@ -123,7 +123,7 @@ namespace ookpik {
 
 		float findDistance(df::Vector p0, df::Vector p1);
 
-		int eliminateDisperateZones(std::vector<std::vector<mapTileIds::mapTileId>>& map, mapTileIds::mapTileId empty, MapGenConfig configObj);
+		int eliminateDisperateZones(std::vector<std::vector<mapTileIds::mapTileId>>& map, mapTileIds::mapTileId flood, mapTileIds::mapTileId empty, MapGenConfig configObj);
 
 		std::vector<df::Vector> generateBresenhamLine(int x1, int y1, int x2, int y2);
 
@@ -131,7 +131,7 @@ namespace ookpik {
 
 		std::vector<std::vector<mapTileIds::mapTileId>> createStartingMap(int width, int height, mapTileIds::mapTileId canvas);
 
-		std::vector<std::vector<mapTileIds::mapTileId>> copyMap(std::vector<std::vector<mapTileIds::mapTileId>> &map);
+		std::vector<std::vector<mapTileIds::mapTileId>> copyMap(std::vector<std::vector<mapTileIds::mapTileId>> map);
 
 		int drawLine(std::vector<std::vector<mapTileIds::mapTileId>> &map, std::vector<df::Vector> &line, mapTileIds::mapTileId type);
 
@@ -145,7 +145,7 @@ namespace ookpik {
 
 		int findCoordsOfValueCount(std::vector<std::vector<mapTileIds::mapTileId>>& map, mapTileIds::mapTileId open);
 
-		std::vector<std::vector<df::Vector>> findZones(std::vector<std::vector<mapTileIds::mapTileId>> &map, mapTileIds::mapTileId open);
+		std::vector<std::vector<df::Vector>> findZones(std::vector<std::vector<mapTileIds::mapTileId>> &map, mapTileIds::mapTileId flood, mapTileIds::mapTileId open);
 		
 		int findLargestZone(std::vector<std::vector<df::Vector>> &zones);
 
