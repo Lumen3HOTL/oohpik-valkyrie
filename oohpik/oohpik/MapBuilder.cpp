@@ -239,7 +239,7 @@ namespace ookpik {
 			return -1;
 		}
 
-		if (x + width - 1 > map.size()) {
+		if (x + width - 1 >= map.size()) {
 			this->addErrorMessage(std::string("drawSquare: error 2 invalid square size or coordinates!").append(" values are: max square x: ").append(std::to_string(x+width -1)).append(" map width: ").append(std::to_string(map.size())).append("!"));
 			this->setGenError(true);
 			return -1;
@@ -290,22 +290,22 @@ namespace ookpik {
 					map[((int)currentCoord.getX())][((int)currentCoord.getY())] = fillValue;
 					newCoord = currentCoord;
 					newCoord.setX(((int)newCoord.getX()) - 1);
-					if ((((int)newCoord.getX()) >= 0)&&map[((int)newCoord.getX())][((int)newCoord.getY())]==emptyValue) {
+					if ((((int)newCoord.getX()) >= 0)&&(map[((int)newCoord.getX())].size()>((int)newCoord.getY()))&&map[((int)newCoord.getX())][((int)newCoord.getY())]==emptyValue) {
 						toVisit.push(newCoord);
 					}
 					newCoord = currentCoord;
 					newCoord.setX(((int)newCoord.getX()) + 1);
-					if ((((int)newCoord.getX()) < map.size()) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
+					if ((((int)newCoord.getX()) <= map.size()) && (map[((int)newCoord.getX())].size() > ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
 						toVisit.push(newCoord);
 					}
 					newCoord = currentCoord;
 					newCoord.setY(((int)newCoord.getY()) - 1);
-					if ((((int)newCoord.getY()) >= 0) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
+					if ((((int)newCoord.getY()) >= 0) && (map[((int)newCoord.getX())].size() > ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
 						toVisit.push(newCoord);
 					}
 					newCoord = currentCoord;
 					newCoord.setY(((int)newCoord.getY()) + 1);
-					if ((((int)newCoord.getX()) < map[((int)newCoord.getX())].size()) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
+					if ((((int)newCoord.getX()) <= map[((int)newCoord.getX())].size()) && (map[((int)newCoord.getX())].size() > ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
 						toVisit.push(newCoord);
 					}
 				}
@@ -359,22 +359,22 @@ namespace ookpik {
 					foundCoords.push_back(currentCoord);
 					newCoord = currentCoord;
 					newCoord.setX(((int)newCoord.getX()) - 1);
-					if ((((int)newCoord.getX()) >= 0) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
+					if ((((int)newCoord.getX()) >= 0) && (map[((int)newCoord.getX())].size() > ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
 						toVisit.push(newCoord);
 					}
 					newCoord = currentCoord;
 					newCoord.setX(((int)newCoord.getX()) + 1);
-					if ((((int)newCoord.getX()) < map.size()) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
+					if ((((int)newCoord.getX()) <= map.size()) && (map[((int)newCoord.getX())].size() > ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
 						toVisit.push(newCoord);
 					}
 					newCoord = currentCoord;
 					newCoord.setY(((int)newCoord.getY()) - 1);
-					if ((((int)newCoord.getY()) >= 0) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
+					if ((((int)newCoord.getY()) >= 0) && (map[((int)newCoord.getX())].size() > ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
 						toVisit.push(newCoord);
 					}
 					newCoord = currentCoord;
 					newCoord.setY(((int)newCoord.getY()) + 1);
-					if ((((int)newCoord.getX()) < map[((int)newCoord.getX())].size()) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
+					if ((((int)newCoord.getX()) <= map[((int)newCoord.getX())].size()) && (map[((int)newCoord.getX())].size() > ((int)newCoord.getY())) && map[((int)newCoord.getX())][((int)newCoord.getY())] == emptyValue) {
 						toVisit.push(newCoord);
 					}
 				}
@@ -453,7 +453,7 @@ namespace ookpik {
 
 		std::vector<df::Vector> currentZone;
 
-		df::Vector randomSeed;
+		df::Vector floodSeed;
 
 		
 
@@ -466,8 +466,8 @@ namespace ookpik {
 
 
 		while (!openCoords.empty()) {
-			randomSeed = openCoords.at(std::rand() % openCoords.size());
-			currentZone = this->floodFillReturnCoords(tempMap, randomSeed, mapTileIds::FLOOD, mapTileIds::EMPTY);
+			floodSeed = openCoords.at(0);
+			currentZone = this->floodFillReturnCoords(tempMap, floodSeed, mapTileIds::FLOOD, mapTileIds::EMPTY);
 			if (this->getGenError()) {
 				this->addErrorMessage("FindZones: error 2 flood fill failure!");
 				return std::vector<std::vector<df::Vector>>();
@@ -513,14 +513,9 @@ namespace ookpik {
 
 	float MapBuilder::findDistance(df::Vector p0, df::Vector p1) {
 		float precursor = ((p1.getX()-p0.getX()) * (p1.getX() - p0.getX()))+ ((p1.getY()-p0.getY()) * (p1.getY() - p0.getY()));
-		if (precursor < 0.000001f) {
+		
 			
-			this->addErrorMessage(std::string("findDistance: error 0 potential deivide by zero or negative number! suspect precursor: ").append(std::to_string(precursor)).append("!"));
-			this->setGenError(true);
-
-			
-			return -1;
-		}
+		
 		return sqrtf(precursor);
 	}
 
@@ -543,6 +538,7 @@ namespace ookpik {
 			}
 			if (testDistance < shortestDistance) {
 				closestPoint = otherPoints[i];
+				shortestDistance = testDistance;
 			}
 		}
 
@@ -584,24 +580,24 @@ namespace ookpik {
 					this->setGenError(true);
 					return CoordinatePair();
 				}
-				for (int end = 0; end < otherZones[zone].size(); end++) {
-					endCheckPoint = this->findClosestPointInOtherZone(startCheckPoint,otherZones[zone]);
-					if (this->getGenError()) {
-						this->addErrorMessage(std::string("findSmallestConnectionLine: error 3 closest point search failed!"));
-						return CoordinatePair();
-					}
-
-					checkDistance = this->findDistance(startCheckPoint, endCheckPoint);
-					if (this->getGenError()) {
-						this->addErrorMessage(std::string("findSmallestConnectionLine: error 4 failed distance calculation!"));
-						return CoordinatePair();
-					}
-					if (checkDistance < overallShortestDistance) {
-						overallShortestStartZonePoint = startCheckPoint;
-						overallShortestOtherZonePoint = endCheckPoint;
-						overallShortestDistance = checkDistance;
-					}
+				
+				endCheckPoint = this->findClosestPointInOtherZone(startCheckPoint,otherZones[zone]);
+				if (this->getGenError()) {
+					this->addErrorMessage(std::string("findSmallestConnectionLine: error 3 closest point search failed!"));
+					return CoordinatePair();
 				}
+
+				checkDistance = this->findDistance(startCheckPoint, endCheckPoint);
+				if (this->getGenError()) {
+					this->addErrorMessage(std::string("findSmallestConnectionLine: error 4 failed distance calculation!"));
+					return CoordinatePair();
+				}
+				if (checkDistance < overallShortestDistance) {
+					overallShortestStartZonePoint = startCheckPoint;
+					overallShortestOtherZonePoint = endCheckPoint;
+					overallShortestDistance = checkDistance;
+				}
+				
 			}
 		}
 
