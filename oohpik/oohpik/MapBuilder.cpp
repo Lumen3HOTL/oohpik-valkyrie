@@ -2518,7 +2518,7 @@ namespace ookpik {
 
 						std::vector < std::string> errorMessages = this->getErrorMessages();
 						for (int i = 0; i < errorMessages.size(); i++) {
-							lm.writeLog(m_error_messages[i].c_str());
+							lm.writeLog(errorMessages[i].c_str());
 						}
 
 						EventMapGenDone done = EventMapGenDone(errorMessages);
@@ -2552,7 +2552,7 @@ namespace ookpik {
 							df::LogManager& lm = df::LogManager::getInstance();
 							std::vector < std::string> errorMessages = this->getErrorMessages();
 							for (int i = 0; i < errorMessages.size(); i++) {
-								lm.writeLog(m_error_messages[i].c_str());
+								lm.writeLog(errorMessages[i].c_str());
 							}
 
 							EventMapGenDone done = EventMapGenDone(errorMessages);
