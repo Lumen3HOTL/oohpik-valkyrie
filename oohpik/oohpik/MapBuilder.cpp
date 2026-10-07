@@ -610,7 +610,13 @@ namespace ookpik {
 		df::Clock timer;
 		timer.delta();
 
-		std::vector<std::vector<df::Vector>> zones=this->findZones(map,empty,flood);
+		std::vector<std::vector<df::Vector>> zones=this->findZones(map,flood,empty);
+		// No zones means nothing open was found; report it rather than indexing an empty list
+		if (zones.empty()) {
+			this->addErrorMessage(std::string("eliminateDisperateZones: error 5 no open zones found!"));
+			this->setGenError(true);
+			return -1;
+		}
 		std::vector<df::Vector> startZone = zones[zones.size() - 1];
 		zones.pop_back();
 		std::vector<df::Vector> fixLine;
@@ -643,7 +649,12 @@ namespace ookpik {
 				this->addErrorMessage(std::string("eliminateDisperateZones: error 4 connection line draw failed!"));
 				return -1;
 			}
-			zones = this->findZones(map, empty,flood);
+			zones = this->findZones(map, flood, empty);
+			if (zones.empty()) {
+				this->addErrorMessage(std::string("eliminateDisperateZones: error 6 no open zones found after joining!"));
+				this->setGenError(true);
+				return -1;
+			}
 			startZone = zones[zones.size() - 1];
 			zones.pop_back();
 		}
