@@ -2510,6 +2510,12 @@ namespace ookpik {
 					if (this->getBaseFunctionExit()) {
 						df::GameManager& gm = df::GameManager::getInstance();
 						df::LogManager& lm = df::LogManager::getInstance();
+						m_genThread->join();
+						if (m_genThread != nullptr) {
+							delete m_genThread;
+							m_genThread = nullptr;
+						}
+
 						std::vector < std::string> errorMessages = this->getErrorMessages();
 						for (int i = 0; i < errorMessages.size(); i++) {
 							lm.writeLog(m_error_messages[i].c_str());
@@ -2527,7 +2533,11 @@ namespace ookpik {
 				else if (!this->getGenerating()) {
 					if (this->getGenDone() && (!this->getBuilding())&&this->getBaseFunctionExit()) {
 						m_genThread->join();
-						m_genThread = nullptr;
+						if (m_genThread != nullptr) {
+							delete m_genThread;
+							m_genThread = nullptr;
+						}
+						
 						this->setBuilding(true);
 						this->setCurrentBuildPos(m_configObj.getMapOrigin());
 						m_to_build=(this->m_configObj.getMapWidth() + (this->m_configObj.getMapBorderThickness() * 2)) * (this->m_configObj.getMapHeight() + (this->m_configObj.getMapBorderThickness() * 2));
