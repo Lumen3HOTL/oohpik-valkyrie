@@ -92,6 +92,8 @@ namespace ookpik {
 					vectorError += yDistance;
 					pathPoints.push_back(df::Vector(currentX, currentY));
 				}
+
+				currentY += stepY;
 			}
 		}
 		pathPoints.push_back(df::Vector(x2, y2));
