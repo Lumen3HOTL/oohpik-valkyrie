@@ -54,7 +54,7 @@ namespace ookpik {
 
 	}
 	bool  MapGenConfig::getGenDebugMode()const {
-		return m_map_gen_demo_mode;
+		return m_map_gen_debug;
 	}
 
 	void  MapGenConfig::setGenDemoMode(bool new_demo_mode) {
