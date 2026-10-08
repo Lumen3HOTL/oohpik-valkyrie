@@ -1058,10 +1058,12 @@ namespace ookpik {
 
 
 	void MapBuilder::resetTimer() {
-		if(!this->getDeleteMode())
-		m_state_gate.lock();
-		m_timer.delta();
-		m_state_gate.unlock();
+		if (!this->getDeleteMode()) {
+			m_state_gate.lock();
+			m_timer.delta();
+			m_state_gate.unlock();
+		}
+		
 	}
 	bool MapBuilder::checkTimer() {
 		bool temp = false;
