@@ -2317,7 +2317,7 @@ namespace ookpik {
 	}
 
 
-	int MapBuilder::buildMapV2(MapBuildStateObject state) {
+	int MapBuilder::buildMapV2(MapBuildStateObject& state) {
 		df::Object* newGround = nullptr;
 		df::Object* newTree = nullptr;
 		df::Object* newExit = nullptr;
@@ -2879,6 +2879,7 @@ namespace ookpik {
 					done = EventMapGenDone(m_builder_state.getCurrentMapObjects(), this->getGenTime(), this->getBuildTime());
 					gm.onEvent(&done);
 					this->setCurrentMode(GenerationStages::DONE);
+					this->setVisible(false);
 					break;
 				case GenerationStages::STAGE_ERROR:
 
@@ -2887,7 +2888,7 @@ namespace ookpik {
 
 					break;
 				case GenerationStages::DONE:
-
+					this->setVisible(false);
 					break;
 				default:
 					this->setCurrentMode(GenerationStages::STAGE_ERROR);

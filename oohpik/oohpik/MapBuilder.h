@@ -54,7 +54,7 @@ namespace ookpik {
 
 		int configureMapBuilding(MapGenConfig config, std::vector<std::vector<mapTileIds::mapTileId>> mapPlan, df::Object* owl);
 
-		int buildMapV2(MapBuildStateObject state);
+		int buildMapV2(MapBuildStateObject& state);
 
 		GenerationStages::GenerationStage getCurrentMode();
 		void setCurrentMode(GenerationStages::GenerationStage new_mode);

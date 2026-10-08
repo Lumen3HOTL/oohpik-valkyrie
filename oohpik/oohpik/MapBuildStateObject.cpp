@@ -1,5 +1,5 @@
 #include "MapBuildStateObject.h"
-
+#include <iostream>
 namespace ookpik {
 	MapBuildStateObject::MapBuildStateObject() {
 		m_current_X=0;
@@ -174,7 +174,8 @@ namespace ookpik {
 
 
 	bool MapBuildStateObject::isCurrentPosBorder() {
-		return ((m_current_X<m_border_thickness) || (m_current_X>=m_border_thickness+m_map_width) || (m_current_Y<m_border_thickness) || (m_current_Y>=m_border_thickness+m_map_height));
+		
+		return ((m_current_X < m_border_thickness) ||(m_current_X >= (m_border_thickness + (m_map_width))) ||(m_current_Y < m_border_thickness) ||(m_current_Y >= (m_border_thickness +( m_map_height))));
 	}
 	df::Vector  MapBuildStateObject::getTrueCursorPos() {
 		return m_map_origin + m_current_global_pos;
@@ -188,7 +189,8 @@ namespace ookpik {
 		if (this->isCurrentPosBorder()) {
 			return mapTileIds::TREE;
 		}
-		return m_map_plan[m_current_X][m_current_Y];
+		
+		return  m_map_plan[m_current_X-m_border_thickness][m_current_Y-m_border_thickness];
 
 	}
 }

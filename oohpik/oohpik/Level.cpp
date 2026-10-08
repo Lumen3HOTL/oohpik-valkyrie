@@ -8,13 +8,13 @@ namespace {
 	// buildMap draws rows from y = 1, so 27 rows + a 1-tile border on each side = rows 1..29.
 	ookpik::MapGenConfig makeMapConfig() {
 		ookpik::MapGenConfig config;
-		config.setMapOrigin(df::Vector(1, 0));
+		config.setMapOrigin(df::Vector(2, 0));
 
 
-		config.setMapWidth(34);
-		config.setMapHeight(27);
-		config.setMapBorderThickness(1);
-		config.setObjectsConstructedPerFrame(1000); // build the whole map in one frame
+		config.setMapWidth(53);
+		config.setMapHeight(26);
+		config.setMapBorderThickness(2);
+		config.setObjectsConstructedPerFrame(5000); // build the whole map in one frame
 
 		
 		//config.setMapWidth(500);
@@ -38,8 +38,8 @@ namespace {
 		config.setMaxRoomWidth(12);
 		config.setMinRoomHeight(3);
 		config.setMaxRoomHeight(6);
-		config.setMinRightAngleLines(20);
-		config.setMaxRightAngleLine(30);
+		config.setMinRightAngleLines(15);
+		config.setMaxRightAngleLine(20);
 		config.setMinRightAngleLineWidth(10);
 		config.setMaxRightAngleLineWidth(30);
 		config.setMinRightAngleLineHeight(3);
