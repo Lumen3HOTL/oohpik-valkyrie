@@ -263,7 +263,7 @@ namespace ookpik {
 			m_debug_gate.lock();
 
 			lm.writeLog(std::string("debug map 2:\n").append(m_debug_map2).c_str());
-			m_debug_map1.clear();
+			m_debug_map2.clear();
 			m_debug_gate.unlock();
 		}
 		
