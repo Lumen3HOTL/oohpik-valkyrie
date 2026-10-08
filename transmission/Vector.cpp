@@ -3,6 +3,7 @@
 #include <math.h>
 #include <cmath>
 #include <numbers>
+
 namespace df {
 	Vector::Vector() {
 		m_x = 0;

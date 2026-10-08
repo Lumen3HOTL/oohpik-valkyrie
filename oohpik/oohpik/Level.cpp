@@ -10,18 +10,18 @@ namespace {
 		ookpik::MapGenConfig config;
 		config.setMapOrigin(df::Vector(2, 0));
 
-
+		
 		config.setMapWidth(53);
 		config.setMapHeight(26);
 		config.setMapBorderThickness(2);
 		config.setObjectsConstructedPerFrame(5000); // build the whole map in one frame
-
 		
-		//config.setMapWidth(500);
-		//config.setMapHeight(500);
-		//config.setMapBorderThickness(50);
-		//config.setObjectsConstructedPerFrame(100); 
-		
+		/*
+		config.setMapWidth(500);
+		config.setMapHeight(500);
+		config.setMapBorderThickness(50);
+		config.setObjectsConstructedPerFrame(1000); 
+		*/
 		
 		
 		config.setMapObjectWidth(2);

@@ -29,7 +29,7 @@ namespace df {
 			checkBox = p_o->getBox();
 			if (!cameras.isEmpty()) {
 				if (p_o->getCameraAffected()) {
-					checkBox.getCorner() - cameras.getCurrentCamera()->getCameraPos();
+					 checkBox.setCorner( checkBox.getCorner() - cameras.getCurrentCamera()->getCameraPos());
 				}
 			}
 			

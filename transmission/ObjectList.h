@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-
+#include <unordered_set>
 #include "Object.h"
 
 namespace df {
@@ -9,6 +9,7 @@ namespace df {
 		private:
 			int m_count; // Count of objects in list.
 			std::vector<Object *> m_p_obj; // Array of pointers to objects.
+			std::unordered_set<Object*> m_p_obj_presence;
 		
 	public:
 			// Default constructor.

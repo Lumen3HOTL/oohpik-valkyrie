@@ -1,11 +1,13 @@
 #include "ObjectList.h"
 #include <stdexcept>
 #include <cstdio>
+
 #include "WorldManager.h"
 namespace df {
 	ObjectList::ObjectList() {
 		m_count = 0;
 		m_p_obj = std::vector<Object *>();
+		m_p_obj_presence= std::unordered_set<Object*>();
 	}
 
 	int ObjectList::insert(Object* p_o) {
@@ -13,13 +15,13 @@ namespace df {
 			return -1;
 		}
 		//check if the object is already in the list and if so dont add it
-		for (int i = 0; i < m_p_obj.size(); i++) {
-			if (((Object*)m_p_obj[i]) == ((Object*)p_o)) {
-				return -1;
-			}
+		if (m_p_obj_presence.contains(p_o)) {
+			return -1;
 		}
+		
 		//otherwise add it and up the count
 		m_p_obj.push_back(p_o);
+		m_p_obj_presence.insert(p_o);
 		m_count++;
 		return 0;
 	}
@@ -48,11 +50,13 @@ namespace df {
 				found = 0;
 			}
 		}
+		m_p_obj_presence.erase(p_o);
 		return found;
 	}
 
 	void ObjectList::clear() {
 		m_p_obj.clear();
+		m_p_obj_presence.clear();
 		m_count = 0;
 
 	}
