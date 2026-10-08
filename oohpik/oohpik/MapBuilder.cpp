@@ -1,6 +1,6 @@
   #include "MapBuilder.h"
 
-
+//behold madness
 namespace ookpik {
 	// Ground objects are invisible and do nothing, but there is one per open tile,
 	// and every object costs time each frame. Set to true to create them again.
@@ -661,7 +661,19 @@ namespace ookpik {
 		}
 		int timeout = configObj.getTimeoutSeconds();
 
-		
+		int selection = 0;
+
+		bool yFirst = false;
+		bool point1first = false;
+
+
+		int topLeftx = 0;
+		int topLefty = 0;
+
+		int repairWidth = 0;
+		int repairHeight = 0;
+		df::Box repairBox;
+		df::Vector testPoint;
 
 		CoordinatePair fixPoints;
 		while ((zones.size() > 0)) {
@@ -676,18 +688,74 @@ namespace ookpik {
 				this->m_debug_harness->queueErrorMessage(std::string("eliminateDisperateZones: error 4 connection line search failed!"));
 				return -1;
 			}
-
-
-			fixLine = this->generateBresenhamLine(fixPoints.getPoint0().getX(), fixPoints.getPoint0().getY(), fixPoints.getPoint1().getX(), fixPoints.getPoint1().getY());
-			if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+			testPoint = this->getXYDistanceBetweenTwoPoint(fixPoints.getPoint0(), fixPoints.getPoint1());
+			if (this->getCurrentMode() == GenerationStages::GENERATION_ERROR) {
 				this->m_debug_harness->queueErrorMessage(std::string("eliminateDisperateZones: error 5 zone search failed!"));
 				return -1;
 			}
-			this->drawLine(map, fixLine, empty);
-			if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
-				this->m_debug_harness->queueErrorMessage(std::string("eliminateDisperateZones: error 6 connection line draw failed!"));
-				return -1;
+			if (testPoint.getX()+testPoint.getY() > 7) {
+				selection = this->getRandom(0, 1);
 			}
+			else {
+				selection = this->getRandom(0, 2);
+			}
+			
+			switch (selection) {
+				case 0:
+					fixLine = this->generateBresenhamLine(fixPoints.getPoint0().getX(), fixPoints.getPoint0().getY(), fixPoints.getPoint1().getX(), fixPoints.getPoint1().getY());
+					this->drawLine(map, fixLine, empty);
+					if (this->getCurrentMode() == GenerationStages::GENERATION_ERROR) {
+						this->m_debug_harness->queueErrorMessage(std::string("eliminateDisperateZones: error 6 connection line draw failed!"));
+						return -1;
+					}
+					break;
+			case 1:
+				yFirst = false;
+				point1first = false;
+				if (this->getRandom(0, 1) == 1) {
+					yFirst = true;
+				}
+				if (this->getRandom(0, 1) == 1) {
+					point1first = true;
+				}
+				fixLine = this->generateXYLine(fixPoints.getPoint0().getX(), fixPoints.getPoint0().getY(), fixPoints.getPoint1().getX(), fixPoints.getPoint1().getY(), yFirst, point1first);
+				this->drawLine(map, fixLine, empty);
+				if (this->getCurrentMode() == GenerationStages::GENERATION_ERROR) {
+					this->m_debug_harness->queueErrorMessage(std::string("eliminateDisperateZones: error 6 connection line draw failed!"));
+					return -1;
+				}
+				break;
+			case 2:
+				topLeftx = fixPoints.getPoint1().getX();
+				repairWidth = fixPoints.getPoint1().getX() - fixPoints.getPoint0().getX();
+				topLefty = fixPoints.getPoint0().getY();
+				repairHeight = fixPoints.getPoint0().getY() - fixPoints.getPoint1().getY();
+				if (fixPoints.getPoint0().getX() < fixPoints.getPoint1().getX()) {
+					topLeftx = fixPoints.getPoint0().getX();
+					repairWidth =  fixPoints.getPoint1().getX()- fixPoints.getPoint0().getX();
+				}
+				if (fixPoints.getPoint1().getY() > fixPoints.getPoint0().getY()) {
+					topLefty = fixPoints.getPoint0().getY();
+					repairHeight = fixPoints.getPoint1().getY() - fixPoints.getPoint0().getY();
+				}
+				if (repairWidth <= 0) {
+					repairWidth = 1;
+				}
+				if (repairHeight <= 0) {
+					repairHeight = 1;
+				}
+				repairBox = df::Box(df::Vector(topLeftx, topLefty), repairWidth, repairHeight);
+				this->drawRectangle(map, repairBox, empty);
+				
+				if (this->getCurrentMode() == GenerationStages::GENERATION_ERROR) {
+					this->m_debug_harness->queueErrorMessage(std::string("eliminateDisperateZones: error 6 connection box draw failed!"));
+					return -1;
+				}
+				break;
+			}
+			
+			
+			
 			zones = this->findZones(map, flood, empty);
 			if (zones.empty()) {
 				this->m_debug_harness->queueErrorMessage(std::string("eliminateDisperateZones: error 7 no open zones found after joining!"));
