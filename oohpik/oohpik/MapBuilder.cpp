@@ -4,7 +4,7 @@
 namespace ookpik {
 	// Ground objects are invisible and do nothing, but there is one per open tile,
 	// and every object costs time each frame. Set to true to create them again.
-	const bool CREATE_GROUND_OBJECTS = true;
+	const bool CREATE_GROUND_OBJECTS = false;
 
 	unsigned long long MapBuilder::getBuildTime() {
 		unsigned long long temp = 0;
