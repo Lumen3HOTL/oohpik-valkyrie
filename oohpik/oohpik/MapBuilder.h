@@ -22,6 +22,8 @@
 #include "Tree.h"
 #include "Ground.h"
 #include "Seed.h"
+#include "MapGenDebugObj.h"
+#include "MapBuildStateObject.h"
 namespace ookpik {
 	namespace mapTileIds {
 		enum mapTileId {
@@ -34,17 +36,29 @@ namespace ookpik {
 			FLOOD
 		};
 	}
-	
+	namespace GenerationStages {
+		enum GenerationStage {
+			STAGE_ERROR,
+			GENERATION_ERROR,
+			BUILD_ERROR,
+			READY,
+			WAITING_TO_GENERATE,
+			GENERATING,
+			WAITING_FOR_THREAD_EXIT,
+			GENERATION_DONE,
+			WAITING_FOR_BUILD_START,
+			BUILDING,
+			BUILD_DONE,
+			SENDING_EVENT,
+			DONE,
+			
+
+
+		};
+	}
 	class MapBuilder : public df::Object {
 	private:
 		MapGenConfig m_configObj;
-		
-		df::ObjectList m_mapReturn;
-		bool m_generating;
-		bool m_genDone;
-		bool m_done_sent;
-		bool m_build_done;
-		bool m_building;
 		std::thread* m_genThread;
 		unsigned long long m_genTime;
 		unsigned long long m_buildTime;
@@ -52,59 +66,40 @@ namespace ookpik {
 		df::Clock m_timer;
 		df::Object* m_player;
 		std::vector<std::vector<mapTileIds::mapTileId>> m_map_plan;
-		bool m_gen_error;
-		std::vector<std::string> m_error_messages;
-		std::mutex m_error_gate=std::mutex();
-		std::mutex m_state_gate=std::mutex();
-		std::mutex m_log_man_access = std::mutex();
 		
-		int m_build_progress;
-		int m_to_build;
-		int m_build_per_frame;
-		df::Vector m_current_build_pos;
-		bool m_base_function_exit;
-		int m_lastx;
-		int m_lasty;
+		std::mutex m_state_gate=std::mutex();
+		std::mutex m_mode_gate = std::mutex();
 		std::mt19937 m_RandomEngine;
-		std::string m_debug_map1;
-		std::string m_debug_map2;
-		std::vector<std::string> m_current_debug_strip;
-		std::vector<std::vector<std::string>> m_debug_strips;
-		std::vector<df::Vector > m_debug_Coords;
-		std::vector<df::Vector> m_debug_map_positions;
-		bool m_debug = true;
+		MapGenDebugObj* m_debug_harness;
+		MapBuildStateObject m_builder_state;
+
+		bool m_demo_mode;
+		bool m_delete_mode;
+		GenerationStages::GenerationStage m_current_mode;
+		bool m_base_function_exit;
+		bool m_error_handled;
 
 
+		int configureMapBuilding();
+
+
+
+		GenerationStages::GenerationStage getCurrentMode();
+		void setCurrentMode(GenerationStages::GenerationStage new_mode);
+		bool getBaseFunctionExit();
+		void setBaseFunctionExit(bool new_base_function_exit);
+
+		
 		int getRandom(int low, int high);
 		void setMapReturn(df::ObjectList new_map_return);
 		df::ObjectList getMapReturn();
 
-		bool isMapBuildFinished();
+		bool getDeleteMode();
+		void setDeleteMode(bool new_delete_mode);
 		
-		void setLastX(int new_last_x);
-		int getLastX();
-		void setLastY(int new_last_y);
-		int getlastY();
-
-		int getBuildProgress();
-		void setBuildProgress(int new_build_progress);
-		int getToBuild();
-		void setToBuild(int new_to_build);
-		int getBuildPerFrame();
-		void setBuildPerFrame(int new_build_per_frame);
-		void setCurrentBuildPos(df::Vector  new_current_build_pos);
-		df::Vector getCurrentBuildPos();
-
+		
 		unsigned long long getBuildTime();
 		void setBuildTime(unsigned long long n_build_time);
-		
-
-		void setBuildDone(bool new_build_done);
-		bool getBuildDone();
-		void setGenDone(bool new_gen_done);
-		bool getGenDone();
-		void setBuilding(bool new_building);
-		bool getBuilding();
 
 		void setGenTime(unsigned long long new_gen_time);
 		unsigned long long getGenTime();
@@ -115,21 +110,8 @@ namespace ookpik {
 		int getTimeout();
 		int setTimeout(int new_timeout);
 
-		void setGenerating(bool new_genrating);
-		bool getGenerating();
-		void setDoneSent(bool new_done_set);
-		bool getDoneSet();
 
-		void setBaseFunctionExit(bool new_base_function_exit);
-		bool getBaseFunctionExit();
-
-		void addErrorMessage(std::string new_error_message);
-		void resetErrorMessage();
-		void setErrorMessages(std::vector<std::string> new_error_messages);
-		std::vector<std::string> getErrorMessages();
-
-		void setGenError(bool new_gen_error);
-		bool getGenError();
+		
 
 		float findDistance(df::Vector p0, df::Vector p1);
 
@@ -203,6 +185,7 @@ namespace ookpik {
 		int startGenerateMap(MapGenConfig config, df::Object* owl);
 
 		bool isMapGenFinished();
+		bool isMapBuildFinished();
 
 		int destroyMap(df::ObjectList map);
 

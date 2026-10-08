@@ -158,8 +158,10 @@
     <ClCompile Include="Hero.cpp" />
     <ClCompile Include="Level.cpp" />
     <ClCompile Include="MapBuilder.cpp" />
+    <ClCompile Include="MapBuildStateObject.cpp" />
     <ClCompile Include="MapExit.cpp" />
     <ClCompile Include="MapGenConfigObj.cpp" />
+    <ClCompile Include="MapGenDebugObject.cpp" />
     <ClCompile Include="Seed.cpp" />
     <ClCompile Include="Tree.cpp" />
   </ItemGroup>
@@ -171,8 +173,10 @@
     <ClInclude Include="Hero.h" />
     <ClInclude Include="Level.h" />
     <ClInclude Include="MapBuilder.h" />
+    <ClInclude Include="MapBuildStateObject.h" />
     <ClInclude Include="MapExit.h" />
     <ClInclude Include="MapGenConfigObj.h" />
+    <ClInclude Include="MapGenDebugObj.h" />
     <ClInclude Include="Seed.h" />
     <ClInclude Include="Tree.h" />
   </ItemGroup>

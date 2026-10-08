@@ -1,5 +1,6 @@
 #pragma once
 #include "vector.h"
+#include <string>
 namespace ookpik {
 	class MapGenConfig {
 	private:
@@ -12,6 +13,10 @@ namespace ookpik {
 		int m_objects_construct_per_frame;
 
 		int m_map_object_altitude;
+
+		bool m_map_gen_debug;
+		bool m_map_gen_demo_mode;
+		std::string m_map_gen_demo_mode_log_file_name;
 
 		int m_min_rand_trees;
 		int m_max_rand_trees;
@@ -63,6 +68,14 @@ namespace ookpik {
 		void setObjectsConstructedPerFrame(int new_objects_constructed_per_frame);
 		int getObjectsConstructedPerFrame()const;
 	
+		void setGenDebugMode(bool new_debug_mode);
+		bool getGenDebugMode()const;
+
+		void setGenDemoMode(bool new_demo_mode);
+		bool getaGenDemoMode()const;
+
+		void setGenDemoModeLogFileName(std::string new_demo_mode_log_file_name);
+		std::string getGenDemoModeLogFileName()const;
 
 		void setRandomSeed(int new_seed);
 		int getRandomSeed()const;

@@ -8,15 +8,21 @@ namespace ookpik {
 
 	unsigned long long MapBuilder::getBuildTime() {
 		unsigned long long temp = 0;
-		m_state_gate.lock();
-		temp = m_buildTime;
-		m_state_gate.unlock();
+		if (!this->getDeleteMode()) {
+			m_state_gate.lock();
+			temp = m_buildTime;
+			m_state_gate.unlock();
+		}
+		
 		return temp;
 	}
 	void MapBuilder::setBuildTime(unsigned long long new_build_time) {
-		m_state_gate.lock();
-		m_buildTime = new_build_time;
-		m_state_gate.unlock();
+		if (!this->getDeleteMode()) {
+			m_state_gate.lock();
+			m_buildTime = new_build_time;
+			m_state_gate.unlock();
+		}
+		
 	}
 
 	std::vector<df::Vector> MapBuilder::generateBresenhamLine(int x1, int y1, int x2, int y2) {
@@ -212,15 +218,15 @@ namespace ookpik {
 
 	int MapBuilder::drawLine(std::vector<std::vector<mapTileIds::mapTileId>>& map, std::vector<df::Vector>& line, mapTileIds::mapTileId type) {
 		if (map.empty()) {
-			this->addErrorMessage("drawLineError: error 0 map empty!");
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage("drawLineError: error 0 map empty!");
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			
 			
 			return -1;
 		}
 		else if (line.empty()) {
-			this->addErrorMessage("drawLineError: error 1 line empty!");
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage("drawLineError: error 1 line empty!");
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 
 
 			return -1;
@@ -231,13 +237,13 @@ namespace ookpik {
 
 			point = line.at(pointIndex);
 			if ((((int)point.getX()) >= map.size()) || (((int)point.getX()) < 0) ){
-				this->addErrorMessage(std::string("drawLineError: error 2 line extends outside map!").append(" invalid point is x: ").append(std::to_string(point.getX())).append(" map size is: Width: ").append(std::to_string(map.size())).append("!"));
-				this->setGenError(true);
+				this->m_debug_harness->queueErrorMessage(std::string("drawLineError: error 2 line extends outside map!").append(" invalid point is x: ").append(std::to_string(point.getX())).append(" map size is: Width: ").append(std::to_string(map.size())).append("!"));
+				this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 				return -1;
 			}
 			if (((((int)point.getY()) >= map.at(((int)point.getX())).size())) || (((int)point.getY()) < 0)) {
-				this->addErrorMessage(std::string("drawLineError: error 2 line extends outside map!").append(" invalid point is ").append(" y: ").append(std::to_string(point.getY())).append(" map size is: ").append(" height: ").append(std::to_string(map.at(((int)point.getX())).size())).append("!"));
-				this->setGenError(true);
+				this->m_debug_harness->queueErrorMessage(std::string("drawLineError: error 2 line extends outside map!").append(" invalid point is ").append(" y: ").append(std::to_string(point.getY())).append(" map size is: ").append(" height: ").append(std::to_string(map.at(((int)point.getX())).size())).append("!"));
+				this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 				return -1;
 			}
 			
@@ -248,8 +254,8 @@ namespace ookpik {
 
 	int MapBuilder::drawRectangle(std::vector<std::vector<mapTileIds::mapTileId>>& map, df::Box square, mapTileIds::mapTileId value) {
 		if (map.empty()) {
-			this->addErrorMessage("drawSquare: error 0 map empty!");
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage("drawSquare: error 0 map empty!");
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return -1;
 		}
 		int width = (int)square.getHorizontal();
@@ -257,22 +263,22 @@ namespace ookpik {
 		int x = (int)square.getCorner().getX();
 		int y = ((int)square.getCorner().getY());
 		if ((width < 1) || (height < 1) || (x < 0) || (y < 0)) {
-			this->addErrorMessage(std::string("drawSquare: error 1 invalid square dimensions or coordinates!").append(" values are: width:").append(std::to_string(width)).append(" height: ").append(std::to_string(height)).append(" x: ").append(std::to_string(x)).append(" y: ").append(std::to_string(y)).append("!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("drawSquare: error 1 invalid square dimensions or coordinates!").append(" values are: width:").append(std::to_string(width)).append(" height: ").append(std::to_string(height)).append(" x: ").append(std::to_string(x)).append(" y: ").append(std::to_string(y)).append("!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return -1;
 		}
 
 		if (x + width - 1 >= map.size()) {
-			this->addErrorMessage(std::string("drawSquare: error 2 invalid square size or coordinates!").append(" values are: max square x: ").append(std::to_string(x+width -1)).append(" map width: ").append(std::to_string(map.size())).append("!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("drawSquare: error 2 invalid square size or coordinates!").append(" values are: max square x: ").append(std::to_string(x+width -1)).append(" map width: ").append(std::to_string(map.size())).append("!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return -1;
 		}
 
 		for (int i = x; i < width + x; i++) {
 			for (int j = y; j < y + height; j++) {
 				if (map.at(i).size() <= j) {
-					this->addErrorMessage(std::string("drawSquare: error 3 invalid square size or coordinates!").append(" values are: y:").append(std::to_string(j)).append(" map x: ").append(std::to_string(i)).append(" map height at map x: ").append(std::to_string(map.at(i).size())).append("!"));
-					this->setGenError(true);
+					this->m_debug_harness->queueErrorMessage(std::string("drawSquare: error 3 invalid square size or coordinates!").append(" values are: y:").append(std::to_string(j)).append(" map x: ").append(std::to_string(i)).append(" map height at map x: ").append(std::to_string(map.at(i).size())).append("!"));
+					this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 					return -1;
 				}
 				map.at(i).at(j) = value;
@@ -285,8 +291,8 @@ namespace ookpik {
 
 	int MapBuilder::floodFill(std::vector<std::vector<mapTileIds::mapTileId>>& map, df::Vector location, mapTileIds::mapTileId fillValue, mapTileIds::mapTileId emptyValue) {
 		if (map.empty()) {
-			this->addErrorMessage("floodfill: error 0 map empty!");
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage("floodfill: error 0 map empty!");
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return -1;
 		}
 		
@@ -304,8 +310,8 @@ namespace ookpik {
 			toVisit.pop();
 			if (!visited.contains(((((unsigned long long)(currentCoord.getX())) << 32) | ((unsigned long long)currentCoord.getY())))) {
 				if ((((int)currentCoord.getX()) < 0) || (((int)currentCoord.getX()) >= map.size()) || (((int)currentCoord.getY()) < 0) || (((int)currentCoord.getY()) >= map.at(((int)currentCoord.getX())).size())) {
-					this->addErrorMessage("floodfill: error 1 point outside map!");
-					this->setGenError(true);
+					this->m_debug_harness->queueErrorMessage("floodfill: error 1 point outside map!");
+					this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 					return -1;
 				}
 
@@ -345,13 +351,13 @@ namespace ookpik {
 
 	std::vector<df::Vector> MapBuilder::floodFillReturnCoords(std::vector<std::vector<mapTileIds::mapTileId>>& map, df::Vector location, mapTileIds::mapTileId fillValue, mapTileIds::mapTileId emptyValue) {
 		if (map.empty()) {
-			this->addErrorMessage("floodfillReturnCoords: error 0 map empty!");
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage("floodfillReturnCoords: error 0 map empty!");
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return std::vector<df::Vector>();
 		}
 		else if (fillValue == emptyValue) {
-			this->addErrorMessage(std::string("floodfillReturnCoords: error 1 fill value is equal to emtpy value! fill and empty value: ").append(std::to_string((int)fillValue)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("floodfillReturnCoords: error 1 fill value is equal to emtpy value! fill and empty value: ").append(std::to_string((int)fillValue)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return std::vector<df::Vector>();
 		}
 
@@ -371,8 +377,8 @@ namespace ookpik {
 			toVisit.pop();
 			if (!visited.contains(((((unsigned long long)(currentCoord.getX())) << 32) | ((unsigned long long)currentCoord.getY())))) {
 				if ((((int)currentCoord.getX()) < 0) || (((int)currentCoord.getX()) >= map.size()) || (((int)currentCoord.getY()) < 0) || (((int)currentCoord.getY()) >= map.at(((int)currentCoord.getX())).size())) {
-					this->addErrorMessage("floodfillreturnCoords: error 1 point outside map!");
-					this->setGenError(true);
+					this->m_debug_harness->queueErrorMessage("floodfillreturnCoords: error 1 point outside map!");
+					this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 					
 					return std::vector<df::Vector>();
 				}
@@ -414,8 +420,8 @@ namespace ookpik {
 
 	std::vector<df::Vector> MapBuilder::findCoordsOfValue(std::vector<std::vector<mapTileIds::mapTileId>>& map, mapTileIds::mapTileId type) {
 		if (map.empty()) {
-			this->addErrorMessage("findOpenCoords: error 0 map empty!");
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage("findOpenCoords: error 0 map empty!");
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return std::vector<df::Vector>();
 		}
 
@@ -423,8 +429,8 @@ namespace ookpik {
 
 		for (int x = 0; x < map.size();x++) {
 			if (map.at(x).empty()) {
-				this->addErrorMessage("FindOpenCoords: error 1 map collumn empty!");
-				this->setGenError(true);
+				this->m_debug_harness->queueErrorMessage("FindOpenCoords: error 1 map collumn empty!");
+				this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 				return std::vector<df::Vector>();
 			}
 			for (int y = 0; y < map.at(x).size(); y++) {
@@ -439,15 +445,15 @@ namespace ookpik {
 
 	int MapBuilder::findCoordsOfValueCount(std::vector<std::vector<mapTileIds::mapTileId>>& map, mapTileIds::mapTileId type) {
 		if (map.empty()) {
-			this->addErrorMessage("FindOpencoordsCount: error 0 map empty!");
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage("FindOpencoordsCount: error 0 map empty!");
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return -1;
 		}
 		int openCount = 0;
 		for (int x = 0; x < map.size();x++) {
 			if (map.at(x).empty()) {
-				this->addErrorMessage(std::string("FindOpenCoordsCount: error 1 map collumn empty!").append(" empty y at x: ").append(std::to_string(x)).append("!"));
-				this->setGenError(true);
+				this->m_debug_harness->queueErrorMessage(std::string("FindOpenCoordsCount: error 1 map collumn empty!").append(" empty y at x: ").append(std::to_string(x)).append("!"));
+				this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 
 				return -1;
 			}
@@ -463,8 +469,8 @@ namespace ookpik {
 
 	std::vector<std::vector<df::Vector>> MapBuilder::findZones(std::vector<std::vector<mapTileIds::mapTileId>>& map, mapTileIds::mapTileId flood, mapTileIds::mapTileId open) {
 		if (map.empty()) {
-			this->addErrorMessage("FindZones: error 0 map empty!");
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage("FindZones: error 0 map empty!");
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return std::vector<std::vector<df::Vector>>();
 		}
 
@@ -482,8 +488,8 @@ namespace ookpik {
 
 		openCoords = this->findCoordsOfValue(tempMap,open);
 
-		if (this->getGenError()) {
-			this->addErrorMessage("FindZones: error 1 find open coords error!");
+		if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+			this->m_debug_harness->queueErrorMessage("FindZones: error 1 find open coords error!");
 			return std::vector<std::vector<df::Vector>>();
 		}
 
@@ -491,16 +497,16 @@ namespace ookpik {
 		while (!openCoords.empty()) {
 			floodSeed = openCoords.at(0);
 			currentZone = this->floodFillReturnCoords(tempMap, floodSeed, mapTileIds::FLOOD,open);
-			if (this->getGenError()) {
-				this->addErrorMessage("FindZones: error 2 flood fill failure!");
+			if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+				this->m_debug_harness->queueErrorMessage("FindZones: error 2 flood fill failure!");
 				return std::vector<std::vector<df::Vector>>();
 			}
 			zones.push_back(currentZone);
 			currentZone.clear();
 			openCoords = this->findCoordsOfValue(tempMap, open);
 
-			if (this->getGenError()) {
-				this->addErrorMessage("FindZones: error 3 find open coords error!");
+			if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+				this->m_debug_harness->queueErrorMessage("FindZones: error 3 find open coords error!");
 				return std::vector<std::vector<df::Vector>>();
 			}
 		}
@@ -510,8 +516,8 @@ namespace ookpik {
 
 	int MapBuilder::findLargestZone(std::vector<std::vector<df::Vector>>& zones) {
 		if (zones.empty()) {
-			this->addErrorMessage("findLargestZone: error 0 empty zones list!");
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage("findLargestZone: error 0 empty zones list!");
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			
 			return -1;
 		}
@@ -525,8 +531,8 @@ namespace ookpik {
 		}
 
 		if ((biggest <= 0 ) || (biggestZone == -1)) {
-			this->addErrorMessage("findLargestZone: error 1 all zones empty!");
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage("findLargestZone: error 1 all zones empty!");
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			
 			return -1;
 		}
@@ -545,8 +551,8 @@ namespace ookpik {
 
 	df::Vector MapBuilder::findClosestPointInOtherZone(df::Vector targetPoint, std::vector<df::Vector>& otherPoints) {
 		if (otherPoints.empty()) {
-			this->addErrorMessage(std::string("find closest point in other zone: error 0 empty other points vector!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("find closest point in other zone: error 0 empty other points vector!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return df::Vector();
 		}
 
@@ -555,8 +561,8 @@ namespace ookpik {
 		float testDistance = 0;
 		for (int i = 0; i < otherPoints.size(); i++) {
 			testDistance = this->findDistance(targetPoint, otherPoints.at(i));
-			if (this->getGenError()) {
-				this->addErrorMessage(std::string("find closest point in other zone: error 1 failed distance calculation!"));
+			if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+				this->m_debug_harness->queueErrorMessage(std::string("find closest point in other zone: error 1 failed distance calculation!"));
 				return df::Vector();
 			}
 			if (testDistance < shortestDistance) {
@@ -570,18 +576,18 @@ namespace ookpik {
 
 	CoordinatePair MapBuilder::findSmallestConnectionLine(std::vector<df::Vector>& startZone, std::vector<std::vector<df::Vector>>& otherZones) {
 		if (startZone.empty()) {
-			this->addErrorMessage(std::string("findSmallestConnectionLine: error 0 empty start zone!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("findSmallestConnectionLine: error 0 empty start zone!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return CoordinatePair();
 		}
 		else if (otherZones.empty()) {
-			this->addErrorMessage(std::string("findSmallestConnectionLine: error 1 empty other zones vector!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("findSmallestConnectionLine: error 1 empty other zones vector!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return CoordinatePair();
 		}
 		else if (otherZones.at(0).empty()) {
-			this->addErrorMessage(std::string("findSmallestConnectionLine: error 2 empty other zone vector 0!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("findSmallestConnectionLine: error 2 empty other zone vector 0!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return CoordinatePair();
 		}
 
@@ -599,20 +605,20 @@ namespace ookpik {
 			for (int zone = 0; zone < otherZones.size(); zone++) {
 				currentZone = zone;
 				if (otherZones.at(zone).empty()) {
-					this->addErrorMessage(std::string("findSmallestConnectionLine: error 2 empty other zone!").append(" other zones index: ").append(std::to_string(zone)).append("!"));
-					this->setGenError(true);
+					this->m_debug_harness->queueErrorMessage(std::string("findSmallestConnectionLine: error 2 empty other zone!").append(" other zones index: ").append(std::to_string(zone)).append("!"));
+					this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 					return CoordinatePair();
 				}
 				
 				endCheckPoint = this->findClosestPointInOtherZone(startCheckPoint,otherZones.at(zone));
-				if (this->getGenError()) {
-					this->addErrorMessage(std::string("findSmallestConnectionLine: error 3 closest point search failed!"));
+				if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+					this->m_debug_harness->queueErrorMessage(std::string("findSmallestConnectionLine: error 3 closest point search failed!"));
 					return CoordinatePair();
 				}
 
 				checkDistance = this->findDistance(startCheckPoint, endCheckPoint);
-				if (this->getGenError()) {
-					this->addErrorMessage(std::string("findSmallestConnectionLine: error 4 failed distance calculation!"));
+				if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+					this->m_debug_harness->queueErrorMessage(std::string("findSmallestConnectionLine: error 4 failed distance calculation!"));
 					return CoordinatePair();
 				}
 				if (checkDistance < overallShortestDistance) {
@@ -630,8 +636,8 @@ namespace ookpik {
 
 	int MapBuilder::eliminateDisperateZones(std::vector<std::vector<mapTileIds::mapTileId>>& map, mapTileIds::mapTileId flood, mapTileIds::mapTileId empty, MapGenConfig configObj) {
 		if (map.empty()) {
-			this->addErrorMessage(std::string("eliminateDisperateZones: error 0 empty map!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("eliminateDisperateZones: error 0 empty map!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return -1;
 		}
 		df::Clock timer;
@@ -640,8 +646,8 @@ namespace ookpik {
 		std::vector<std::vector<df::Vector>> zones=this->findZones(map,flood,empty);
 		// No zones means nothing open was found; report it rather than indexing an empty list
 		if (zones.empty()) {
-			this->addErrorMessage(std::string("eliminateDisperateZones: error 5 no open zones found!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("eliminateDisperateZones: error 5 no open zones found!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return -1;
 		}
 		std::vector<df::Vector> startZone = zones.at(zones.size() - 1);
@@ -649,8 +655,8 @@ namespace ookpik {
 		std::vector<df::Vector> fixLine;
 		
 		
-		if (this->getGenError()) {
-			this->addErrorMessage(std::string("eliminateDisperateZones: error 1 zone search failed!"));
+		if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+			this->m_debug_harness->queueErrorMessage(std::string("eliminateDisperateZones: error 1 zone search failed!"));
 			return -1;
 		}
 		int timeout = configObj.getTimeoutSeconds();
@@ -660,32 +666,32 @@ namespace ookpik {
 		CoordinatePair fixPoints;
 		while ((zones.size() > 0)) {
 			if ((timer.split() / 1000) >= (33 * timeout * 30)) {
-				this->addErrorMessage(std::string("eliminateDisperateZones: error 3 process timeout!"));
-				this->setGenError(true);
+				this->m_debug_harness->queueErrorMessage(std::string("eliminateDisperateZones: error 3 process timeout!"));
+				this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 				return -1;
 			}
 
 			fixPoints = this->findSmallestConnectionLine(startZone, zones);
-			if (this->getGenError()) {
-				this->addErrorMessage(std::string("eliminateDisperateZones: error 4 connection line search failed!"));
+			if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+				this->m_debug_harness->queueErrorMessage(std::string("eliminateDisperateZones: error 4 connection line search failed!"));
 				return -1;
 			}
 
 
 			fixLine = this->generateBresenhamLine(fixPoints.getPoint0().getX(), fixPoints.getPoint0().getY(), fixPoints.getPoint1().getX(), fixPoints.getPoint1().getY());
-			if (this->getGenError()) {
-				this->addErrorMessage(std::string("eliminateDisperateZones: error 5 zone search failed!"));
+			if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+				this->m_debug_harness->queueErrorMessage(std::string("eliminateDisperateZones: error 5 zone search failed!"));
 				return -1;
 			}
 			this->drawLine(map, fixLine, empty);
-			if (this->getGenError()) {
-				this->addErrorMessage(std::string("eliminateDisperateZones: error 6 connection line draw failed!"));
+			if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+				this->m_debug_harness->queueErrorMessage(std::string("eliminateDisperateZones: error 6 connection line draw failed!"));
 				return -1;
 			}
 			zones = this->findZones(map, flood, empty);
 			if (zones.empty()) {
-				this->addErrorMessage(std::string("eliminateDisperateZones: error 7 no open zones found after joining!"));
-				this->setGenError(true);
+				this->m_debug_harness->queueErrorMessage(std::string("eliminateDisperateZones: error 7 no open zones found after joining!"));
+				this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 				return -1;
 			}
 			
@@ -699,19 +705,19 @@ namespace ookpik {
 
 	std::vector<df::Vector> MapBuilder::getRandomCoordListOfValue(std::vector<std::vector<mapTileIds::mapTileId>>& map, mapTileIds::mapTileId open) {
 		if (map.empty()) {
-			this->addErrorMessage(std::string("generateRandomOpenCoordList: error 0 empty map!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generateRandomOpenCoordList: error 0 empty map!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return std::vector<df::Vector>();
 		}
 		std::vector<df::Vector> openSpace = this->findCoordsOfValue(map, open);
 		
-		if (this->getGenError()) {
-			this->addErrorMessage(std::string("generateRandomOpenCoordList: error 1 retreive empty space failed!"));
+		if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+			this->m_debug_harness->queueErrorMessage(std::string("generateRandomOpenCoordList: error 1 retreive empty space failed!"));
 			return std::vector<df::Vector>();
 		}
 		if (openSpace.empty()) {
-			this->addErrorMessage(std::string("generateRandomOpenCoordList: error 2 no open space!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generateRandomOpenCoordList: error 2 no open space!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return std::vector<df::Vector>();
 		}
 		std::shuffle(openSpace.begin(), openSpace.end(), m_RandomEngine);
@@ -721,19 +727,19 @@ namespace ookpik {
 
 	df::Vector MapBuilder::getRandomCoordOfValue(std::vector<std::vector<mapTileIds::mapTileId>>& map, mapTileIds::mapTileId open) {
 		if (map.empty()) {
-			this->addErrorMessage(std::string("generateRandomOpenCoord: error 0 empty map!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generateRandomOpenCoord: error 0 empty map!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return df::Vector();
 		}
 		std::vector<df::Vector> openSpace = this->findCoordsOfValue(map, open);
 
-		if (this->getGenError()) {
-			this->addErrorMessage(std::string("generateRandomOpenCoord: error 1 retreive empty space failed!"));
+		if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+			this->m_debug_harness->queueErrorMessage(std::string("generateRandomOpenCoord: error 1 retreive empty space failed!"));
 			return df::Vector();
 		}
 		if (openSpace.empty()) {
-			this->addErrorMessage(std::string("generateRandomOpenCoord: error 2 no open space!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generateRandomOpenCoord: error 2 no open space!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return df::Vector();
 		}
 		return openSpace.at(this->getRandom(0, openSpace.size()-1));
@@ -742,35 +748,35 @@ namespace ookpik {
 
 	int MapBuilder::sprinkleTrees(std::vector<std::vector<mapTileIds::mapTileId>>& map, int trees, mapTileIds::mapTileId open, mapTileIds::mapTileId tree) {
 		if (map.empty()) {
-			this->addErrorMessage(std::string("sprinkleTrees: error 0 empty map!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("sprinkleTrees: error 0 empty map!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return -1;
 		}
 		
 		std::vector<df::Vector> openSpace = this->getRandomCoordListOfValue(map, open);
-		if (this->getGenError()) {
-			this->addErrorMessage(std::string("sprinkleTrees: error 1 random open coord list genration failed!"));
+		if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+			this->m_debug_harness->queueErrorMessage(std::string("sprinkleTrees: error 1 random open coord list genration failed!"));
 			return -1;
 		}
 
 		if (trees > openSpace.size()) {
-			this->addErrorMessage(std::string("sprinkleTrees: error 2 too little open space for specified trees! values: open space: ").append(std::to_string(openSpace.size())).append(" trees: ").append(std::to_string(trees)).append("!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("sprinkleTrees: error 2 too little open space for specified trees! values: open space: ").append(std::to_string(openSpace.size())).append(" trees: ").append(std::to_string(trees)).append("!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return -1;
 		}
 
 
 		for (int treeIndex = 0; treeIndex < trees; treeIndex++) {
 			if ((((int)openSpace.at(treeIndex).getX()) >= map.size()) || (((int)openSpace.at(treeIndex).getX()) < 0)) {
-				this->addErrorMessage(std::string("sprinkleTrees: error 3 map x smaller than random open coord x or random open coord x less than zero! values: map x: ").append(std::to_string(map.size())).append(" coord x: ").append(std::to_string((int)openSpace.at(treeIndex).getX())).append("!"));
+				this->m_debug_harness->queueErrorMessage(std::string("sprinkleTrees: error 3 map x smaller than random open coord x or random open coord x less than zero! values: map x: ").append(std::to_string(map.size())).append(" coord x: ").append(std::to_string((int)openSpace.at(treeIndex).getX())).append("!"));
 
-				this->setGenError(true);
+				this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 				return -1;
 			}
 			if (map.at((int)openSpace.at(treeIndex).getX()).size() <= (int)openSpace.at(treeIndex).getY()) {
-				this->addErrorMessage(std::string("sprinkleTrees: error 4 map y smaller than random open coord y! values: small y x:").append(std::to_string((int)openSpace.at(treeIndex).getX())).append(" map y size: ").append(std::to_string(map.at((int)openSpace.at(treeIndex).getX()).size())).append(" coord y: ").append(std::to_string((int)openSpace.at(treeIndex).getY())).append("!"));
+				this->m_debug_harness->queueErrorMessage(std::string("sprinkleTrees: error 4 map y smaller than random open coord y! values: small y x:").append(std::to_string((int)openSpace.at(treeIndex).getX())).append(" map y size: ").append(std::to_string(map.at((int)openSpace.at(treeIndex).getX()).size())).append(" coord y: ").append(std::to_string((int)openSpace.at(treeIndex).getY())).append("!"));
 
-				this->setGenError(true);
+				this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 				return -1;
 			}
 			map.at((int)openSpace.at(treeIndex).getX()).at((int)openSpace.at(treeIndex).getY()) = tree;
@@ -780,35 +786,35 @@ namespace ookpik {
 
 	int MapBuilder::sprinkleSeeds(std::vector<std::vector<mapTileIds::mapTileId>>& map, int seeds, mapTileIds::mapTileId open, mapTileIds::mapTileId seed){
 		if (map.empty()) {
-			this->addErrorMessage(std::string("sprinkeSeeds: error 0 empty map!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("sprinkeSeeds: error 0 empty map!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return -1;
 		}
 
 		std::vector<df::Vector> openSpace = this->getRandomCoordListOfValue(map, open);
-		if (this->getGenError()) {
-			this->addErrorMessage(std::string("sprinkleSeeds: error 1 random open coord list genration failed!"));
+		if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+			this->m_debug_harness->queueErrorMessage(std::string("sprinkleSeeds: error 1 random open coord list genration failed!"));
 			return -1;
 		}
 
 		if (seeds > openSpace.size()) {
-			this->addErrorMessage(std::string("sprinkleSeeds: error 2 too little open space for specified trees! values: open space: ").append(std::to_string(openSpace.size())).append(" seeds: ").append(std::to_string(seeds)).append("!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("sprinkleSeeds: error 2 too little open space for specified trees! values: open space: ").append(std::to_string(openSpace.size())).append(" seeds: ").append(std::to_string(seeds)).append("!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return -1;
 		}
 
 
 		for (int seedIndex = 0; seedIndex < seeds; seedIndex++) {
 			if ((((int)openSpace.at(seedIndex).getX()) >= map.size())|| (((int)openSpace.at(seedIndex).getX()) < 0)) {
-				this->addErrorMessage(std::string("sprinkleSeeds: error 3 map x smaller than random open coord x or random open cooord x less than zero! values: map x: ").append(std::to_string(map.size())).append(" coord x: ").append(std::to_string((int)openSpace.at(seedIndex).getX())).append("!"));
+				this->m_debug_harness->queueErrorMessage(std::string("sprinkleSeeds: error 3 map x smaller than random open coord x or random open cooord x less than zero! values: map x: ").append(std::to_string(map.size())).append(" coord x: ").append(std::to_string((int)openSpace.at(seedIndex).getX())).append("!"));
 
-				this->setGenError(true);
+				this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 				return -1;
 			}
 			if (map.at((int)openSpace.at(seedIndex).getX()).size() <= (int)openSpace.at(seedIndex).getY()) {
-				this->addErrorMessage(std::string("sprinkleSeeds: error 4 map y smaller than random open coord y! values: small y x:").append(std::to_string((int)openSpace.at(seedIndex).getX())).append(" map y size: ").append(std::to_string(map.at((int)openSpace.at(seedIndex).getX()).size())).append(" coord y: ").append(std::to_string((int)openSpace.at(seedIndex).getY())).append("!"));
+				this->m_debug_harness->queueErrorMessage(std::string("sprinkleSeeds: error 4 map y smaller than random open coord y! values: small y x:").append(std::to_string((int)openSpace.at(seedIndex).getX())).append(" map y size: ").append(std::to_string(map.at((int)openSpace.at(seedIndex).getX()).size())).append(" coord y: ").append(std::to_string((int)openSpace.at(seedIndex).getY())).append("!"));
 
-				this->setGenError(true);
+				this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 				return -1;
 			}
 			map.at((int)openSpace.at(seedIndex).getX()).at((int)openSpace.at(seedIndex).getY()) = seed;
@@ -819,25 +825,25 @@ namespace ookpik {
 	int MapBuilder::placeOwl(std::vector<std::vector<mapTileIds::mapTileId>>& map, mapTileIds::mapTileId open, mapTileIds::mapTileId owl) {
 
 		if (map.empty()) {
-			this->addErrorMessage(std::string("placeOwl: error 0 empty map!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("placeOwl: error 0 empty map!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return -1;
 		}
 
 		df::Vector openPos = this->getRandomCoordOfValue(map,open);
-		if (this->getGenError()) {
-			this->addErrorMessage(std::string("placeOwl: error 1 open coord generation failed!"));
+		if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+			this->m_debug_harness->queueErrorMessage(std::string("placeOwl: error 1 open coord generation failed!"));
 			return -1;
 		}
 
 		if ((((int)openPos.getX()) < 0) || (((int)openPos.getX()) >= map.size()) ) {
-			this->addErrorMessage(std::string("placeOwl: error 2 random open pos x invalid! values: pos x: ").append(std::to_string(((int)openPos.getX()))).append(" map x: ").append(std::to_string(map.size())).append("!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("placeOwl: error 2 random open pos x invalid! values: pos x: ").append(std::to_string(((int)openPos.getX()))).append(" map x: ").append(std::to_string(map.size())).append("!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return -1;
 		}
 		if ((((int)openPos.getY()) < 0) || (((int)openPos.getY()) >= map.at(((int)openPos.getX())).size())) {
-			this->addErrorMessage(std::string("placeOwl: error 3 random open pos Y invalid! values: pos y: ").append(std::to_string(((int)openPos.getY()))).append(" map Y: ").append(std::to_string(map.at((int)openPos.getX()).size())).append("!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("placeOwl: error 3 random open pos Y invalid! values: pos y: ").append(std::to_string(((int)openPos.getY()))).append(" map Y: ").append(std::to_string(map.at((int)openPos.getX()).size())).append("!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return -1;
 		}
 
@@ -848,25 +854,25 @@ namespace ookpik {
 
 	int MapBuilder::placeExit(std::vector < std::vector < mapTileIds::mapTileId >> &map, mapTileIds::mapTileId open, mapTileIds::mapTileId exit) {
 		if (map.empty()) {
-			this->addErrorMessage(std::string("placeExit: error 0 empty map!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("placeExit: error 0 empty map!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return -1;
 		}
 
 		df::Vector openPos = this->getRandomCoordOfValue(map, open);
-		if (this->getGenError()) {
-			this->addErrorMessage(std::string("placeExit: error 1 open coord generation failed!"));
+		if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+			this->m_debug_harness->queueErrorMessage(std::string("placeExit: error 1 open coord generation failed!"));
 			return -1;
 		}
 
 		if ((((int)openPos.getX()) < 0) || (((int)openPos.getX()) >= map.size())) {
-			this->addErrorMessage(std::string("placeExit: error 2 random open pos x invalid! values: pos x: ").append(std::to_string(((int)openPos.getX()))).append(" map x: ").append(std::to_string(map.size())).append("!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("placeExit: error 2 random open pos x invalid! values: pos x: ").append(std::to_string(((int)openPos.getX()))).append(" map x: ").append(std::to_string(map.size())).append("!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return -1;
 		}
 		if ((((int)openPos.getY()) < 0) || (((int)openPos.getY()) >= map.at(((int)openPos.getX())).size())) {
-			this->addErrorMessage(std::string("placeExit: error 3 random open pos Y invalid! values: pos y: ").append(std::to_string(((int)openPos.getY()))).append(" map Y: ").append(std::to_string(map.at((int)openPos.getX()).size())).append("!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("placeExit: error 3 random open pos Y invalid! values: pos y: ").append(std::to_string(((int)openPos.getY()))).append(" map Y: ").append(std::to_string(map.at((int)openPos.getX()).size())).append("!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return -1;
 		}
 
@@ -881,28 +887,28 @@ namespace ookpik {
 
 	int MapBuilder::squarePlot(std::vector<std::vector<mapTileIds::mapTileId>>& map, df::Vector location, mapTileIds::mapTileId value) {
 		if (map.empty()) {
-			this->addErrorMessage(std::string("squarePlot: error 0 empty map!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("squarePlot: error 0 empty map!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return -1;
 		}
 		if ((((int)location.getX()) < 0) || (((int)location.getX()) >= map.size())) {
-			this->addErrorMessage(std::string("squarePlot: error 1 plot corner 0 x invalid! values: pos x: ").append(std::to_string(((int)location.getX()))).append(" map x: ").append(std::to_string(map.size())).append("!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("squarePlot: error 1 plot corner 0 x invalid! values: pos x: ").append(std::to_string(((int)location.getX()))).append(" map x: ").append(std::to_string(map.size())).append("!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return -1;
 		}
 		if ((((int)location.getY()) < 0) || (((int)location.getY()) >= map.at(((int)location.getX())).size())) {
-			this->addErrorMessage(std::string("squarePlot: error 2 corner 0 Y invalid! values: pos y: ").append(std::to_string(((int)location.getY()))).append(" map Y: ").append(std::to_string(map.at((int)location.getX()).size())).append("!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("squarePlot: error 2 corner 0 Y invalid! values: pos y: ").append(std::to_string(((int)location.getY()))).append(" map Y: ").append(std::to_string(map.at((int)location.getX()).size())).append("!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return -1;
 		}
 		if ((((int)location.getX())+1 >= map.size())) {
-			this->addErrorMessage(std::string("squarePlot: error 3 corner 1 x invalid! values: pos x: ").append(std::to_string(((int)location.getX()))).append(" map x: ").append(std::to_string(map.size())).append("!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("squarePlot: error 3 corner 1 x invalid! values: pos x: ").append(std::to_string(((int)location.getX()))).append(" map x: ").append(std::to_string(map.size())).append("!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return -1;
 		}
 		if ((((int)location.getY())+1 >= map.at(((int)location.getX())).size())) {
-			this->addErrorMessage(std::string("squarePlot: error 4 corner 1 Y invalid! values: pos y: ").append(std::to_string(((int)location.getY()))).append(" map Y: ").append(std::to_string(map.at((int)location.getX()).size())).append("!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("squarePlot: error 4 corner 1 Y invalid! values: pos y: ").append(std::to_string(((int)location.getY()))).append(" map Y: ").append(std::to_string(map.at((int)location.getX()).size())).append("!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return -1;
 		}
 
@@ -925,27 +931,27 @@ namespace ookpik {
 	CoordinatePair  MapBuilder::findAngleLineClosestToDistance(std::vector<std::vector<mapTileIds::mapTileId>>& map, int dist, mapTileIds::mapTileId pointType) {
 		if (map.empty()) {
 
-			this->addErrorMessage(std::string("findAngleLineClosestToDistance: error 0 empty map!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("findAngleLineClosestToDistance: error 0 empty map!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return CoordinatePair();
 
 		}
 
 		if (dist < 1) {
-			this->addErrorMessage(std::string("findAngleLineClosestToDistance: error 1 invalid distance of: ").append(std::to_string(dist)).append("!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("findAngleLineClosestToDistance: error 1 invalid distance of: ").append(std::to_string(dist)).append("!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return CoordinatePair();
 		}
 
 		std::vector < df::Vector> avalablePoint = this->getRandomCoordListOfValue(map, pointType);
-		if (this->getGenError()) {
-			this->addErrorMessage(std::string("findAngleLineClosestToDistance: error 2 avalable point retreival failed!"));
+		if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+			this->m_debug_harness->queueErrorMessage(std::string("findAngleLineClosestToDistance: error 2 avalable point retreival failed!"));
 			return CoordinatePair();
 		}
 
 		if (avalablePoint.size() < 2) {
-			this->addErrorMessage(std::string("findAngleLineClosestToDistance: error 4 too few avalable points! avalable points: ").append(std::to_string(avalablePoint.size())).append("!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("findAngleLineClosestToDistance: error 4 too few avalable points! avalable points: ").append(std::to_string(avalablePoint.size())).append("!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return CoordinatePair();
 		}
 
@@ -982,27 +988,27 @@ namespace ookpik {
 	CoordinatePair  MapBuilder::findDiagLineClosestToDistance(std::vector<std::vector<mapTileIds::mapTileId>>& map, int dist, mapTileIds::mapTileId pointType) {
 		if (map.empty()) {
 
-			this->addErrorMessage(std::string("findAngleLineClosestToDistance: error 0 empty map!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("findAngleLineClosestToDistance: error 0 empty map!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return CoordinatePair();
 
 		}
 
 		if (dist < 1) {
-			this->addErrorMessage(std::string("findAngleLineClosestToDistance: error 1 invalid distance of: ").append(std::to_string(dist)).append("!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("findAngleLineClosestToDistance: error 1 invalid distance of: ").append(std::to_string(dist)).append("!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return CoordinatePair();
 		}
 
 		std::vector < df::Vector> avalablePoint = this->getRandomCoordListOfValue(map, pointType);
-		if (this->getGenError()) {
-			this->addErrorMessage(std::string("findAngleLineClosestToDistance: error 2 avalable point retreival failed!"));
+		if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+			this->m_debug_harness->queueErrorMessage(std::string("findAngleLineClosestToDistance: error 2 avalable point retreival failed!"));
 			return CoordinatePair();
 		}
 
 		if (avalablePoint.size() < 2) {
-			this->addErrorMessage(std::string("findAngleLineClosestToDistance: error 4 too few avalable points! avalable points: ").append(std::to_string(avalablePoint.size())).append("!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("findAngleLineClosestToDistance: error 4 too few avalable points! avalable points: ").append(std::to_string(avalablePoint.size())).append("!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return CoordinatePair();
 		}
 
@@ -1020,8 +1026,8 @@ namespace ookpik {
 		closestStartPoint0 = testPoint;
 		closestStartPoint1 = testPoint2;
 		closestDistance = this->findDistance(testPoint, testPoint2);
-		if (this->getGenError()) {
-			this->addErrorMessage(std::string("findAngleLineClosestToDistance: error 5  distance retreival failed!"));
+		if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+			this->m_debug_harness->queueErrorMessage(std::string("findAngleLineClosestToDistance: error 5  distance retreival failed!"));
 			
 			return CoordinatePair();
 		}
@@ -1032,8 +1038,8 @@ namespace ookpik {
 				testPoint2 = avalablePoint.at(point1);
 				if (testPoint != testPoint2) {
 					resultdist = this->findDistance(testPoint, testPoint2);
-					if (this->getGenError()) {
-						this->addErrorMessage(std::string("findAngleLineClosestToDistance: error 5  distance retreival failed!"));
+					if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+						this->m_debug_harness->queueErrorMessage(std::string("findAngleLineClosestToDistance: error 5  distance retreival failed!"));
 
 						return CoordinatePair();
 					}
@@ -1052,30 +1058,40 @@ namespace ookpik {
 
 
 	void MapBuilder::resetTimer() {
+		if(!this->getDeleteMode())
 		m_state_gate.lock();
 		m_timer.delta();
 		m_state_gate.unlock();
 	}
 	bool MapBuilder::checkTimer() {
 		bool temp = false;
-		m_state_gate.lock();
-		temp= ((m_timer.split() / 1000) >= (m_timeout * 33 * 30));
-		m_state_gate.unlock();
+		if (!this->getDeleteMode()) {
+			m_state_gate.lock();
+			temp= ((m_timer.split() / 1000) >= (m_timeout * 33 * 30));
+			m_state_gate.unlock();
+		}
+		
 		return temp;
 	
 	}
 	unsigned long long MapBuilder::getTimerTime() {
 		unsigned long long temp = 0;
-		m_state_gate.lock();
-		temp= m_timer.split();
-		m_state_gate.unlock();
+		if (!this->getDeleteMode()) {
+			m_state_gate.lock();
+			temp = m_timer.split();
+			m_state_gate.unlock();
+		}
+		
 		return temp;
 	}
 	int MapBuilder::getTimeout() {
 		int temp = 0;
-		m_state_gate.lock();
-		temp = m_timeout;
-		m_state_gate.unlock();
+		if (!this->getDeleteMode()) {
+			m_state_gate.lock();
+			temp = m_timeout;
+			m_state_gate.unlock();
+		}
+		
 		return temp;
 	}
 	int MapBuilder::setTimeout(int new_timeout) {
@@ -1083,9 +1099,12 @@ namespace ookpik {
 
 			return -1;
 		}
-		m_state_gate.lock();
-		m_timeout = new_timeout;
-		m_state_gate.unlock();
+		if (!this->getDeleteMode()) {
+			m_state_gate.lock();
+			m_timeout = new_timeout;
+			m_state_gate.unlock();
+		}
+		
 		return 0;
 	}
 
@@ -1094,8 +1113,8 @@ namespace ookpik {
 	int MapBuilder::ensureSpace(std::vector<std::vector<mapTileIds::mapTileId>>& map, mapTileIds::mapTileId empty, mapTileIds::mapTileId tree,  int neededOpenSpaces) {
 		if (map.empty()) {
 			
-				this->addErrorMessage(std::string("ensureSpace: error 0 empty map!"));
-				this->setGenError(true);
+				this->m_debug_harness->queueErrorMessage(std::string("ensureSpace: error 0 empty map!"));
+				this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 				return -1;
 			
 		}
@@ -1103,13 +1122,13 @@ namespace ookpik {
 
 
 		int currentOpen = this->findCoordsOfValueCount(map, empty);
-		if (this->getGenError()) {
-			this->addErrorMessage(std::string("ensureSpace: error 1 open count retreival failed!"));
+		if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+			this->m_debug_harness->queueErrorMessage(std::string("ensureSpace: error 1 open count retreival failed!"));
 			return -1;
 		}
 		if (neededOpenSpaces < 3) {
-			this->addErrorMessage(std::string("ensureSpace: error 2 invalid meeded open of: ").append(std::to_string(neededOpenSpaces)).append("!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("ensureSpace: error 2 invalid meeded open of: ").append(std::to_string(neededOpenSpaces)).append("!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			return -1;
 		}
 
@@ -1136,18 +1155,18 @@ namespace ookpik {
 
 			
 			ClosedCoordsList= this->getRandomCoordListOfValue(map,tree);
-			if (this->getGenError()) {
-				this->addErrorMessage(std::string("ensureSpace: error 3 closed coords retreival failed!"));
+			if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+				this->m_debug_harness->queueErrorMessage(std::string("ensureSpace: error 3 closed coords retreival failed!"));
 				return -1;
 			}
 			if (ClosedCoordsList.empty()) {
-				this->addErrorMessage(std::string("ensureSpace: error 4 empty closed spaces list!"));
-				this->setGenError(true);
+				this->m_debug_harness->queueErrorMessage(std::string("ensureSpace: error 4 empty closed spaces list!"));
+				this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 				return -1;
 			}
 			if (ClosedCoordsList.size()<neededOpenSpaces-currentOpen) {
-				this->addErrorMessage(std::string("ensureSpace: error 5 too small closed spaces list! size: ").append(std::to_string(ClosedCoordsList.size())).append(" needed open: ").append(std::to_string(neededOpenSpaces-currentOpen)).append("!"));
-				this->setGenError(true);
+				this->m_debug_harness->queueErrorMessage(std::string("ensureSpace: error 5 too small closed spaces list! size: ").append(std::to_string(ClosedCoordsList.size())).append(" needed open: ").append(std::to_string(neededOpenSpaces-currentOpen)).append("!"));
+				this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 				return -1;
 			}
 			bool yFirst = false;
@@ -1161,16 +1180,16 @@ namespace ookpik {
 				case 0:
 					//line mode
 					targetPair = this->findDiagLineClosestToDistance(map, neededOpenSpaces-currentOpen, empty);
-					if (this->getGenError()) {
-						this->addErrorMessage(std::string("ensureSpace: error 6 draw points retreival failed!"));
+					if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+						this->m_debug_harness->queueErrorMessage(std::string("ensureSpace: error 6 draw points retreival failed!"));
 
 
 						return -1;
 					}
 					repairSpaces = this->generateBresenhamLine(targetPair.getPoint0().getX(), targetPair.getPoint0().getY(), targetPair.getPoint1().getX(), targetPair.getPoint1().getY());
 					this->drawLine(map, repairSpaces, empty);
-					if (this->getGenError()) {
-						this->addErrorMessage(std::string("ensureSpace: error 7 draw failed!"));
+					if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+						this->m_debug_harness->queueErrorMessage(std::string("ensureSpace: error 7 draw failed!"));
 
 
 						return -1;
@@ -1180,8 +1199,8 @@ namespace ookpik {
 				case 1:
 					//xy line mode
 					targetPair = this->findAngleLineClosestToDistance(map, neededOpenSpaces - currentOpen, empty);
-					if (this->getGenError()) {
-						this->addErrorMessage(std::string("ensureSpace: error 8 draw points retreival failed!"));
+					if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+						this->m_debug_harness->queueErrorMessage(std::string("ensureSpace: error 8 draw points retreival failed!"));
 
 
 						return -1;
@@ -1196,8 +1215,8 @@ namespace ookpik {
 					}
 					repairSpaces = this->generateXYLine(targetPair.getPoint0().getX(), targetPair.getPoint0().getY(), targetPair.getPoint1().getX(), targetPair.getPoint1().getY(), yFirst, point1First);
 					this->drawLine(map, repairSpaces, empty);
-					if (this->getGenError()) {
-						this->addErrorMessage(std::string("ensureSpace: error 9 draw failed!"));
+					if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+						this->m_debug_harness->queueErrorMessage(std::string("ensureSpace: error 9 draw failed!"));
 
 
 						return -1;
@@ -1207,8 +1226,8 @@ namespace ookpik {
 				case 2:
 					///rect mode
 					targetPair = this->findAngleLineClosestToDistance(map, neededOpenSpaces - currentOpen, empty);
-					if (this->getGenError()) {
-						this->addErrorMessage(std::string("ensureSpace: error 10 draw points retreival failed!"));
+					if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+						this->m_debug_harness->queueErrorMessage(std::string("ensureSpace: error 10 draw points retreival failed!"));
 
 
 						return -1;
@@ -1238,8 +1257,8 @@ namespace ookpik {
 
 					this->drawRectangle(map, repairbox, empty);
 
-					if (this->getGenError()) {
-						this->addErrorMessage(std::string("ensureSpace: error 11 draw failed!"));
+					if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+						this->m_debug_harness->queueErrorMessage(std::string("ensureSpace: error 11 draw failed!"));
 
 
 						return -1;
@@ -1248,8 +1267,8 @@ namespace ookpik {
 					 addTrees = area - (neededOpenSpaces - currentOpen);
 
 					this->sprinkleTrees(map, addTrees, empty, tree);
-					if (this->getGenError()) {
-						this->addErrorMessage(std::string("ensureSpace: error 12 draw failed!"));
+					if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+						this->m_debug_harness->queueErrorMessage(std::string("ensureSpace: error 12 draw failed!"));
 
 
 						return -1;
@@ -1260,13 +1279,13 @@ namespace ookpik {
 					for (int i = 0; i < neededOpenSpaces-currentOpen; i++) {
 						closeCoord = ClosedCoordsList.at(i);
 						if ((closeCoord.getX() < 0) || (closeCoord.getX() >= map.size())) {
-							this->addErrorMessage(std::string("ensureSpace: error 13 invalid target coord x: ").append(std::to_string(closeCoord.getX())).append(" map width: ").append(std::to_string(map.size())).append("!"));
-							this->setGenError(true);
+							this->m_debug_harness->queueErrorMessage(std::string("ensureSpace: error 13 invalid target coord x: ").append(std::to_string(closeCoord.getX())).append(" map width: ").append(std::to_string(map.size())).append("!"));
+							this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 							return -1;
 						}
 						if ((closeCoord.getY() < 0) || (closeCoord.getY() >= map.at((int)closeCoord.getX()).size())) {
-							this->addErrorMessage(std::string("ensureSpace: error 14 invalid target coord y: ").append(std::to_string(closeCoord.getY())).append(" map width: ").append(std::to_string(map.at((int)closeCoord.getX()).size())).append("!"));
-							this->setGenError(true);
+							this->m_debug_harness->queueErrorMessage(std::string("ensureSpace: error 14 invalid target coord y: ").append(std::to_string(closeCoord.getY())).append(" map width: ").append(std::to_string(map.at((int)closeCoord.getX()).size())).append("!"));
+							this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 							return -1;
 						}
 						map.at((int)closeCoord.getX()).at((int)closeCoord.getY()) = empty;
@@ -1283,20 +1302,20 @@ namespace ookpik {
 						closeCoord = ClosedCoordsList.at(i);
 
 						if ((closeCoord.getX() < 0) || (closeCoord.getX() >= map.size())) {
-							this->addErrorMessage(std::string("ensureSpace: error 13 invalid target coord x: ").append(std::to_string(closeCoord.getX())).append(" map width: ").append(std::to_string(map.size())).append("!"));
-							this->setGenError(true);
+							this->m_debug_harness->queueErrorMessage(std::string("ensureSpace: error 13 invalid target coord x: ").append(std::to_string(closeCoord.getX())).append(" map width: ").append(std::to_string(map.size())).append("!"));
+							this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 							return -1;
 						}
 						if ((closeCoord.getY() < 0) || (closeCoord.getY() >= map.at((int)closeCoord.getX()).size())) {
-							this->addErrorMessage(std::string("ensureSpace: error 14 invalid target coord y: ").append(std::to_string(closeCoord.getY())).append(" map width: ").append(std::to_string(map.at((int)closeCoord.getX()).size())).append("!"));
-							this->setGenError(true);
+							this->m_debug_harness->queueErrorMessage(std::string("ensureSpace: error 14 invalid target coord y: ").append(std::to_string(closeCoord.getY())).append(" map width: ").append(std::to_string(map.at((int)closeCoord.getX()).size())).append("!"));
+							this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 							return -1;
 						}
 						if (!(((closeCoord.getX() < 0) || (closeCoord.getX() >= ((int)map.size())-1))|| ((closeCoord.getY() < 0) || (closeCoord.getY() >= ((int)map.at((int)closeCoord.getX()).size()) - 1)))) {
 							this->squarePlot(map, closeCoord,empty);
-							if (this->getGenError()) {
-								this->addErrorMessage(std::string("ensureSpace: error 15 square plot failrue!"));
-								this->setGenError(true);
+							if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+								this->m_debug_harness->queueErrorMessage(std::string("ensureSpace: error 15 square plot failrue!"));
+								this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 								return -1;
 							}
 						}
@@ -1308,15 +1327,15 @@ namespace ookpik {
 					break;
 
 				default:
-					this->addErrorMessage(std::string("ensureSpace: error 16 invalid random repair mode!"));
-					this->setGenError(true);
+					this->m_debug_harness->queueErrorMessage(std::string("ensureSpace: error 16 invalid random repair mode!"));
+					this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 					return -1;
 			}
 
 			currentOpen = this->findCoordsOfValueCount(map, empty);
 
-			if (this->getGenError()) {
-				this->addErrorMessage(std::string("ensureSpace: error 17 open count retreival failed!"));
+			if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+				this->m_debug_harness->queueErrorMessage(std::string("ensureSpace: error 17 open count retreival failed!"));
 				return -1;
 			}
 		}
@@ -1350,8 +1369,8 @@ namespace ookpik {
 		errorNumber++;
 		int timeout = this->m_configObj.getTimeoutSeconds();
 		if (timeout < 1) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured timeout. must be at least 1 second. value is: ").append(std::to_string(timeout)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured timeout. must be at least 1 second. value is: ").append(std::to_string(timeout)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
@@ -1359,64 +1378,64 @@ namespace ookpik {
 		this->resetTimer();
 		int mapBorderThickness = this->m_configObj.getMapBorderThickness();
 		if (mapBorderThickness < 1) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append("invalid configured map border thickeness.must be at least 1. value is : ").append(std::to_string(mapBorderThickness)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append("invalid configured map border thickeness.must be at least 1. value is : ").append(std::to_string(mapBorderThickness)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
 		errorNumber++;
 		int mapHeight = this->m_configObj.getMapHeight();
 		if (mapHeight < 1) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured map height. must be at least 1. value is: ").append(std::to_string(mapHeight)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured map height. must be at least 1. value is: ").append(std::to_string(mapHeight)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
 		errorNumber++;
 		int mapObjectAltitude = this->m_configObj.getMapObjectAltitude();
 		if ((mapObjectAltitude < 0 )||(mapObjectAltitude > df::MAX_ALTITUDE)) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured map object altitude. must be between 0 and ").append(std::to_string(df::MAX_ALTITUDE)).append(". value is: ").append(std::to_string(mapObjectAltitude)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured map object altitude. must be between 0 and ").append(std::to_string(df::MAX_ALTITUDE)).append(". value is: ").append(std::to_string(mapObjectAltitude)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
 		errorNumber++;
 		int mapWidth=this->m_configObj.getMapWidth();
 		if (mapWidth < 1) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured map width. must be at least 1. value is: ").append(std::to_string(mapWidth)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured map width. must be at least 1. value is: ").append(std::to_string(mapWidth)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
 		errorNumber++;
 		int maxRightAngleLine = this->m_configObj.getMaxRightAngleLine();
 		if (maxRightAngleLine < 0) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max right angle line. must be at least 0. value is: ").append(std::to_string(maxRightAngleLine)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max right angle line. must be at least 0. value is: ").append(std::to_string(maxRightAngleLine)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
 		errorNumber++;
 		int maxRightAngleLineHeight = this->m_configObj.getMaxAngleLineHeight();
 		if (maxRightAngleLineHeight < 1) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max right angle line height. must be at least 1. value is: ").append(std::to_string(maxRightAngleLineHeight)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max right angle line height. must be at least 1. value is: ").append(std::to_string(maxRightAngleLineHeight)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
 		errorNumber++;
 		int maxRightAngleLineWidth = this->m_configObj.getMaxAngleLineWidth();
 		if (maxRightAngleLineWidth < 1) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max right angle line width. must be at least 1. value is: ").append(std::to_string(maxRightAngleLineWidth)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max right angle line width. must be at least 1. value is: ").append(std::to_string(maxRightAngleLineWidth)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
 		errorNumber++;
 		int maxDiagLineHeight = this->m_configObj.getMaxDiagLineHeight();
 		if (maxDiagLineHeight < 1) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max diag line height. must be at least 1. value is: ").append(std::to_string(maxDiagLineHeight)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max diag line height. must be at least 1. value is: ").append(std::to_string(maxDiagLineHeight)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
@@ -1424,8 +1443,8 @@ namespace ookpik {
 		errorNumber++;
 		int maxDiagLines = this->m_configObj.getMaxDiagLines();
 		if (maxDiagLines < 0) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max diag lines. must be at least 0. value is: ").append(std::to_string(maxDiagLines)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max diag lines. must be at least 0. value is: ").append(std::to_string(maxDiagLines)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
@@ -1433,8 +1452,8 @@ namespace ookpik {
 		errorNumber++;
 		int maxDiagLinesWidth = this->m_configObj.getMaxDiagLineWidth();
 		if (maxDiagLinesWidth < 1) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max diag line width. must be at least 1. value is: ").append(std::to_string(maxDiagLinesWidth)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max diag line width. must be at least 1. value is: ").append(std::to_string(maxDiagLinesWidth)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
@@ -1442,8 +1461,8 @@ namespace ookpik {
 		errorNumber++;
 		int maxRandTrees = this->m_configObj.getMaxRandTrees();
 		if (maxRandTrees < 0) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max rand trees. must be at least 0. value is: ").append(std::to_string(maxRandTrees)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max rand trees. must be at least 0. value is: ").append(std::to_string(maxRandTrees)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
@@ -1451,8 +1470,8 @@ namespace ookpik {
 		errorNumber++;
 		int maxRoomHeight = this->m_configObj.getMaxRoomHeight();
 		if (maxRoomHeight < 1) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured room height. must be at least 1. value is: ").append(std::to_string(maxRoomHeight)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured room height. must be at least 1. value is: ").append(std::to_string(maxRoomHeight)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
@@ -1460,8 +1479,8 @@ namespace ookpik {
 		errorNumber++;
 		int maxRooms = this->m_configObj.getMaxRooms();
 		if (maxRooms < 0) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max rooms. must be at least 0. value is: ").append(std::to_string(maxRooms)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max rooms. must be at least 0. value is: ").append(std::to_string(maxRooms)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
@@ -1469,8 +1488,8 @@ namespace ookpik {
 		errorNumber++;
 		int maxRoomWidth = this->m_configObj.getMaxRoomWidth();
 		if (maxRoomWidth < 1) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max room width. must be at least 1. value is: ").append(std::to_string(maxRoomWidth)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max room width. must be at least 1. value is: ").append(std::to_string(maxRoomWidth)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
@@ -1478,8 +1497,8 @@ namespace ookpik {
 		errorNumber++;
 		int maxSeeds = this->m_configObj.getMaxSeeds();
 		if (maxSeeds < 1) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max seeds. must be at least 1. value is: ").append(std::to_string(maxSeeds)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max seeds. must be at least 1. value is: ").append(std::to_string(maxSeeds)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
@@ -1487,8 +1506,8 @@ namespace ookpik {
 		errorNumber++;
 		int minRightAngleLines = this->m_configObj.getMinRightAngleLines();
 		if (minRightAngleLines < 0) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured min angle lines. must be at least 0. value is: ").append(std::to_string(minRightAngleLines)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured min angle lines. must be at least 0. value is: ").append(std::to_string(minRightAngleLines)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
@@ -1497,8 +1516,8 @@ namespace ookpik {
 		errorNumber++;
 		int minRightAngleLineHeight = this->m_configObj.getMinAngleLineHeight();
 		if (minRightAngleLineHeight < 1) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured min right angle lines height. must be at least 1. value is: ").append(std::to_string(minRightAngleLineHeight)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured min right angle lines height. must be at least 1. value is: ").append(std::to_string(minRightAngleLineHeight)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
@@ -1506,8 +1525,8 @@ namespace ookpik {
 		errorNumber++;
 		int minRightAngleLinesWidth = this->m_configObj.getMinAngleLineWidth();
 		if (minRightAngleLinesWidth < 1) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured min angle line width. must be at least 1. value is: ").append(std::to_string(minRightAngleLinesWidth)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured min angle line width. must be at least 1. value is: ").append(std::to_string(minRightAngleLinesWidth)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
@@ -1515,8 +1534,8 @@ namespace ookpik {
 		errorNumber++;
 		int minDiagLineHeight = this->m_configObj.getMinDiagLineHeight();
 		if (minDiagLineHeight < 1) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured min diag line height. must be at least 1. value is: ").append(std::to_string(minDiagLineHeight)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured min diag line height. must be at least 1. value is: ").append(std::to_string(minDiagLineHeight)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
@@ -1524,8 +1543,8 @@ namespace ookpik {
 		errorNumber++;
 		int minDiagLines = this->m_configObj.getMinDiagLines();
 		if (minDiagLines < 0) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured min diag lines. must be at least 0. value is: ").append(std::to_string(minDiagLines)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured min diag lines. must be at least 0. value is: ").append(std::to_string(minDiagLines)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
@@ -1533,8 +1552,8 @@ namespace ookpik {
 		errorNumber++;
 		int minDiagLineWidth = this->m_configObj.getMinDiagLineWidth();
 		if (minDiagLineWidth < 1) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured min diag line width. must be at least 1. value is: ").append(std::to_string(minDiagLineWidth)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured min diag line width. must be at least 1. value is: ").append(std::to_string(minDiagLineWidth)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
@@ -1542,8 +1561,8 @@ namespace ookpik {
 		errorNumber++;
 		int minRandTrees = this->m_configObj.getMinRandTrees();
 		if (minRandTrees < 0) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured min randTrees. must be at least 0. value is: ").append(std::to_string(minRandTrees)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured min randTrees. must be at least 0. value is: ").append(std::to_string(minRandTrees)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
@@ -1551,8 +1570,8 @@ namespace ookpik {
 		errorNumber++;
 		int minRoomHeight = this->m_configObj.getMinRoomHeight();
 		if (minRoomHeight < 1) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured min room height. must be at least 1. value is: ").append(std::to_string(minRoomHeight)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured min room height. must be at least 1. value is: ").append(std::to_string(minRoomHeight)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
@@ -1560,8 +1579,8 @@ namespace ookpik {
 		errorNumber++;
 		int minRooms = this->m_configObj.getMinRooms();
 		if (minRooms < 0) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured min rooms. must be at least 0. value is: ").append(std::to_string(minRooms)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured min rooms. must be at least 0. value is: ").append(std::to_string(minRooms)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
@@ -1569,8 +1588,8 @@ namespace ookpik {
 		errorNumber++;
 		int minRoomsWidth = this->m_configObj.getMinRoomWidth();
 		if (minRoomsWidth < 1) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured min room width. must be at least 1. value is: ").append(std::to_string(minRoomsWidth)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured min room width. must be at least 1. value is: ").append(std::to_string(minRoomsWidth)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
@@ -1578,15 +1597,15 @@ namespace ookpik {
 		errorNumber++;
 		int minSeeds = this->m_configObj.getMinSeeds();
 		if (minSeeds < 1) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured min seeds. must be at least 1. value is: ").append(std::to_string(minSeeds)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured min seeds. must be at least 1. value is: ").append(std::to_string(minSeeds)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
 		errorNumber++;
 		if (this->checkTimer()) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime()/1000))/33)/30))).append(" seconds!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime()/1000))/33)/30))).append(" seconds!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
@@ -1606,36 +1625,36 @@ namespace ookpik {
 		
 		errorNumber++;
 		if (minSeeds > maxSeeds) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured seeds. min seeds must be less than max seeds. min seeds is: ").append(std::to_string(minSeeds)).append(" max seeds is: ").append(std::to_string(maxSeeds)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured seeds. min seeds must be less than max seeds. min seeds is: ").append(std::to_string(minSeeds)).append(" max seeds is: ").append(std::to_string(maxSeeds)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
 		errorNumber++;
 		if (minSeeds + 2 >= mapArea) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured seeds. must be less than map area -2. min seeds is: ").append(std::to_string(minSeeds)).append(" map area is: ").append(std::to_string(mapArea)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured seeds. must be less than map area -2. min seeds is: ").append(std::to_string(minSeeds)).append(" map area is: ").append(std::to_string(mapArea)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
 		errorNumber++;
 		if (maxSeeds + 2 >= mapArea) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured seeds. must be less than map area -2. max seeds is: ").append(std::to_string(maxSeeds)).append(" map area is: ").append(std::to_string(mapArea)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured seeds. must be less than map area -2. max seeds is: ").append(std::to_string(maxSeeds)).append(" map area is: ").append(std::to_string(mapArea)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
 		errorNumber++;
 		if (minRandTrees > (mapArea-2) - maxSeeds) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured random trees. min random trees must be less than map area-maxSeeds-2. map area is: ").append(std::to_string(mapArea)).append(" max seeds is: ").append(std::to_string(maxSeeds)).append(" min rand trees is: ").append(std::to_string(minRandTrees)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured random trees. min random trees must be less than map area-maxSeeds-2. map area is: ").append(std::to_string(mapArea)).append(" max seeds is: ").append(std::to_string(maxSeeds)).append(" min rand trees is: ").append(std::to_string(minRandTrees)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
 		errorNumber++;
 		if (maxRandTrees > (mapArea - 2) - maxSeeds) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured random trees. max random trees must be less than map area-maxSeeds-2. map area is: ").append(std::to_string(mapArea)).append(" max seeds is: ").append(std::to_string(maxSeeds)).append(" max rand trees is: ").append(std::to_string(maxRandTrees)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured random trees. max random trees must be less than map area-maxSeeds-2. map area is: ").append(std::to_string(mapArea)).append(" max seeds is: ").append(std::to_string(maxSeeds)).append(" max rand trees is: ").append(std::to_string(maxRandTrees)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
@@ -1643,100 +1662,100 @@ namespace ookpik {
 
 		errorNumber++;
 		if (minRightAngleLines > maxRightAngleLine) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured right angle lines. min right angle lines  must be less than max right angle lines. min right angle lines  is: ").append(std::to_string(minRightAngleLines)).append(" max right angle lines is: ").append(std::to_string(maxRightAngleLine)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured right angle lines. min right angle lines  must be less than max right angle lines. min right angle lines  is: ").append(std::to_string(minRightAngleLines)).append(" max right angle lines is: ").append(std::to_string(maxRightAngleLine)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
 		errorNumber++;
 		if (minRightAngleLinesWidth > maxRightAngleLineWidth) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured right angle lines width. min angle lines width must be less than max angle lines width. min right angle lines width is: ").append(std::to_string(minRightAngleLinesWidth)).append(" max right angle line width is: ").append(std::to_string(maxRightAngleLineWidth)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured right angle lines width. min angle lines width must be less than max angle lines width. min right angle lines width is: ").append(std::to_string(minRightAngleLinesWidth)).append(" max right angle line width is: ").append(std::to_string(maxRightAngleLineWidth)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
 		errorNumber++;
 		if (maxRightAngleLineWidth >= mapWidth) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max right angle line width.max right angle line width must be less than map width. max right angle lines width is: ").append(std::to_string(maxRightAngleLineWidth)).append(" map width is: ").append(std::to_string(mapWidth)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max right angle line width.max right angle line width must be less than map width. max right angle lines width is: ").append(std::to_string(maxRightAngleLineWidth)).append(" map width is: ").append(std::to_string(mapWidth)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
 		errorNumber++;
 		if (minRightAngleLinesWidth >= mapWidth) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured right agnle lines width. min right angle lines width must be less than map width. min right angle lines width is: ").append(std::to_string(minRightAngleLinesWidth)).append(" map width is: ").append(std::to_string(mapWidth)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured right agnle lines width. min right angle lines width must be less than map width. min right angle lines width is: ").append(std::to_string(minRightAngleLinesWidth)).append(" map width is: ").append(std::to_string(mapWidth)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
 		errorNumber++;
 		if (minRightAngleLineHeight > maxRightAngleLineHeight) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured angle lines height. min angle lines height must be less than max angle lines height. min right angle lines height is: ").append(std::to_string(minRightAngleLineHeight)).append(" max right angle line hieght is: ").append(std::to_string(maxRightAngleLineHeight)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured angle lines height. min angle lines height must be less than max angle lines height. min right angle lines height is: ").append(std::to_string(minRightAngleLineHeight)).append(" max right angle line hieght is: ").append(std::to_string(maxRightAngleLineHeight)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
 		errorNumber++;
 		if (maxRightAngleLineHeight >= mapHeight) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max right angle line hieght. must be less than map heigth. max right angle lines height is: ").append(std::to_string(maxRightAngleLineHeight)).append(" map hieght is: ").append(std::to_string(mapHeight)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max right angle line hieght. must be less than map heigth. max right angle lines height is: ").append(std::to_string(maxRightAngleLineHeight)).append(" map hieght is: ").append(std::to_string(mapHeight)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
 		errorNumber++;
 		if (minRightAngleLineHeight >= mapHeight) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid min right angle line height. min right angle line height must be less than map height. min right angle line hieght is: ").append(std::to_string(minRightAngleLineHeight)).append(" map height is: ").append(std::to_string(mapHeight)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid min right angle line height. min right angle line height must be less than map height. min right angle line hieght is: ").append(std::to_string(minRightAngleLineHeight)).append(" map height is: ").append(std::to_string(mapHeight)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
 		
 		errorNumber++;
 		if (minDiagLines > maxDiagLines) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured daig lines. min daig lines  must be less than max daig lines. min diag lines  is: ").append(std::to_string(minDiagLines)).append(" max diag lines is: ").append(std::to_string(maxDiagLines)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured daig lines. min daig lines  must be less than max daig lines. min diag lines  is: ").append(std::to_string(minDiagLines)).append(" max diag lines is: ").append(std::to_string(maxDiagLines)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
 		errorNumber++;
 		if (minDiagLineWidth > maxDiagLinesWidth) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured diag lines width. mindiag lines width must be less than maxdaig lines width. min daig lines width is: ").append(std::to_string(minDiagLineWidth)).append(" max diag line width is: ").append(std::to_string(maxDiagLinesWidth)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured diag lines width. mindiag lines width must be less than maxdaig lines width. min daig lines width is: ").append(std::to_string(minDiagLineWidth)).append(" max diag line width is: ").append(std::to_string(maxDiagLinesWidth)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
 		errorNumber++;
 		if (minDiagLineWidth >= mapWidth) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured diag lines width. mindiag lines width must be less than map width. min daig lines width is: ").append(std::to_string(minDiagLineWidth)).append(" map width is: ").append(std::to_string(mapWidth)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured diag lines width. mindiag lines width must be less than map width. min daig lines width is: ").append(std::to_string(minDiagLineWidth)).append(" map width is: ").append(std::to_string(mapWidth)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
 		errorNumber++;
 		if (maxDiagLinesWidth >= mapWidth) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max diag line width. must be less than map width. max daig lines width is: ").append(std::to_string(maxDiagLinesWidth)).append(" map width is: ").append(std::to_string(mapWidth)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max diag line width. must be less than map width. max daig lines width is: ").append(std::to_string(maxDiagLinesWidth)).append(" map width is: ").append(std::to_string(mapWidth)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
 		errorNumber++;
 		if (minDiagLineHeight > maxDiagLineHeight) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured diag lines height. min daig lines height must be less than max diag lines height. min daig lines height is: ").append(std::to_string(minDiagLineHeight)).append(" max diag line hieght is: ").append(std::to_string(maxDiagLineHeight)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured diag lines height. min daig lines height must be less than max diag lines height. min daig lines height is: ").append(std::to_string(minDiagLineHeight)).append(" max diag line hieght is: ").append(std::to_string(maxDiagLineHeight)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
 		errorNumber++;
 		if (maxDiagLineHeight >= mapHeight) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max diag line hieght. must be less than map heigth. max daig lines height is: ").append(std::to_string(maxDiagLineHeight)).append(" map hieght is: ").append(std::to_string(mapHeight)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max diag line hieght. must be less than map heigth. max daig lines height is: ").append(std::to_string(maxDiagLineHeight)).append(" map hieght is: ").append(std::to_string(mapHeight)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
 		errorNumber++;
 		if (minDiagLineHeight >= mapHeight) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid min diag line height. min diag line height must be less than map height. min daig line hieght is: ").append(std::to_string(minDiagLineHeight)).append(" map height is: ").append(std::to_string(mapHeight)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid min diag line height. min diag line height must be less than map height. min daig line hieght is: ").append(std::to_string(minDiagLineHeight)).append(" map height is: ").append(std::to_string(mapHeight)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
@@ -1744,50 +1763,50 @@ namespace ookpik {
 
 		errorNumber++;
 		if (minRooms > maxRooms) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured rooms lines. min rooms must be less thanmax rooms. min rooms is: ").append(std::to_string(minRooms)).append(" max rooms is: ").append(std::to_string(maxRooms)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured rooms lines. min rooms must be less thanmax rooms. min rooms is: ").append(std::to_string(minRooms)).append(" max rooms is: ").append(std::to_string(maxRooms)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
 		errorNumber++;
 		if (minRoomsWidth > maxRoomWidth) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured rooms width. min rooms width must be less thanmax rooms width. min room width is: ").append(std::to_string(minRoomsWidth)).append(" max roome width is: ").append(std::to_string(maxRoomWidth)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured rooms width. min rooms width must be less thanmax rooms width. min room width is: ").append(std::to_string(minRoomsWidth)).append(" max roome width is: ").append(std::to_string(maxRoomWidth)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
 		errorNumber++;
 		if (minRoomsWidth >= mapWidth) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured min rooms width. min rooms width must be less than map width. min rooms width is: ").append(std::to_string(minRoomsWidth)).append(" map width is: ").append(std::to_string(mapWidth)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured min rooms width. min rooms width must be less than map width. min rooms width is: ").append(std::to_string(minRoomsWidth)).append(" map width is: ").append(std::to_string(mapWidth)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
 		errorNumber++;
 		if (maxRoomWidth >= mapWidth) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max room width. must be less than map width. max rooms width is: ").append(std::to_string(maxRoomWidth)).append(" map width is: ").append(std::to_string(mapWidth)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max room width. must be less than map width. max rooms width is: ").append(std::to_string(maxRoomWidth)).append(" map width is: ").append(std::to_string(mapWidth)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
 		errorNumber++;
 		if (maxRoomHeight < minRoomHeight) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured room height. min room height must be less than max rooms height. min room height is: ").append(std::to_string(minRoomHeight)).append(" max room hieght is: ").append(std::to_string(maxRoomHeight)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured room height. min room height must be less than max rooms height. min room height is: ").append(std::to_string(minRoomHeight)).append(" max room hieght is: ").append(std::to_string(maxRoomHeight)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
 		errorNumber++;
 		if (maxRoomHeight >= mapHeight) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max room hieght. must be less than map heigth. max room height is: ").append(std::to_string(maxRoomHeight)).append(" map hieght is: ").append(std::to_string(mapHeight)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured max room hieght. must be less than map heigth. max room height is: ").append(std::to_string(maxRoomHeight)).append(" map hieght is: ").append(std::to_string(mapHeight)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
 		errorNumber++;
 		if (minRoomHeight >= mapHeight) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid min room height. min room height must be less than map height. min room hieght is: ").append(std::to_string(minRoomHeight)).append(" map height is: ").append(std::to_string(mapHeight)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid min room height. min room height must be less than map height. min room hieght is: ").append(std::to_string(minRoomHeight)).append(" map height is: ").append(std::to_string(mapHeight)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
@@ -1795,8 +1814,8 @@ namespace ookpik {
 
 		errorNumber++;
 		if (this->checkTimer()) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime() / 1000)) / 33) / 30))).append(" seconds!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime() / 1000)) / 33) / 30))).append(" seconds!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
@@ -1818,8 +1837,8 @@ namespace ookpik {
 		int neededOpen = this->calculateNeededOpenSpaces(neededSeeds);
 		errorNumber++;
 		if (this->checkTimer()) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime() / 1000)) / 33) / 30))).append(" seconds!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime() / 1000)) / 33) / 30))).append(" seconds!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
@@ -1860,8 +1879,8 @@ namespace ookpik {
 
 		errorNumber++;
 		if (requestedDiagLines + requestedRooms + requestedRightAngleLines <= 0) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid open area. collective generated number of open structure (right angle lines, rooms, diag lines) must be greater than 0!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid open area. collective generated number of open structure (right angle lines, rooms, diag lines) must be greater than 0!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
@@ -1869,8 +1888,8 @@ namespace ookpik {
 		std::vector<std::vector<mapTileIds::mapTileId>> protomap = this->createStartingMap(mapWidth, mapHeight, mapTileIds::TREE);
 		errorNumber++;
 		if (this->checkTimer()) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime() / 1000)) / 33) / 30))).append(" seconds!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime() / 1000)) / 33) / 30))).append(" seconds!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
@@ -1889,9 +1908,9 @@ namespace ookpik {
 				starty = (this->getRandom(0, ((mapHeight) - height)));
 				df::Box room = df::Box(df::Vector(startx,starty),(width), (height));
 				this->drawRectangle(protomap, room, mapTileIds::EMPTY);
-				if (this->getGenError()) {
+				if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
 					
-					this->addErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" room draw failed! box number: ").append(std::to_string(index)).append(" out of ").append(std::to_string(requestedRooms)).append("x: ").append(std::to_string(startx)).append(" y: ").append(std::to_string(starty)).append(" width: ").append(std::to_string(width)).append("height").append(std::to_string(height)).append(" map height: ").append(std::to_string(mapHeight)).append(" map width:").append(std::to_string(mapWidth)));
+					this->m_debug_harness->queueErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" room draw failed! box number: ").append(std::to_string(index)).append(" out of ").append(std::to_string(requestedRooms)).append("x: ").append(std::to_string(startx)).append(" y: ").append(std::to_string(starty)).append(" width: ").append(std::to_string(width)).append("height").append(std::to_string(height)).append(" map height: ").append(std::to_string(mapHeight)).append(" map width:").append(std::to_string(mapWidth)));
 					this->setBaseFunctionExit(true);
 					return;
 				}
@@ -1899,8 +1918,8 @@ namespace ookpik {
 		}
 		errorNumber++;
 		if (this->checkTimer()) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime() / 1000)) / 33) / 30))).append(" seconds!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime() / 1000)) / 33) / 30))).append(" seconds!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
@@ -1921,8 +1940,8 @@ namespace ookpik {
 
 				this->drawLine(protomap, toDraw, mapTileIds::EMPTY);
 
-				if (this->getGenError()) {
-					this->addErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" diag line draw failed! diag line number: ").append(std::to_string(index)).append(" out of ").append(std::to_string(requestedDiagLines)));
+				if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+					this->m_debug_harness->queueErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" diag line draw failed! diag line number: ").append(std::to_string(index)).append(" out of ").append(std::to_string(requestedDiagLines)));
 					this->setBaseFunctionExit(true);
 					return;
 				}
@@ -1931,8 +1950,8 @@ namespace ookpik {
 		}
 		errorNumber++;
 		if (this->checkTimer()) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime() / 1000)) / 33) / 30))).append(" seconds!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime() / 1000)) / 33) / 30))).append(" seconds!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
@@ -1962,8 +1981,8 @@ namespace ookpik {
 
 				this->drawLine(protomap, toDraw, mapTileIds::EMPTY);
 
-				if (this->getGenError()) {
-					this->addErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" right angle line draw failed! right angle line number: ").append(std::to_string(index)).append(" out of ").append(std::to_string(requestedDiagLines)));
+				if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+					this->m_debug_harness->queueErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" right angle line draw failed! right angle line number: ").append(std::to_string(index)).append(" out of ").append(std::to_string(requestedDiagLines)));
 					this->setBaseFunctionExit(true);
 					return;
 				}
@@ -1972,8 +1991,8 @@ namespace ookpik {
 		}
 		errorNumber++;
 		if (this->checkTimer()) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime() / 1000)) / 33) / 30))).append(" seconds!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime() / 1000)) / 33) / 30))).append(" seconds!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
@@ -1981,15 +2000,15 @@ namespace ookpik {
 
 		int openCount = this->findCoordsOfValueCount(protomap, mapTileIds::EMPTY);
 		errorNumber++;
-		if (this->getGenError()) {
-			this->addErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" open space count failed!"));
+		if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" open space count failed!"));
 			this->setBaseFunctionExit(true);
 			return;
 		}
 		errorNumber++;
 		if (this->checkTimer()) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime() / 1000)) / 33) / 30))).append(" seconds!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime() / 1000)) / 33) / 30))).append(" seconds!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
@@ -2003,31 +2022,31 @@ namespace ookpik {
 
 			this->sprinkleTrees(protomap, requestedRandomTrees, mapTileIds::EMPTY, mapTileIds::TREE);
 			errorNumber++;
-			if (this->getGenError()) {
-				this->addErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" tree sprinkle failed!"));
+			if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+				this->m_debug_harness->queueErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" tree sprinkle failed!"));
 				this->setBaseFunctionExit(true);
 				return;
 			}
 		}
 		errorNumber++;
 		if (this->checkTimer()) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime() / 1000)) / 33) / 30))).append(" seconds!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime() / 1000)) / 33) / 30))).append(" seconds!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
 
 		this->ensureSpace(protomap, mapTileIds::EMPTY, mapTileIds::TREE, neededOpen);
 		errorNumber++;
-		if (this->getGenError()) {
-			this->addErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" space ensurance failed!"));
+		if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" space ensurance failed!"));
 			this->setBaseFunctionExit(true);
 			return;
 		}
 		errorNumber++;
 		if (this->checkTimer()) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime() / 1000)) / 33) / 30))).append(" seconds!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime() / 1000)) / 33) / 30))).append(" seconds!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
@@ -2035,15 +2054,15 @@ namespace ookpik {
 		std::vector<std::vector<df::Vector>> zones;
 		zones = this->findZones(protomap,mapTileIds::FLOOD, mapTileIds::EMPTY);
 		errorNumber++;
-		if (this->getGenError()) {
-			this->addErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" zone search failed!"));
+		if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" zone search failed!"));
 			this->setBaseFunctionExit(true);
 			return;
 		}
 		errorNumber++;
 		if (this->checkTimer()) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime() / 1000)) / 33) / 30))).append(" seconds!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime() / 1000)) / 33) / 30))).append(" seconds!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
@@ -2054,198 +2073,170 @@ namespace ookpik {
 			errorNumber++;
 			
 			
-			this->addErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append("map gen failed! invalid zone count zone must be at least 1! zone count: ").append(std::to_string(zoneCount)));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append("map gen failed! invalid zone count zone must be at least 1! zone count: ").append(std::to_string(zoneCount)));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
 
 		if (zoneCount > 1) {
 			this->eliminateDisperateZones(protomap, mapTileIds::FLOOD, mapTileIds::EMPTY, m_configObj);
-			if (this->getGenError()) {
-				this->addErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" zone search failed!"));
+			if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+				this->m_debug_harness->queueErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" zone search failed!"));
 				this->setBaseFunctionExit(true);
 				return;
 			}
 		}
 		errorNumber++;
 		if (this->checkTimer()) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime() / 1000)) / 33) / 30))).append(" seconds!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime() / 1000)) / 33) / 30))).append(" seconds!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
 		int openSpaceCount = this->findCoordsOfValueCount(protomap, mapTileIds::EMPTY);
 		if (openSpaceCount < neededOpen) {
-			this->addErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append("map gen failed! too few emtpy spaces! empty space count: ").append(std::to_string(openSpaceCount)).append(" needed oepn spaces: ").append(std::to_string(neededOpen)).append("!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append("map gen failed! too few emtpy spaces! empty space count: ").append(std::to_string(openSpaceCount)).append(" needed oepn spaces: ").append(std::to_string(neededOpen)).append("!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
 		
 		this->sprinkleSeeds(protomap, neededSeeds, mapTileIds::EMPTY, mapTileIds::SEED);
-		if (this->getGenError()) {
-			this->addErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" seed sprinkle failed!"));
+		if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" seed sprinkle failed!"));
 			this->setBaseFunctionExit(true);
 			return;
 		}
 
 		this->placeExit(protomap, mapTileIds::EMPTY, mapTileIds::EXIT);
-		if (this->getGenError()) {
-			this->addErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" exit place failed!"));
+		if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" exit place failed!"));
 			this->setBaseFunctionExit(true);
 			return;
 		}
 
 		this->placeOwl(protomap, mapTileIds::EMPTY, mapTileIds::OWL);
-		if (this->getGenError()) {
-			this->addErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" owl place failed!"));
+		if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error: ").append(std::to_string(errorNumber)).append(" owl place failed!"));
 			this->setBaseFunctionExit(true);
 			return;
 		}
 
 		if (this->checkTimer()) {
-			this->addErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime() / 1000)) / 33) / 30))).append(" seconds!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" generation timeout! timer setting: ").append(std::to_string(this->getTimeout())).append(" seconds, timer elapsed: ").append(std::to_string(((double)((double)((double)(this->getTimerTime() / 1000)) / 33) / 30))).append(" seconds!"));
+			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
 			this->setBaseFunctionExit(true);
 			return;
 		}
 		
 		this->m_map_plan = this->copyMap(protomap);
-		if (m_debug) {
-			df::LogManager& lm = df::LogManager::getInstance();
+		if (this->m_debug_harness->getDebugMode()) {
+			
 			int protomapArea = 0;
 			int mapY = protomap[0].size();
 			bool error = false;
 			for (int i = 0; i < protomap.size(); i++) {
 				if (protomap[i].size() != mapY) {
 					error = true;
-					m_log_man_access.lock();
-					lm.writeLog("map gen debug log failed: map y sizes inconsitent!");
-					m_log_man_access.unlock();
+					m_debug_harness->queueErrorMessage("map gen debug log failed: map y sizes inconsitent!");
+					m_debug_harness->drainErrorMessageQueueToLog();
 					break;
 				}
 			}
 			if (!error) {
-				std::string mapTiles="";
+				m_debug_harness->setDebugMap1("");
 				for (int y = 0; y < mapY; y++) {
 					for (int x = 0; x < protomap.size(); x++) {
 						switch (protomap[x][y]) {
 						case mapTileIds::EMPTY:
-							mapTiles.append("..");
+							this->m_debug_harness->addToDebugMap1("..");
 							break;
 
 						case mapTileIds::EXIT:
-							mapTiles.append("EE");
+							this->m_debug_harness->addToDebugMap1("EE");
 							break;
 						
 						case mapTileIds::OWL:
-							mapTiles.append("/\\");
+							this->m_debug_harness->addToDebugMap1("/\\");
 							break;
 
 						case mapTileIds::SEED:
-							mapTiles.append("@@");
+							this->m_debug_harness->addToDebugMap1("@@");
 							break;
 						
 						case mapTileIds::TREE:
-							mapTiles.append("##");
+							this->m_debug_harness->addToDebugMap1("##");
 							break;
 						}
 					}
-					mapTiles.append("\n");
+					this->m_debug_harness->addToDebugMap1("\n");
 				}
-				m_debug_map1 = std::string("map order:\n").append(mapTiles).c_str();
-				lm.writeLog(m_debug_map1.c_str());
+				
+				this->m_debug_harness->logDebugMap1();
 			}
 			
 		}
 		
 		this->setGenTime(this->getTimerTime());
-		this->setGenerating(false);
-		this->setGenDone(true);
+		this->setCurrentMode(GenerationStages::WAITING_FOR_THREAD_EXIT);
 		//put this before every return, otherwise bad things start happening
 		this->setBaseFunctionExit(true);
 		return;
 	}
 	
-	void MapBuilder::setGenDone(bool new_gen_done) {
-		m_state_gate.lock();
-		m_genDone = new_gen_done;
-		m_state_gate.unlock();
-	}
-	bool MapBuilder::getGenDone() {
-		bool temp = false;
-		m_state_gate.lock();
-		temp = m_genDone;
-		m_state_gate.unlock();
-
-		return temp;
-	}
+	
 
 	void MapBuilder::setGenTime(unsigned long long new_gen_time) {
-		m_state_gate.lock();
-		m_genTime = new_gen_time;
-		m_state_gate.unlock();
+		if (!this->getDeleteMode()) {
+			m_state_gate.lock();
+			m_genTime = new_gen_time;
+			m_state_gate.unlock();
+		}
+		
 	}
 	unsigned long long MapBuilder::getGenTime() {
 		unsigned long long temp = 0;
-		m_state_gate.lock();
-		temp = m_genTime;
-		m_state_gate.unlock();
+		if (!this->getDeleteMode()) {
+			m_state_gate.lock();
+			temp = m_genTime;
+			m_state_gate.unlock();
+		}
+		
 		return temp;
 	}
 
 
-	void MapBuilder::setGenerating(bool new_genrating) {
-
-		m_state_gate.lock();
-		m_generating = new_genrating;
-		m_state_gate.unlock();
-	}
-	bool MapBuilder::getGenerating() {
+	
+	bool MapBuilder::getBaseFunctionExit() {
 		bool temp = false;
-		m_state_gate.lock();
-		temp = m_generating;
-		m_state_gate.unlock();
+		if (!this->getDeleteMode()) {
+			m_state_gate.lock();
+			temp = m_base_function_exit;
+			m_state_gate.unlock();
+		}
+		
 		return temp;
 	}
-	void MapBuilder::setDoneSent(bool new_done_set) {
-		m_state_gate.lock();
-		m_done_sent = new_done_set;
-		m_state_gate.unlock();
-	}
-	bool MapBuilder::getDoneSet() {
-		bool temp = false;
-		m_state_gate.lock();
-		temp = m_done_sent;
-		m_state_gate.unlock();
-		return temp;
+	void MapBuilder::setBaseFunctionExit(bool new_base_function_exit) {
+		if (!this->getDeleteMode()) {
+			m_state_gate.lock();
+			m_base_function_exit = new_base_function_exit;
+			m_state_gate.unlock();
+		}
+		
 	}
 
 
 
-
-	void MapBuilder::setMapReturn(df::ObjectList new_map_return) {
-		m_state_gate.lock();
-		m_mapReturn = new_map_return;
-		m_state_gate.unlock();
-	}
-	df::ObjectList MapBuilder::getMapReturn() {
-		df::ObjectList temp;
-		m_state_gate.lock();
-		temp = m_mapReturn;
-		m_state_gate.unlock();
-
-		return temp;
-
-	}
-
+	
 	//this is the important function to change to swap out the different game objects the gnerator instances
+	//need to rewrite this function and its infastructure with cooperative multitasking in mind
 	int MapBuilder::buildMap(MapGenConfig config, std::vector<std::vector<mapTileIds::mapTileId>>& map, df::Object* owl) {
-
+		//the current version is broken and dperecated, an new v2 will be made shortly
 		if (map.empty()) {
-			this->addErrorMessage("buildMap: error 0 map empty!");
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage("buildMap: error 0 map empty!");
+			this->setCurrentMode(GenerationStages::BUILD_ERROR);
 			return -1;
 		}
 
@@ -2264,43 +2255,43 @@ namespace ookpik {
 		int altitude = config.getMapObjectAltitude();
 
 		if ((playAreaWidth <= 0)) {
-			this->addErrorMessage(std::string("buildMap: error 1 invalid play area width of: ").append(std::to_string(playAreaWidth)).append("!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("buildMap: error 1 invalid play area width of: ").append(std::to_string(playAreaWidth)).append("!"));
+			this->setCurrentMode(GenerationStages::BUILD_ERROR);
 			return -1;
 		}
 		else if ((playAreaHeight <= 0)) {
-			this->addErrorMessage(std::string("buildMap: error 2 invalid play area height of: ").append(std::to_string(playAreaHeight)).append("!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("buildMap: error 2 invalid play area height of: ").append(std::to_string(playAreaHeight)).append("!"));
+			this->setCurrentMode(GenerationStages::BUILD_ERROR);
 			return -1;
 		}
 		else if ((borderThickness < 0)) {
-			this->addErrorMessage(std::string("buildMap: error 3 invalid border thickness of: ").append(std::to_string(borderThickness)).append("!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("buildMap: error 3 invalid border thickness of: ").append(std::to_string(borderThickness)).append("!"));
+			this->setCurrentMode(GenerationStages::BUILD_ERROR);
 			return -1;
 		}
 		else if ((tileWidth < 1)) {
-			this->addErrorMessage(std::string("buildMap: error 4 invalid tile width of: ").append(std::to_string(tileWidth)).append("!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("buildMap: error 4 invalid tile width of: ").append(std::to_string(tileWidth)).append("!"));
+			this->setCurrentMode(GenerationStages::BUILD_ERROR);
 			return -1;
 		}
 		else if ((tileHeight < 1)) {
-			this->addErrorMessage(std::string("buildMap: error 5 invalid tile height of: ").append(std::to_string(tileHeight)).append("!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("buildMap: error 5 invalid tile height of: ").append(std::to_string(tileHeight)).append("!"));
+			this->setCurrentMode(GenerationStages::BUILD_ERROR);
 			return -1;
 		}
 		else if ((altitude < 0) || (altitude > df::MAX_ALTITUDE)) {
-			this->addErrorMessage(std::string("buildMap: error 6 invalid tile height of: ").append(std::to_string(altitude)).append("!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("buildMap: error 6 invalid tile height of: ").append(std::to_string(altitude)).append("!"));
+			this->setCurrentMode(GenerationStages::BUILD_ERROR);
 			return -1;
 		}
 		else if (playAreaWidth > map.size()) { // error only if the plan is narrower than configured
-			this->addErrorMessage(std::string("buildMap: error 7 invalid map size of: ").append(std::to_string(map.size())).append(" configured width: ").append(std::to_string(playAreaWidth)).append("!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("buildMap: error 7 invalid map size of: ").append(std::to_string(map.size())).append(" configured width: ").append(std::to_string(playAreaWidth)).append("!"));
+			this->setCurrentMode(GenerationStages::BUILD_ERROR);
 			return -1;
 		}
 		else if (this->getBuildPerFrame() <= 0) {
-			this->addErrorMessage(std::string("buildMap: error 8 invalid per frame object construction count, must be at least one, give count of: ").append(std::to_string(this->getBuildPerFrame())).append("!"));
-			this->setGenError(true);
+			this->m_debug_harness->queueErrorMessage(std::string("buildMap: error 8 invalid per frame object construction count, must be at least one, give count of: ").append(std::to_string(this->getBuildPerFrame())).append("!"));
+			this->setCurrentMode(GenerationStages::BUILD_ERROR);
 			return -1;
 		}
 		df::Object* newGround=nullptr;
@@ -2344,8 +2335,8 @@ namespace ookpik {
 							for (int i = 0; i < m_mapReturn.getCount(); i++) {
 								wm.markForDelete(m_mapReturn[i]);
 							}
-							this->addErrorMessage(std::string("buildMap: error 9 map Y vector less than configured!").append(" values: map y: ").append(std::to_string(map.at(x - borderThickness).size())).append(" configured y: ").append(std::to_string(playAreaHeight)).append("!"));
-							this->setGenError(true);
+							this->m_debug_harness->queueErrorMessage(std::string("buildMap: error 9 map Y vector less than configured!").append(" values: map y: ").append(std::to_string(map.at(x - borderThickness).size())).append(" configured y: ").append(std::to_string(playAreaHeight)).append("!"));
+							this->setCurrentMode(GenerationStages::BUILD_ERROR);
 							return -1;
 						}
 						//if you want to swap out the gameobjects the object instances, this switch statement is where you do that
@@ -2399,8 +2390,8 @@ namespace ookpik {
 							for (int i = 0; i < m_mapReturn.getCount(); i++) {
 								wm.markForDelete(m_mapReturn[i]);
 							}
-							this->addErrorMessage(std::string("buildMap: error 10 invalid tile id!").append(" values: id Value: ").append(std::to_string((int)map.at((x)-borderThickness).at((y)-borderThickness))).append("!"));
-							this->setGenError(true);
+							this->m_debug_harness->queueErrorMessage(std::string("buildMap: error 10 invalid tile id!").append(" values: id Value: ").append(std::to_string((int)map.at((x)-borderThickness).at((y)-borderThickness))).append("!"));
+							this->setCurrentMode(GenerationStages::BUILD_ERROR);
 							return -1;
 
 						}
@@ -2408,13 +2399,16 @@ namespace ookpik {
 					currentPos.setY(currentPos.getY() + tileHeight);
 					
 					if (framePorgressCount >= this->getBuildPerFrame()) {
-						if (y >= tileHeight*(playAreaHeight + (borderThickness * 2) - 1)) {
+						if (y >= tileHeight*(playAreaHeight + (borderThickness * 2))) {
 							currentPos.setY(0);
 							currentPos.setX(currentPos.getX() + tileWidth);
 							this->setLastX(this->getLastX() + 1);
 							this->setLastY(0);
-							m_debug_strips.push_back(m_current_debug_strip);
-							m_current_debug_strip.clear();
+							if (m_debug) {
+								m_debug_strips.push_back(m_current_debug_strip);
+								m_current_debug_strip.clear();
+							}
+							
 						}
 						else {
 							this->setLastY(y + 1);
@@ -2428,8 +2422,11 @@ namespace ookpik {
 					}
 					framePorgressCount++;
 				}
-				m_debug_strips.push_back(m_current_debug_strip);
-				m_current_debug_strip.clear();
+				if (m_debug) {
+					m_debug_strips.push_back(m_current_debug_strip);
+					m_current_debug_strip.clear();
+				}
+				
 				startY = 0;
 				currentPos.setY(0);
 				currentPos.setX(currentPos.getX() + tileWidth);
@@ -2448,9 +2445,7 @@ namespace ookpik {
 			for (int i = 0; i < m_debug_Coords.size(); i++) {
 				coordsString.append(std::string("< coord: ").append(std::to_string(i)).append(" map pos:  x:").append(std::to_string(m_debug_map_positions[i].getX())).append(" y: ").append(std::to_string(m_debug_map_positions[i].getY())).append(" object pos: x: ").append(std::to_string(m_debug_Coords[i].getX())).append(" y: ").append(std::to_string(m_debug_Coords[i].getY())).append(" >, "));
 			}
-			m_log_man_access.lock();
-			lm.writeLog(coordsString.c_str());
-			m_log_man_access.unlock();
+			
 			for (int i = 0; i < m_debug_strips.size(); i++) {
 				if (m_debug_strips[i].size() != stripy) {
 					error = true;
@@ -2471,7 +2466,9 @@ namespace ookpik {
 				lm.writeLog(m_debug_map2.c_str());
 				m_log_man_access.unlock();
 			}
-
+			m_log_man_access.lock();
+			lm.writeLog(coordsString.c_str());
+			m_log_man_access.unlock();
 		}
 
 		this->setBuildProgress(this->getBuildProgress() + framePorgressCount);
@@ -2482,66 +2479,40 @@ namespace ookpik {
 	}
 
 
-	void  MapBuilder::setLastX(int new_last_x) {
-		m_state_gate.lock();
-		m_lastx = new_last_x;
-		m_state_gate.unlock();
-	}
-	int  MapBuilder::getLastX() {
-		int temp = 0;
-		m_state_gate.lock();
-		temp = m_lastx;
-		m_state_gate.unlock();
-		return temp;
-	}
-	void  MapBuilder::setLastY(int new_last_y) {
-		m_state_gate.lock();
-		m_lasty = new_last_y;
-		m_state_gate.unlock();
-	}
-	int  MapBuilder::getlastY() {
-		int temp = 0;
-		m_state_gate.lock();
-		temp = m_lasty;
-		m_state_gate.unlock();
-		return temp;
-	}
+	
 
 
 	int MapBuilder::startGenerateMap(MapGenConfig config, df::Object* owl){
-		if ((!this->getGenerating()) && (!this->getBuilding())) {
+		if ((this->getCurrentMode()==GenerationStages::READY)||(this->getCurrentMode()==GenerationStages::DONE)) {
 			
 			m_configObj = MapGenConfig();
-			m_genDone = false;
-			m_generating = false;
-			m_build_done = false;
-			m_build_per_frame = 0;
-			m_to_build = 0;
-			m_build_progress = 0;
-			m_current_build_pos = df::Vector();
-			m_mapReturn = df::ObjectList();
+			if (m_debug_harness != nullptr) {
+				m_debug_harness->setDeleteMode();
+				delete m_debug_harness;
+				m_debug_harness = nullptr;
+			}
+			
+			m_debug_harness = new MapGenDebugObj(config.getGenDebugMode());
 			m_timer = df::Clock();
 			m_map_plan = std::vector<std::vector<mapTileIds::mapTileId>>();
-			m_debug_map1 = "";
-			m_debug_map2 = "";
 			
-			m_error_messages = std::vector<std::string>();
 			m_player = nullptr;
+			if (m_genThread != nullptr) {
+				m_genThread->join();
+				delete m_genThread;
+			}
 			m_genThread = nullptr;
 			m_genTime = 0;
-			m_gen_error = false;
-			m_base_function_exit = false;
+			m_error_handled = false;
 			m_timeout = 0;
-			m_lastx = 0;
-			m_lasty = 0;
-			m_building = false;
+			
 			m_RandomEngine = std::mt19937();
-			m_done_sent = false;
+			
 			m_player = owl;
 			m_configObj = config;
-			this->setGenerating(true);
-			this->setBuildPerFrame(config.getObjectsConstructedPerFrame());
-			
+			this->setBaseFunctionExit(false);
+			this->setCurrentMode(GenerationStages::GENERATING);
+			m_builder_state = MapBuildStateObject();
 			m_genThread = new std::thread(&MapBuilder::generateMap, this);
 
 			
@@ -2555,109 +2526,48 @@ namespace ookpik {
 
 	bool MapBuilder::isMapGenFinished() {
 		
-		return this->getGenDone();
+		return this->getCurrentMode() >= GenerationStages::GENERATION_DONE;
 	}
 
 	bool MapBuilder::isMapBuildFinished() {
 		
-		return this->getBuildDone();
+		return this->getCurrentMode() >= GenerationStages::BUILD_DONE;
 	}
 
-	int  MapBuilder::getBuildProgress() {
-		int temp = 0;
-		m_state_gate.lock();
-		temp = m_build_progress;
-		m_state_gate.unlock();
+	
+	bool MapBuilder::getDeleteMode() {
+		bool temp = true;
+		if (!m_delete_mode) {
+			m_state_gate.lock();
+			m_mode_gate.lock();
+			temp = m_delete_mode;
+			m_state_gate.unlock();
+			m_mode_gate.unlock();
+		}
 		return temp;
 	}
-	void  MapBuilder::setBuildProgress(int new_build_progress) {
-		m_state_gate.lock();
-		m_build_progress = new_build_progress;
-		m_state_gate.unlock();
-		
-	}
-	int  MapBuilder::getToBuild() {
-		int temp = 0;
-		m_state_gate.lock();
-		temp = m_to_build;
-		m_state_gate.unlock();
-		return temp;
-	}
-	void  MapBuilder::setToBuild(int new_to_build) {
-		m_state_gate.lock();
-		m_to_build = new_to_build;
-		m_state_gate.unlock();
-	}
-	int  MapBuilder::getBuildPerFrame() {
-		int temp = 0;
-		m_state_gate.lock();
-		temp = m_build_per_frame;
-		m_state_gate.unlock();
-		return temp;
-	}
-	void  MapBuilder::setBuildPerFrame(int new_build_per_frame) {
-		m_state_gate.lock();
-		m_build_per_frame = new_build_per_frame;
-		m_state_gate.unlock();
-	}
-	void  MapBuilder::setCurrentBuildPos(df::Vector new_current_build_pos) {
-		m_state_gate.lock();
-		m_current_build_pos = new_current_build_pos;
-		m_state_gate.unlock();
-	}
-	df::Vector  MapBuilder::getCurrentBuildPos() {
-		df::Vector temp;
-		m_state_gate.lock();
-		temp= m_current_build_pos;
-		m_state_gate.unlock();
-		return temp;
-	}
-
-	void MapBuilder::setBuildDone(bool new_build_done) {
-		m_state_gate.lock();
-		m_build_done = new_build_done;
-		m_state_gate.unlock();
-	}
-	bool MapBuilder::getBuildDone() {
-		bool temp = false;
-		m_state_gate.lock();
-		temp = m_build_done;
-		m_state_gate.unlock();
-		return temp;
+	void MapBuilder::setDeleteMode(bool new_delete_mode) {
+		if (!m_delete_mode) {
+			m_state_gate.lock();
+			m_mode_gate.lock();
+			m_delete_mode = new_delete_mode;
+			m_state_gate.unlock();
+			m_mode_gate.unlock();
+		}
 	}
 
 	MapBuilder::MapBuilder() {
 		m_configObj = MapGenConfig();
-		m_genDone = false;
-		m_generating = false;
-		m_build_done = false;
-		m_done_sent = false;
-		m_build_per_frame = 0;
-		m_to_build = 0;
-		m_build_progress = 0;
-		m_current_build_pos = df::Vector();
-		m_mapReturn=df::ObjectList();
+		m_debug_harness = nullptr;
 		m_timer = df::Clock();
 		m_map_plan = std::vector<std::vector<mapTileIds::mapTileId>>();
-		m_debug_map1 = "";
-		m_debug_map2 = "";
-		m_current_debug_strip= std::vector<std::string>();
-		m_debug_strips= std::vector<std::vector<std::string>>();
-		m_error_messages=std::vector<std::string>();
-		m_debug_Coords= std::vector<df::Vector>();
-
-		m_debug_map_positions= std::vector<df::Vector>();
+		
 		m_player = nullptr;
 		m_genThread = nullptr;
 		m_genTime = 0;
-		m_gen_error = false;
-		m_base_function_exit = false;
-		m_timeout = 0;
-		m_lastx = 0;
-		m_lasty = 0;
-		m_building = false;
+		m_error_handled=false;
 		m_RandomEngine = std::mt19937();
-		m_done_sent = false;
+		
 		this->setCameraAffected(false);
 		this->setPosition(df::Vector(57, 15)); // centre of the 115x30 window
 		this->setType("mapBuilder");
@@ -2673,23 +2583,35 @@ namespace ookpik {
 			delete m_genThread;
 			m_genThread = nullptr;
 		}
+		if (m_debug_harness != nullptr) {
+			m_debug_harness->setDeleteMode();
+			delete m_debug_harness;
+		}
+		
+
+		this->setDeleteMode(true);
 		
 	}
 
 
-	void MapBuilder::setBaseFunctionExit(bool new_base_function_exit) {
-		m_error_gate.lock();
-		m_base_function_exit = new_base_function_exit;
-		m_error_gate.unlock();
+	GenerationStages::GenerationStage MapBuilder::getCurrentMode() {
+		GenerationStages::GenerationStage temp = GenerationStages::STAGE_ERROR;
+		if (!this->getDeleteMode()) {
+			m_mode_gate.lock();
+			temp = m_current_mode;
+			m_mode_gate.unlock();
+		}
+		return temp;
 	}
-	bool MapBuilder::getBaseFunctionExit() {
-		bool exitStateTemp;
-		m_error_gate.lock();
-		exitStateTemp = m_base_function_exit;
-		m_error_gate.unlock();
-		return exitStateTemp;
+	void MapBuilder::setCurrentMode(GenerationStages::GenerationStage new_mode) {
+		if (!this->getDeleteMode()) {
+			m_mode_gate.lock();
+			m_current_mode = new_mode;
+			m_mode_gate.unlock();
+		}
 	}
-		
+
+	int configureMapBuilding();
 
 
 	int MapBuilder::destroyMap(df::ObjectList map) {
@@ -2703,51 +2625,89 @@ namespace ookpik {
 		return 0;
 	}
 
-	void MapBuilder::setBuilding(bool new_building) {
-		m_state_gate.lock();
-		m_building = new_building;
-		m_state_gate.unlock();
-	}
-	bool MapBuilder::getBuilding() {
-
-		bool temp = false;
-		m_state_gate.lock();
-		temp = m_building;
-		m_state_gate.unlock();
-		return temp;
-	}
+	
 
 	int MapBuilder::eventHandler(const df::Event* m_p) {
 
 		if (m_p->getType() == df::STEP_EVENT) {
-			if (!this->getDoneSet()) {
-				if (this->getGenError()) {
+
+			switch (this->getCurrentMode()) {
+				case GenerationStages::GENERATION_ERROR:
 					if (this->getBaseFunctionExit()) {
+						if (!this->m_error_handled) {
+							df::GameManager& gm = df::GameManager::getInstance();
+							df::LogManager& lm = df::LogManager::getInstance();
+							m_genThread->join();
+							if (m_genThread != nullptr) {
+								delete m_genThread;
+								m_genThread = nullptr;
+							}
+
+
+							EventMapGenDone done = EventMapGenDone(m_debug_harness->getErrorMessages());
+							gm.onEvent(&done);
+							m_error_handled = true;
+						}
+						
+					}
+					break;
+				case GenerationStages::BUILD_ERROR:
+					if (!this->m_error_handled) {
 						df::GameManager& gm = df::GameManager::getInstance();
 						df::LogManager& lm = df::LogManager::getInstance();
-						m_genThread->join();
-						if (m_genThread != nullptr) {
+
+						EventMapGenDone done = EventMapGenDone(m_debug_harness->getErrorMessages());
+						gm.onEvent(&done);
+						m_error_handled = true;
+					}
+					break;
+				case GenerationStages::WAITING_TO_GENERATE:
+					
+					break;
+				case GenerationStages::GENERATING:
+				
+					break;
+				case GenerationStages::GENERATION_DONE:
+				
+					break;
+				case GenerationStages::WAITING_FOR_THREAD_EXIT:
+					if (this->getBaseFunctionExit()) {
+						if (this->m_genThread != nullptr) {
+							m_genThread->join();
 							delete m_genThread;
 							m_genThread = nullptr;
 						}
-
-						std::vector < std::string> errorMessages = this->getErrorMessages();
-						m_log_man_access.lock();
-						for (int i = 0; i < errorMessages.size(); i++) {
-							lm.writeLog(errorMessages.at(i).c_str());
-						}
-						m_log_man_access.unlock();
-
-						EventMapGenDone done = EventMapGenDone(errorMessages);
-						gm.onEvent(&done);
-						this->setDoneSent(true);
+						this->setCurrentMode(GenerationStages::GENERATION_DONE);
 					}
+				
+					break;
+				case GenerationStages::WAITING_FOR_BUILD_START:
+				
+					break;
+				case GenerationStages::BUILDING:
+				
+					break;
+				case GenerationStages::BUILD_DONE:
+				
+					break;
+				case GenerationStages::SENDING_EVENT:
+				
+					break;
+				case GenerationStages::STAGE_ERROR:
+				
+					break;
+				case GenerationStages::READY:
+				
+					break;
+				case GenerationStages::DONE:
+				
+					break;
+			}
+			
+			if (!this->getDoneSet()) {
+				
 
-				}
-
-
-
-				else if (!this->getGenerating()) {
+				if (!this->getGenerating()) {
 					if (this->getGenDone() && (!this->getBuilding())&&this->getBaseFunctionExit()) {
 						m_genThread->join();
 						if (m_genThread != nullptr) {
@@ -2765,7 +2725,7 @@ namespace ookpik {
 
 						this->buildMap(m_configObj, m_map_plan, m_player);
 
-						if (this->getGenError()) {
+						if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
 							df::GameManager& gm = df::GameManager::getInstance();
 							df::LogManager& lm = df::LogManager::getInstance();
 							std::vector < std::string> errorMessages = this->getErrorMessages();
@@ -2806,62 +2766,54 @@ namespace ookpik {
 	int MapBuilder::draw() {
 		if (this->getVisible()) {
 			df::DisplayManager& dm = df::DisplayManager::getInstance();
-			if (this->getGenError()) {
-				return dm.drawString(this->getPosition(), "map generation ERROR!", df::CENTER_JUSTIFIED, df::WHITE);
-			}
-			
-			else if (this->getGenerating()) {
-				return dm.drawString(this->getPosition(), "generating map!", df::CENTER_JUSTIFIED, df::WHITE);
-			} else if (this->getBuilding()) {
-				return dm.drawString(this->getPosition(), "building map!", df::CENTER_JUSTIFIED, df::WHITE);
-			}
-			else if (this->getGenDone()) {
-				return dm.drawString(this->getPosition(), "map generation done!", df::CENTER_JUSTIFIED, df::WHITE);
-			}
-			else {
-				return dm.drawString(this->getPosition(), "waiting to generate!", df::CENTER_JUSTIFIED, df::WHITE);
-			}
+			switch (this->getCurrentMode()) {
+				case GenerationStages::GENERATION_ERROR:
+					return dm.drawString(this->getPosition(), "map generation ERROR!", df::CENTER_JUSTIFIED, df::WHITE);
+					break;
+				case GenerationStages::BUILD_ERROR:
+					return dm.drawString(this->getPosition(), "map build ERROR!", df::CENTER_JUSTIFIED, df::WHITE);
+					break;
+				case GenerationStages::WAITING_TO_GENERATE:
+					return dm.drawString(this->getPosition(), "waiting to generate!", df::CENTER_JUSTIFIED, df::WHITE);
+					break;
+				case GenerationStages::GENERATING:
+					return dm.drawString(this->getPosition(), "generating map!", df::CENTER_JUSTIFIED, df::WHITE);
+					break;
+				case GenerationStages::GENERATION_DONE:
+					return dm.drawString(this->getPosition(), "map generation done!", df::CENTER_JUSTIFIED, df::WHITE);
+					break;
+				case GenerationStages::WAITING_FOR_THREAD_EXIT:
+					return dm.drawString(this->getPosition(), "waiting for thread exit!", df::CENTER_JUSTIFIED, df::WHITE);
+					break;
+				case GenerationStages::WAITING_FOR_BUILD_START:
+					return dm.drawString(this->getPosition(), "waiting for build start!", df::CENTER_JUSTIFIED, df::WHITE);
+					break;
+				case GenerationStages::BUILDING:
+					return dm.drawString(this->getPosition(), "building map!", df::CENTER_JUSTIFIED, df::WHITE);
+					break;
+				case GenerationStages::BUILD_DONE:
+					return dm.drawString(this->getPosition(), "map building done!", df::CENTER_JUSTIFIED, df::WHITE);
+					break;
+				case GenerationStages::SENDING_EVENT:
+					return dm.drawString(this->getPosition(), "sending event!", df::CENTER_JUSTIFIED, df::WHITE);
+					break;
+				case GenerationStages::STAGE_ERROR:
+					return dm.drawString(this->getPosition(), "stage error done!", df::CENTER_JUSTIFIED, df::WHITE);
+					break;
+				case GenerationStages::READY:
+					return dm.drawString(this->getPosition(), "ready!", df::CENTER_JUSTIFIED, df::WHITE);
+					break;
+				case GenerationStages::DONE:
+					return dm.drawString(this->getPosition(), "done!", df::CENTER_JUSTIFIED, df::WHITE);
+					break;
+				default:
+					return dm.drawString(this->getPosition(), "unknown state!", df::CENTER_JUSTIFIED, df::WHITE);
+				}
 		}
 		return 0;
 	}
 
 
-	void MapBuilder::addErrorMessage(std::string new_error_message) {
-		m_error_gate.lock();
-		m_error_messages.push_back(new_error_message);
-		m_error_gate.unlock();
-	}
 
-	void MapBuilder::resetErrorMessage() {
-		m_error_gate.lock();
-		m_error_messages.clear();
-		m_error_gate.unlock();
-	}
-	void MapBuilder::setErrorMessages(std::vector<std::string> new_error_messages) {
-		m_error_gate.lock();
-		m_error_messages=new_error_messages;
-		m_error_gate.unlock();
-	}
-	std::vector<std::string> MapBuilder::getErrorMessages() {
-		std::vector<std::string> errorMessageCache;
-		m_error_gate.lock();
-		errorMessageCache = m_error_messages;
-		m_error_gate.unlock();
-		return errorMessageCache;
-	}
-
-	void MapBuilder::setGenError(bool new_gen_error) {
-		m_error_gate.lock();
-		m_gen_error = new_gen_error;
-		m_error_gate.unlock();
-		
-	}
-	bool MapBuilder::getGenError() {
-		bool tempError;
-		m_error_gate.lock();
-		tempError = m_gen_error;
-		m_error_gate.unlock();
-
-		return tempError;
-	}
+	
 }

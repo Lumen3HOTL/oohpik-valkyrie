@@ -54,6 +54,12 @@
     <ClCompile Include="MapGenConfigObj.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MapGenDebugObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MapBuildStateObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Hero.h">
@@ -87,6 +93,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MapGenConfigObj.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MapGenDebugObj.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MapBuildStateObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

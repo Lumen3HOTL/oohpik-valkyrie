@@ -43,7 +43,36 @@ namespace ookpik {
 
 		m_min_seeds=0;
 		m_max_seeds=0;
+
+		m_map_gen_debug=false;
+		m_map_gen_demo_mode=false;
+		m_map_gen_demo_mode_log_file_name="demo.txt";
 	}
+
+	void  MapGenConfig::setGenDebugMode(bool new_debug_mode) {
+		m_map_gen_debug = new_debug_mode;
+
+	}
+	bool  MapGenConfig::getGenDebugMode()const {
+		return m_map_gen_demo_mode;
+	}
+
+	void  MapGenConfig::setGenDemoMode(bool new_demo_mode) {
+		m_map_gen_demo_mode = new_demo_mode;
+	}
+	bool  MapGenConfig::getaGenDemoMode()const {
+		return m_map_gen_demo_mode;
+	}
+
+	void  MapGenConfig::setGenDemoModeLogFileName(std::string new_demo_mode_log_file_name) {
+		m_map_gen_demo_mode_log_file_name = new_demo_mode_log_file_name;
+	}
+	std::string  MapGenConfig::getGenDemoModeLogFileName()const {
+		return m_map_gen_demo_mode_log_file_name;
+	}
+
+
+
 	void MapGenConfig::setObjectsConstructedPerFrame(int new_objects_constructed_per_frame) {
 		m_objects_construct_per_frame = new_objects_constructed_per_frame;
 	}
