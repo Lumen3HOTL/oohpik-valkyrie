@@ -2228,7 +2228,175 @@ namespace ookpik {
 	}
 
 
+	int MapBuilder::configureMapBuilding(MapGenConfig config, std::vector<std::vector<mapTileIds::mapTileId>> &mapPlan, df::Object* owl) {
+		this->resetTimer();
+		int borderThickness = config.getMapBorderThickness();
+		df::Vector mapOrigin = config.getMapOrigin();
+		df::Vector currentPos = df::Vector();
 
+		int tileWidth = config.getMapObjectWidth();
+		int tileHeight = config.getMapObjectHeight();
+
+		int playAreaWidth = config.getMapWidth();
+		int playAreaHeight = config.getMapHeight();
+
+		int altitude = config.getMapObjectAltitude();
+
+		int buildPerFrame = config.getObjectsConstructedPerFrame();
+
+		if ((playAreaWidth <= 0)) {
+			this->m_debug_harness->queueErrorMessage(std::string("buildMap: error 1 invalid play area width of: ").append(std::to_string(playAreaWidth)).append("!"));
+			this->setCurrentMode(GenerationStages::BUILD_ERROR);
+			return -1;
+		}
+		else if ((playAreaHeight <= 0)) {
+			this->m_debug_harness->queueErrorMessage(std::string("buildMap: error 2 invalid play area height of: ").append(std::to_string(playAreaHeight)).append("!"));
+			this->setCurrentMode(GenerationStages::BUILD_ERROR);
+			return -1;
+		}
+		else if ((borderThickness < 0)) {
+			this->m_debug_harness->queueErrorMessage(std::string("buildMap: error 3 invalid border thickness of: ").append(std::to_string(borderThickness)).append("!"));
+			this->setCurrentMode(GenerationStages::BUILD_ERROR);
+			return -1;
+		}
+		else if ((tileWidth < 1)) {
+			this->m_debug_harness->queueErrorMessage(std::string("buildMap: error 4 invalid tile width of: ").append(std::to_string(tileWidth)).append("!"));
+			this->setCurrentMode(GenerationStages::BUILD_ERROR);
+			return -1;
+		}
+		else if ((tileHeight < 1)) {
+			this->m_debug_harness->queueErrorMessage(std::string("buildMap: error 5 invalid tile height of: ").append(std::to_string(tileHeight)).append("!"));
+			this->setCurrentMode(GenerationStages::BUILD_ERROR);
+			return -1;
+		}
+		else if ((altitude < 0) || (altitude > df::MAX_ALTITUDE)) {
+			this->m_debug_harness->queueErrorMessage(std::string("buildMap: error 6 invalid tile height of: ").append(std::to_string(altitude)).append("!"));
+			this->setCurrentMode(GenerationStages::BUILD_ERROR);
+			return -1;
+		}
+		else if (playAreaWidth > mapPlan.size()) { // error only if the plan is narrower than configured
+			this->m_debug_harness->queueErrorMessage(std::string("buildMap: error 7 invalid map x size of: ").append(std::to_string(mapPlan.size())).append(" configured width: ").append(std::to_string(playAreaWidth)).append("!"));
+			this->setCurrentMode(GenerationStages::BUILD_ERROR);
+			return -1;
+		}
+		else if (buildPerFrame <= 0) {
+			this->m_debug_harness->queueErrorMessage(std::string("buildMap: error 8 invalid per frame object construction count, must be at least one, give count of: ").append(std::to_string(buildPerFrame)).append("!"));
+			this->setCurrentMode(GenerationStages::BUILD_ERROR);
+			return -1;
+
+		}
+		bool UnmatchingHeight = false;
+		int badx = 0;
+		for (int i = 0; i < mapPlan.size(); i++) {
+			if (mapPlan[i].size() != playAreaHeight) {
+				UnmatchingHeight = true;
+				badx = i;
+				break;
+			}
+		}
+		if (UnmatchingHeight) {
+			this->m_debug_harness->queueErrorMessage(std::string("buildMap: error 9 invalid map y size of: ").append(std::to_string(mapPlan[badx].size())).append(" at map x: ").append(std::to_string(badx)).append(" configured width: ").append(std::to_string(playAreaHeight)).append("!"));
+			this->setCurrentMode(GenerationStages::BUILD_ERROR);
+			return -1;
+		}
+
+		m_builder_state.reset();
+		m_builder_state.setAltitude(altitude);
+		m_builder_state.setBorderThickness(borderThickness);
+		m_builder_state.setCurrentGlobalPos(currentPos);
+		m_builder_state.setMapHeight(playAreaHeight);
+		m_builder_state.setMapOrigin(mapOrigin);
+		m_builder_state.setMapPlan(this->copyMap(mapPlan));
+		m_builder_state.setMapWidth(playAreaWidth);
+		m_builder_state.setObjectSpawnPerFrame(buildPerFrame);
+		m_builder_state.setPlayer(owl);
+		m_builder_state.setTileHeight(tileHeight);
+		m_builder_state.setTileWidth(tileWidth);
+
+		return 0;
+	}
+
+
+	int MapBuilder::buildMapV2(MapBuildStateObject& state) {
+		df::Object* newGround = nullptr;
+		df::Object* newTree = nullptr;
+		df::Object* newExit = nullptr;
+		df::Object* newSeed = nullptr;
+		int lastY = 0;
+		for (int i = 0; i < state.getObjectSpawnPerFrame(); i++) {
+			if (state.getFinished()) {
+				
+				this->setCurrentMode(GenerationStages::BUILD_DONE);
+
+				return 0;
+			}
+			switch (state.getValueAtCurrentPosition()) {
+			case mapTileIds::EMPTY:
+				if (CREATE_GROUND_OBJECTS) {
+					newGround = new Ground();
+					newGround->setAltitude(state.getAltitude());
+					newGround->setPosition(state.getTrueCursorPos());
+					state.addMapObject(newGround);
+				}
+				if (m_debug_harness->getDebugMode()) {
+					m_debug_harness->addToCurrentDebugStrip("..");
+				}
+				break;
+			case mapTileIds::OWL:
+				state.getPlayer()->setPosition(state.getTrueCursorPos());
+				if (m_debug_harness->getDebugMode()) {
+					m_debug_harness->addToCurrentDebugStrip("/\\");
+				}
+				break;
+			case mapTileIds::EXIT:
+				newExit = new MapExit();
+				newExit->setAltitude(state.getAltitude());
+				newExit->setPosition(state.getTrueCursorPos());
+				state.addMapObject(newExit);
+				if (m_debug_harness->getDebugMode()) {
+					m_debug_harness->addToCurrentDebugStrip("EE");
+				}
+				break;
+			case mapTileIds::SEED:
+				newSeed = new Seed();
+				newSeed->setAltitude(state.getAltitude());
+				newSeed->setPosition(state.getTrueCursorPos());
+				state.addMapObject(newSeed);
+				if (m_debug_harness->getDebugMode()) {
+					m_debug_harness->addToCurrentDebugStrip("@@");
+				}
+				break;
+			case mapTileIds::TREE:
+				newTree = new Tree();
+				newTree->setAltitude(state.getAltitude());
+				newTree->setPosition(state.getTrueCursorPos());
+				state.addMapObject(newTree);
+				if (m_debug_harness->getDebugMode()) {
+					m_debug_harness->addToCurrentDebugStrip("##");
+				}
+				break;
+			default:
+				state.deleteAllMapObjects();
+				this->m_debug_harness->queueErrorMessage(std::string("buildMapV2: error 0 invalid tile id!").append(" values: id Value: ").append(std::to_string((int) (state.getMapPlan().at(state.getCurrentX()).at(state.getCurrentY())))).append("!"));
+				this->setCurrentMode(GenerationStages::BUILD_ERROR);
+				return -1;
+
+			}
+			lastY = state.getCurrentY();
+			state.advanceCursor();
+			if (m_debug_harness->getDebugMode()) {
+				if (lastY != state.getCurrentY()) {
+					m_debug_harness->storeCurrentDebugStrip();
+				}
+			}
+			
+		}
+		return 0;
+	}
+
+
+
+	/*
 	
 	//this is the important function to change to swap out the different game objects the gnerator instances
 	//need to rewrite this function and its infastructure with cooperative multitasking in mind
@@ -2478,7 +2646,7 @@ namespace ookpik {
 		return 0;
 	}
 
-
+	*/
 	
 
 
@@ -2511,7 +2679,7 @@ namespace ookpik {
 			m_player = owl;
 			m_configObj = config;
 			this->setBaseFunctionExit(false);
-			this->setCurrentMode(GenerationStages::GENERATING);
+			this->setCurrentMode(GenerationStages::WAITING_FOR_BUILD_START);
 			m_builder_state = MapBuildStateObject();
 			m_genThread = new std::thread(&MapBuilder::generateMap, this);
 
@@ -2561,18 +2729,21 @@ namespace ookpik {
 		m_debug_harness = nullptr;
 		m_timer = df::Clock();
 		m_map_plan = std::vector<std::vector<mapTileIds::mapTileId>>();
-		
+		m_timeout = 0;
 		m_player = nullptr;
 		m_genThread = nullptr;
 		m_genTime = 0;
+		m_genTime = 0;
 		m_error_handled=false;
 		m_RandomEngine = std::mt19937();
-		
+		this->setCurrentMode(GenerationStages::READY);
 		this->setCameraAffected(false);
 		this->setPosition(df::Vector(57, 15)); // centre of the 115x30 window
 		this->setType("mapBuilder");
+		m_builder_state = MapBuildStateObject();
 		// Step events drive generation and building; the engine only sends them to registered objects
 		df::EventManager::getInstance().registerEvent(this, df::STEP_EVENT);
+
 	}
 	MapBuilder::~MapBuilder() {
 		// The thread is null if generation never started, or after eventHandler joined it
@@ -2630,8 +2801,11 @@ namespace ookpik {
 	int MapBuilder::eventHandler(const df::Event* m_p) {
 
 		if (m_p->getType() == df::STEP_EVENT) {
+			if ((this->getCurrentMode() != GenerationStages::DONE)&& (this->getCurrentMode() != GenerationStages::READY)) {
+				df::GameManager& gm = df::GameManager::getInstance();
+				EventMapGenDone done;
 
-			switch (this->getCurrentMode()) {
+				switch (this->getCurrentMode()) {
 				case GenerationStages::GENERATION_ERROR:
 					if (this->getBaseFunctionExit()) {
 						if (!this->m_error_handled) {
@@ -2644,11 +2818,11 @@ namespace ookpik {
 							}
 
 
-							EventMapGenDone done = EventMapGenDone(m_debug_harness->getErrorMessages());
+							done = EventMapGenDone(m_debug_harness->getErrorMessages());
 							gm.onEvent(&done);
 							m_error_handled = true;
 						}
-						
+
 					}
 					break;
 				case GenerationStages::BUILD_ERROR:
@@ -2656,19 +2830,19 @@ namespace ookpik {
 						df::GameManager& gm = df::GameManager::getInstance();
 						df::LogManager& lm = df::LogManager::getInstance();
 
-						EventMapGenDone done = EventMapGenDone(m_debug_harness->getErrorMessages());
+						done = EventMapGenDone(m_debug_harness->getErrorMessages());
 						gm.onEvent(&done);
 						m_error_handled = true;
 					}
 					break;
 				case GenerationStages::WAITING_TO_GENERATE:
-					
+					this->setCurrentMode(GenerationStages::GENERATING);
 					break;
 				case GenerationStages::GENERATING:
-				
+
 					break;
 				case GenerationStages::GENERATION_DONE:
-				
+					this->setCurrentMode(GenerationStages::WAITING_FOR_BUILD_START);
 					break;
 				case GenerationStages::WAITING_FOR_THREAD_EXIT:
 					if (this->getBaseFunctionExit()) {
@@ -2679,84 +2853,51 @@ namespace ookpik {
 						}
 						this->setCurrentMode(GenerationStages::GENERATION_DONE);
 					}
-				
+
 					break;
 				case GenerationStages::WAITING_FOR_BUILD_START:
-				
+					this->configureMapBuilding(m_configObj, m_map_plan, m_player);
+					this->setCurrentMode(GenerationStages::BUILDING);
 					break;
 				case GenerationStages::BUILDING:
-				
+					this->buildMapV2(m_builder_state);
+					if (m_builder_state.getFinished()) {
+						this->setCurrentMode(GenerationStages::BUILD_DONE);
+					}
 					break;
 				case GenerationStages::BUILD_DONE:
-				
+					this->setBuildTime(this->checkTimer());
+					if (m_debug_harness->getDebugMode()) {
+						m_debug_harness->compileDebugStripsIntoMap2();
+						m_debug_harness->logDebugMap2();
+					}
+					m_builder_state.addMapObject(m_builder_state.getPlayer());
+					this->setCurrentMode(GenerationStages::SENDING_EVENT);
 					break;
 				case GenerationStages::SENDING_EVENT:
-				
+
+					done = EventMapGenDone(m_builder_state.getCurrentMapObjects(), this->getGenTime(), this->getBuildTime());
+					gm.onEvent(&done);
+					this->setCurrentMode(GenerationStages::DONE);
 					break;
 				case GenerationStages::STAGE_ERROR:
-				
+
 					break;
 				case GenerationStages::READY:
-				
+
 					break;
 				case GenerationStages::DONE:
-				
+
 					break;
-			}
-			
-			if (!this->getDoneSet()) {
-				
-
-				if (!this->getGenerating()) {
-					if (this->getGenDone() && (!this->getBuilding())&&this->getBaseFunctionExit()) {
-						m_genThread->join();
-						if (m_genThread != nullptr) {
-							delete m_genThread;
-							m_genThread = nullptr;
-						}
-						
-						this->setBuilding(true);
-						this->setCurrentBuildPos(df::Vector());
-						this->setToBuild((this->m_configObj.getMapWidth() + (this->m_configObj.getMapBorderThickness() * 2)) * (this->m_configObj.getMapHeight() + (this->m_configObj.getMapBorderThickness() * 2)));
-						this->resetTimer();
-
-					}
-					else if ((!this->getBuildDone()) && (this->getBuilding())&&this->getBaseFunctionExit()) {
-
-						this->buildMap(m_configObj, m_map_plan, m_player);
-
-						if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
-							df::GameManager& gm = df::GameManager::getInstance();
-							df::LogManager& lm = df::LogManager::getInstance();
-							std::vector < std::string> errorMessages = this->getErrorMessages();
-							m_log_man_access.lock();
-							for (int i = 0; i < errorMessages.size(); i++) {
-								lm.writeLog(errorMessages.at(i).c_str());
-							}
-							m_log_man_access.unlock();
-							EventMapGenDone done = EventMapGenDone(errorMessages);
-							
-							gm.onEvent(&done);
-							
-							this->setDoneSent(true);
-							this->setBuilding(false);
-						}
-						else if (this->getBuildDone()) {
-							this->setBuildTime(this->getTimerTime());
-							df::GameManager& gm = df::GameManager::getInstance();
-							EventMapGenDone done = EventMapGenDone(m_mapReturn, this->getGenTime(),this->getBuildTime());
-							gm.onEvent(&done);
-
-							this->setDoneSent(true);
-							this->setBuilding(false);
-							this->setBuildDone(true);
-							this->setVisible(false); // stop drawing the status text over the finished map
-
-						}
-
-					}
+				default:
+					this->setCurrentMode(GenerationStages::STAGE_ERROR);
+					break;
 				}
 			}
+			
+			
+			
+			
 			
 			return 1;
 		}

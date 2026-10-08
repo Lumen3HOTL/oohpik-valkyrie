@@ -17,6 +17,8 @@ namespace ookpik {
 		m_current_global_pos=df::Vector();
 		m_map_objects=df::ObjectList();
 		m_player=nullptr;
+		m_altitude = 0;
+		m_map_plan= std::vector<std::vector<mapTileIds::mapTileId>>();
 	}
 	void MapBuildStateObject::reset() {
 		m_current_X = 0;
@@ -34,7 +36,25 @@ namespace ookpik {
 		m_current_global_pos = df::Vector();
 		m_map_objects = df::ObjectList();
 		m_player = nullptr;
+		m_altitude = 0;
+		m_map_plan = std::vector<std::vector<mapTileIds::mapTileId>>();
 	}
+
+	int MapBuildStateObject::getAltitude()const {
+		return m_altitude;
+	}
+	void MapBuildStateObject::setAltitude(int new_altitude) {
+		m_altitude = new_altitude;
+	}
+
+	void MapBuildStateObject::setMapPlan(std::vector<std::vector<mapTileIds::mapTileId>> new_map_plan) {
+		m_map_plan = new_map_plan;
+	}
+	std::vector<std::vector<mapTileIds::mapTileId>> MapBuildStateObject::getMapPlan()const {
+		return m_map_plan;
+	}
+
+
 	void MapBuildStateObject::deleteAllMapObjects() {
 		df::WorldManager& wm = df::WorldManager::getInstance();
 		for (int i = 0; i < m_map_objects.getCount(); i++) {
@@ -153,10 +173,22 @@ namespace ookpik {
 
 
 
-	bool MapBuildStateObject::isBorder() {
+	bool MapBuildStateObject::isCurrentPosBorder() {
 		return ((m_current_X<m_border_thickness) || (m_current_X>=m_border_thickness+m_map_width) || (m_current_Y<m_border_thickness) || (m_current_Y>=m_border_thickness+m_map_height));
 	}
 	df::Vector  MapBuildStateObject::getTrueCursorPos() {
 		return m_map_origin + m_current_global_pos;
+	}
+
+
+	mapTileIds::mapTileId MapBuildStateObject::getValueAtCurrentPosition() {
+		if (m_finished) {
+			return mapTileIds::TILE_ERROR;
+		}
+		if (this->isCurrentPosBorder()) {
+			return mapTileIds::TREE;
+		}
+		return m_map_plan[m_current_X][m_current_Y];
+
 	}
 }

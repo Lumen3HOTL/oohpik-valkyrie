@@ -2,6 +2,8 @@
 #include "Vector.h"
 #include "ObjectList.h"
 #include "WorldManager.h"
+#include <vector>
+#include "MapBuilder.h"
 namespace ookpik {
 	class MapBuildStateObject {
 	private:
@@ -15,12 +17,18 @@ namespace ookpik {
 		int m_full_world_height;
 		int m_tile_width;
 		int m_tile_height;
+		int m_altitude;
 		bool m_finished;
 		df::Vector m_map_origin;
 		df::Vector m_current_global_pos;
 		df::ObjectList m_map_objects;
 		df::Object* m_player;
+		std::vector<std::vector<mapTileIds::mapTileId>> m_map_plan;
 	public:
+
+		void setMapPlan(std::vector<std::vector<mapTileIds::mapTileId>> new_map_plan);
+		std::vector<std::vector<mapTileIds::mapTileId>> getMapPlan()const;
+
 		MapBuildStateObject();
 		void reset();
 		void deleteAllMapObjects();
@@ -39,6 +47,8 @@ namespace ookpik {
 		df::Vector getCurrentGlobalPos()const;
 		df::ObjectList getCurrentMapObjects()const;
 		df::Object* getPlayer()const;
+		int getAltitude()const;
+		void setAltitude(int new_altitude);
 
 		void setCurrentX(int new_x);
 		void setCurrentY(int new_y);
@@ -56,7 +66,8 @@ namespace ookpik {
 
 		void addMapObject(df::Object* new_object);
 		int advanceCursor();
-		bool isBorder();
+		bool isCurrentPosBorder();
+		mapTileIds::mapTileId getValueAtCurrentPosition();
 		df::Vector getTrueCursorPos();
 	};
 }

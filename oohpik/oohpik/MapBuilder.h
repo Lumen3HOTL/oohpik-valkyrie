@@ -80,9 +80,9 @@ namespace ookpik {
 		bool m_error_handled;
 
 
-		int configureMapBuilding();
+		int configureMapBuilding(MapGenConfig config, std::vector<std::vector<mapTileIds::mapTileId>>& mapPlan, df::Object* owl);
 
-
+		int buildMapV2(MapBuildStateObject &state);
 
 		GenerationStages::GenerationStage getCurrentMode();
 		void setCurrentMode(GenerationStages::GenerationStage new_mode);
@@ -159,7 +159,8 @@ namespace ookpik {
 
 		int squarePlot(std::vector<std::vector<mapTileIds::mapTileId>>& map, df::Vector location, mapTileIds::mapTileId value);
 
-		int buildMap(MapGenConfig config,std::vector<std::vector<mapTileIds::mapTileId>>& map, df::Object* owl);
+		//deprecated function
+		//int buildMap(MapGenConfig config,std::vector<std::vector<mapTileIds::mapTileId>>& map, df::Object* owl);
 
 		df::Vector getXYDistanceBetweenTwoPoint(df::Vector p0, df::Vector p1);
 
