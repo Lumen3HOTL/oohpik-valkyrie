@@ -177,6 +177,7 @@
     <ClInclude Include="MapExit.h" />
     <ClInclude Include="MapGenConfigObj.h" />
     <ClInclude Include="MapGenDebugObj.h" />
+    <ClInclude Include="ookpikEnums.h" />
     <ClInclude Include="Seed.h" />
     <ClInclude Include="Tree.h" />
   </ItemGroup>

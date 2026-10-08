@@ -1,5 +1,5 @@
   #include "MapBuilder.h"
-#include "EventManager.h"
+
 
 namespace ookpik {
 	// Ground objects are invisible and do nothing, but there is one per open tile,
@@ -2228,7 +2228,7 @@ namespace ookpik {
 	}
 
 
-	int MapBuilder::configureMapBuilding(MapGenConfig config, std::vector<std::vector<mapTileIds::mapTileId>> &mapPlan, df::Object* owl) {
+	int MapBuilder::configureMapBuilding(MapGenConfig config, std::vector<std::vector<mapTileIds::mapTileId>> mapPlan, df::Object* owl) {
 		this->resetTimer();
 		int borderThickness = config.getMapBorderThickness();
 		df::Vector mapOrigin = config.getMapOrigin();
@@ -2306,7 +2306,7 @@ namespace ookpik {
 		m_builder_state.setCurrentGlobalPos(currentPos);
 		m_builder_state.setMapHeight(playAreaHeight);
 		m_builder_state.setMapOrigin(mapOrigin);
-		m_builder_state.setMapPlan(this->copyMap(mapPlan));
+		m_builder_state.setMapPlan(mapPlan);
 		m_builder_state.setMapWidth(playAreaWidth);
 		m_builder_state.setObjectSpawnPerFrame(buildPerFrame);
 		m_builder_state.setPlayer(owl);
@@ -2317,7 +2317,7 @@ namespace ookpik {
 	}
 
 
-	int MapBuilder::buildMapV2(MapBuildStateObject& state) {
+	int MapBuilder::buildMapV2(MapBuildStateObject state) {
 		df::Object* newGround = nullptr;
 		df::Object* newTree = nullptr;
 		df::Object* newExit = nullptr;

@@ -24,38 +24,10 @@
 #include "Seed.h"
 #include "MapGenDebugObj.h"
 #include "MapBuildStateObject.h"
+#include "EventManager.h"
+#include "ookpikEnums.h"
 namespace ookpik {
-	namespace mapTileIds {
-		enum mapTileId {
-			TILE_ERROR,
-			EMPTY,
-			TREE,
-			SEED,
-			OWL,
-			EXIT,
-			FLOOD
-		};
-	}
-	namespace GenerationStages {
-		enum GenerationStage {
-			STAGE_ERROR,
-			GENERATION_ERROR,
-			BUILD_ERROR,
-			READY,
-			WAITING_TO_GENERATE,
-			GENERATING,
-			WAITING_FOR_THREAD_EXIT,
-			GENERATION_DONE,
-			WAITING_FOR_BUILD_START,
-			BUILDING,
-			BUILD_DONE,
-			SENDING_EVENT,
-			DONE,
-			
-
-
-		};
-	}
+	
 	class MapBuilder : public df::Object {
 	private:
 		MapGenConfig m_configObj;
@@ -80,9 +52,9 @@ namespace ookpik {
 		bool m_error_handled;
 
 
-		int configureMapBuilding(MapGenConfig config, std::vector<std::vector<mapTileIds::mapTileId>>& mapPlan, df::Object* owl);
+		int configureMapBuilding(MapGenConfig config, std::vector<std::vector<mapTileIds::mapTileId>> mapPlan, df::Object* owl);
 
-		int buildMapV2(MapBuildStateObject &state);
+		int buildMapV2(MapBuildStateObject state);
 
 		GenerationStages::GenerationStage getCurrentMode();
 		void setCurrentMode(GenerationStages::GenerationStage new_mode);

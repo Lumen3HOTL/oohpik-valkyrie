@@ -3,7 +3,7 @@
 #include "ObjectList.h"
 #include "WorldManager.h"
 #include <vector>
-#include "MapBuilder.h"
+#include "ookpikEnums.h"
 namespace ookpik {
 	class MapBuildStateObject {
 	private:
