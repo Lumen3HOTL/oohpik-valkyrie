@@ -84,6 +84,7 @@ namespace df {
 
 			Camera tempCam = Camera(label,init_pos);
 			m_cameras.push_back(tempCam);
+			return 0;
 		}
 		return -1;
 	}
