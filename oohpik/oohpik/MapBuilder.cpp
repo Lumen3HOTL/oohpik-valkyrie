@@ -2668,7 +2668,10 @@ namespace ookpik {
 			
 			m_player = nullptr;
 			if (m_genThread != nullptr) {
-				m_genThread->join();
+				if (m_genThread->joinable()) {
+					m_genThread->join();
+				}
+			
 				delete m_genThread;
 			}
 			m_genThread = nullptr;
@@ -2813,8 +2816,11 @@ namespace ookpik {
 						if (!this->m_error_handled) {
 							df::GameManager& gm = df::GameManager::getInstance();
 							df::LogManager& lm = df::LogManager::getInstance();
-							m_genThread->join();
+							
 							if (m_genThread != nullptr) {
+								if (m_genThread->joinable()) {
+									m_genThread->join();
+								}
 								delete m_genThread;
 								m_genThread = nullptr;
 							}
@@ -2848,8 +2854,11 @@ namespace ookpik {
 					break;
 				case GenerationStages::WAITING_FOR_THREAD_EXIT:
 					if (this->getBaseFunctionExit()) {
+						
 						if (this->m_genThread != nullptr) {
-							m_genThread->join();
+							if (m_genThread->joinable()) {
+								m_genThread->join();
+							}
 							delete m_genThread;
 							m_genThread = nullptr;
 						}
