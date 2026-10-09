@@ -211,6 +211,16 @@
     <Copy SourceFiles="$(EngineDir)df-font.ttf" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(GameResource)" DestinationFolder="$(OutDir)Resources\%(RecursiveDir)" SkipUnchangedFiles="true" />
   </Target>
+  <!-- Debug x64: run the game tests (GameTests.cpp) after each build that produces a new exe.
+       Failures are reported as a build warning, not an error. Results are in dragonfly.log. -->
+  <Target Name="RunGameTests" AfterTargets="CopyGameResources;CopySfmlDlls" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Inputs="$(TargetPath)" Outputs="$(OutDir)gametests.lastrun">
+    <Exec Command="&quot;$(TargetPath)&quot; --test" WorkingDirectory="$(OutDir)" IgnoreExitCode="true">
+      <Output TaskParameter="ExitCode" PropertyName="GameTestExitCode" />
+    </Exec>
+    <Touch Files="$(OutDir)gametests.lastrun" AlwaysCreate="true" />
+    <Message Condition="'$(GameTestExitCode)' == '0'" Importance="high" Text="Game tests: all passed" />
+    <Warning Condition="'$(GameTestExitCode)' != '0'" Text="Game tests did not all pass (exit code $(GameTestExitCode): the number of failed tests, or a crash code if it's huge or negative). See $(OutDir)dragonfly.log" />
+  </Target>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

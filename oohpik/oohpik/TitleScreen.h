@@ -7,6 +7,8 @@ private:
     int m_pending_action;    // option chosen by a key press, carried out on the next step (-1 = none)
     bool m_showing_controls; // true while the controls guide is on screen
     bool m_showing_scores;   // true while the high score table is on screen
+    int m_test_total;        // tests in the last game test run (-1 = no results saved)
+    int m_test_failures;     // failed tests in the last game test run
 
     void choose(int option);
     void carryOut(int option);

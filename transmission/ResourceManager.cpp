@@ -43,7 +43,7 @@ namespace df {
 			}
 		}
 		if (!m_sound.empty()) {
-			for (int s = 0; s < m_music_count; s++) {
+			for (int s = 0; s < m_sound_count; s++) {
 				delete m_sound[s];
 
 			}

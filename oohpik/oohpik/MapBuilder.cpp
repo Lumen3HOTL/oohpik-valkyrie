@@ -1697,6 +1697,28 @@ namespace ookpik {
 			return;
 		}
 		errorNumber++;
+		// Every other min/max pair must be in order too: getRandom() can't pick from a backwards range
+		const struct { const char* name; int min; int max; } ranges[] = {
+			{ "rooms", minRooms, maxRooms },
+			{ "room width", minRoomsWidth, maxRoomWidth },
+			{ "room height", minRoomHeight, maxRoomHeight },
+			{ "random trees", minRandTrees, maxRandTrees },
+			{ "right angle lines", minRightAngleLines, maxRightAngleLine },
+			{ "right angle line width", minRightAngleLinesWidth, maxRightAngleLineWidth },
+			{ "right angle line height", minRightAngleLineHeight, maxRightAngleLineHeight },
+			{ "diag lines", minDiagLines, maxDiagLines },
+			{ "diag line width", minDiagLineWidth, maxDiagLinesWidth },
+			{ "diag line height", minDiagLineHeight, maxDiagLineHeight },
+		};
+		for (const auto& range : ranges) {
+			if (range.min > range.max) {
+				this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured ").append(range.name).append(". min must not be more than max. min is: ").append(std::to_string(range.min)).append(" max is: ").append(std::to_string(range.max)));
+				this->setCurrentMode(GenerationStages::GENERATION_ERROR);
+				this->setBaseFunctionExit(true);
+				return;
+			}
+		}
+		errorNumber++;
 		if (minSeeds + 2 >= mapArea) {
 			this->m_debug_harness->queueErrorMessage(std::string("generate map error:").append(std::to_string(errorNumber)).append(" invalid configured seeds. must be less than map area -2. min seeds is: ").append(std::to_string(minSeeds)).append(" map area is: ").append(std::to_string(mapArea)));
 			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
@@ -2717,6 +2739,11 @@ namespace ookpik {
 
 
 	int MapBuilder::startGenerateMap(MapGenConfig config, df::Object* owl){
+		// The build places the owl on its start tile, so there must be one
+		if (owl == nullptr) {
+			df::LogManager::getInstance().writeLog("startGenerateMap: error, no owl given; map not started");
+			return -1;
+		}
 		if ((this->getCurrentMode()==GenerationStages::READY)||(this->getCurrentMode()==GenerationStages::DONE)) {
 			
 			m_configObj = MapGenConfig();

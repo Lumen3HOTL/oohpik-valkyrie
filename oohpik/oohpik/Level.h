@@ -1,5 +1,9 @@
 #pragma once
 #include "Object.h"
+#include "MapGenConfigObj.h"
+
+// The map layout every level uses (fills the 115x30 window)
+ookpik::MapGenConfig makeMapConfig();
 
 // Remove every map object (trees, ground, seeds, exit and the map builder) at the end of this frame.
 void clearMap();

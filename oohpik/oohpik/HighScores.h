@@ -17,6 +17,7 @@ std::vector<ScoreEntry> loadHighScores();
 
 // Insert a finished run into the table in ranked order and save it, keeping only the top 10.
 // Returns the run's position in the table (0 = best), or -1 if it didn't make the top 10
+// or is impossible (negative seeds or levels, or a negative, NaN or infinite time)
 int submitHighScore(const ScoreEntry& entry);
 
 // Draw the table centred on the screen, starting at top_row.

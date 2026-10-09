@@ -21,6 +21,7 @@
 #include "EventManager.h"
 #include "TimerManager.h"
 #include "EventKeyboard.h"
+#include "EventCollision.h"
 #include "EventStep.h"
 #include "Clock.h"
 
@@ -29,7 +30,7 @@
 #include "Hero.h"
 #include "GameOver.h"
 #include "HighScores.h"
-#include "Level.h" // TEMP-MAPGEN-DEBUG
+#include "Level.h"
 #include "MapBuilder.h"
 #include "Seed.h"
 #include "MapExit.h"
@@ -40,6 +41,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
+#include <limits>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -204,6 +206,15 @@ void releaseKey(df::Keyboard::Key key) {
 	runFrame(key, df::KEY_RELEASED);
 }
 
+// Send a keyboard event straight away, with any key and action, including ones the
+// InputManager never sends (an undefined key or action, or a value outside the Key enum)
+void sendKeyboardEvent(df::Keyboard::Key key, df::EventKeyboardAction action) {
+	df::EventKeyboard keyboard;
+	keyboard.setKey(key);
+	keyboard.setKeyboardAction(action);
+	GM.onEvent(&keyboard);
+}
+
 // --- Finding things in the world ---
 
 // The most recently created object of a type (highest id), or nullptr if there is none
@@ -258,6 +269,24 @@ std::string describeMapBuilder() {
 int mapObjectCount() {
 	return WM.objectsOfTypeCount("Tree") + WM.objectsOfTypeCount("Ground") +
 		WM.objectsOfTypeCount("Seed") + WM.objectsOfTypeCount("mapExit");
+}
+
+// Frames a map builder with a bad config gets to try (and retry) before the test checks it
+const int BAD_MAP_FRAMES = 30;
+
+// Start a map builder with a config and let its errors and retries play out.
+// Returns true if the bad config was caught: the builder never finished and built nothing.
+// Needs a world with no map in it, so map objects can be counted.
+bool mapConfigIsRejected(const ookpik::MapGenConfig& config) {
+	df::Object* p_owl = new df::Object(); // stands in for the owl; the builder only moves it
+	ookpik::MapBuilder* p_builder = new ookpik::MapBuilder();
+	p_builder->startGenerateMap(config, p_owl);
+	runFrames(BAD_MAP_FRAMES);
+	bool rejected = !p_builder->isMapBuildFinished() && mapObjectCount() == 0;
+	WM.markForDelete(p_builder);
+	WM.markForDelete(p_owl);
+	runFrame();
+	return rejected;
 }
 
 // Lowest and highest ids among the map's trees, ground, seeds and exits.
@@ -670,6 +699,60 @@ TestBatch runBatchError() {
 	}
 	clearHighScores();
 
+	// --- Map loading: bad configs are caught instead of building a broken map or crashing ---
+	// Each case changes one value of the real level config (makeMapConfig) to something invalid.
+	ookpik::MapGenConfig bad_config = makeMapConfig();
+	bad_config.setMapWidth(0);
+	batch.check(mapConfigIsRejected(bad_config), "a map width of 0 is caught");
+
+	bad_config = makeMapConfig();
+	bad_config.setMapHeight(-5);
+	batch.check(mapConfigIsRejected(bad_config), "a negative map height is caught");
+
+	bad_config = makeMapConfig();
+	bad_config.setTimeoutSeconds(0);
+	batch.check(mapConfigIsRejected(bad_config), "a generation timeout of 0 seconds is caught");
+
+	bad_config = makeMapConfig();
+	bad_config.setObjectsConstructedPerFrame(0);
+	batch.check(mapConfigIsRejected(bad_config), "building 0 objects per frame is caught");
+
+	bad_config = makeMapConfig();
+	bad_config.setMinSeeds(-3);
+	batch.check(mapConfigIsRejected(bad_config), "a negative seed count is caught");
+
+	bad_config = makeMapConfig();
+	bad_config.setMinSeeds(40);
+	bad_config.setMaxSeeds(10);
+	batch.check(mapConfigIsRejected(bad_config), "more min seeds than max seeds is caught");
+
+	bad_config = makeMapConfig();
+	bad_config.setMaxSeeds(100000);
+	batch.check(mapConfigIsRejected(bad_config), "more seeds than the map has room for is caught");
+
+	bad_config = makeMapConfig();
+	bad_config.setMinRooms(9);
+	bad_config.setMaxRooms(2);
+	batch.check(mapConfigIsRejected(bad_config), "more min rooms than max rooms is caught");
+
+	bad_config = makeMapConfig();
+	bad_config.setMinRoomWidth(20);
+	bad_config.setMaxRoomWidth(5);
+	batch.check(mapConfigIsRejected(bad_config), "a min room width above the max is caught");
+
+	bad_config = makeMapConfig();
+	bad_config.setMinRandTrees(200);
+	bad_config.setMaxRandTrees(10);
+	batch.check(mapConfigIsRejected(bad_config), "more min random trees than max is caught");
+
+	ookpik::MapBuilder* p_no_owl_builder = new ookpik::MapBuilder();
+	int no_owl_result = p_no_owl_builder->startGenerateMap(makeMapConfig(), nullptr);
+	runFrames(5);
+	batch.check(no_owl_result == -1 && !p_no_owl_builder->isMapGenFinished() && mapObjectCount() == 0,
+		"starting a map with no owl is refused", "startGenerateMap returned " + std::to_string(no_owl_result));
+	WM.markForDelete(p_no_owl_builder);
+	runFrame();
+
 	// --- Title screen: keys that should do nothing ---
 	new TitleScreen();
 	runFrame();
@@ -698,6 +781,16 @@ TestBatch runBatchError() {
 		"Q on the controls guide only closes the guide, it doesn't quit");
 	GM.setGameOver(false); // in case it did
 
+	int selected_before = p_title->getSelected();
+	sendKeyboardEvent(df::Keyboard::UNDEFINED_KEY, df::KEY_PRESSED);
+	sendKeyboardEvent(df::Keyboard::Q, df::UNDEFINED_KEYBOARD_ACTION);
+	sendKeyboardEvent(static_cast<df::Keyboard::Key>(999), df::KEY_PRESSED);
+	runFrame();
+	batch.check(p_title->getSelected() == selected_before && !p_title->isShowingControls() &&
+		!p_title->isShowingScores() && !GM.getGameOver() && findTitleScreen() != nullptr,
+		"title screen ignores an undefined key, an undefined action and an out-of-range key");
+	GM.setGameOver(false); // in case it didn't
+
 	// --- In game: keys and moves that should do nothing ---
 	pressKey(df::Keyboard::P);
 	runFrame();
@@ -720,6 +813,24 @@ TestBatch runBatchError() {
 	releaseKey(df::Keyboard::D);
 	batch.check(p_hero->getMoves() == moves && samePosition(p_hero->getPosition(), position) && p_hero->getDirection() == direction,
 		"owl ignores key releases (releasing W or D does nothing)");
+
+	sendKeyboardEvent(df::Keyboard::UNDEFINED_KEY, df::KEY_PRESSED);
+	sendKeyboardEvent(df::Keyboard::W, df::UNDEFINED_KEYBOARD_ACTION);
+	sendKeyboardEvent(static_cast<df::Keyboard::Key>(999), df::KEY_PRESSED);
+	runFrame();
+	batch.check(p_hero->getMoves() == moves && samePosition(p_hero->getPosition(), position) && p_hero->getDirection() == direction,
+		"owl ignores an undefined key, an undefined action and an out-of-range key");
+
+	df::EventCollision empty_collision; // no objects involved
+	int empty_collision_result = p_hero->eventHandler(&empty_collision);
+	batch.check(empty_collision_result == 0 && p_hero->getSeeds() == 0 && p_hero->getMaps() == 0 &&
+		WM.objectsOfTypeCount("Hero") == 1, "owl ignores a collision event with nothing in it");
+
+	df::Vector off_screen(200, 200);
+	placeOwl(p_hero, off_screen, FACING_LEFT);
+	pressKey(df::Keyboard::W);
+	batch.check(samePosition(p_hero->getPosition(), off_screen) && WM.objectsOfTypeCount("Hero") == 1,
+		"an owl placed far outside the window can't hop", "owl at " + describe(p_hero->getPosition()));
 
 	placeOwl(p_hero, LEFT_EDGE_TILE, FACING_LEFT);
 	pressKey(df::Keyboard::W);
@@ -770,7 +881,60 @@ TestBatch runBatchError() {
 	batch.check(rank == -1, "a run worse than a full top 10 isn't ranked", "rank: " + std::to_string(rank));
 	batch.check(readHighScoreFile() == full, "a run that isn't ranked leaves the saved table unchanged");
 
+	// --- High score table: impossible runs are refused ---
+	const double NOT_A_NUMBER = std::numeric_limits<double>::quiet_NaN();
+	const double INFINITE_TIME = std::numeric_limits<double>::infinity();
+	clearHighScores();
+	int negative_seeds_rank = submitHighScore(ScoreEntry{ -4, 1, 10.0 });
+	int negative_levels_rank = submitHighScore(ScoreEntry{ 4, -1, 10.0 });
+	int negative_time_rank = submitHighScore(ScoreEntry{ 4, 1, -10.0 });
+	int nan_time_rank = submitHighScore(ScoreEntry{ 4, 1, NOT_A_NUMBER });
+	int infinite_time_rank = submitHighScore(ScoreEntry{ 4, 1, INFINITE_TIME });
+	batch.check(negative_seeds_rank == -1, "a run with negative seeds is refused", "rank: " + std::to_string(negative_seeds_rank));
+	batch.check(negative_levels_rank == -1, "a run with negative levels is refused", "rank: " + std::to_string(negative_levels_rank));
+	batch.check(negative_time_rank == -1, "a run with a negative time is refused", "rank: " + std::to_string(negative_time_rank));
+	batch.check(nan_time_rank == -1, "a run with a time that isn't a number is refused", "rank: " + std::to_string(nan_time_rank));
+	batch.check(infinite_time_rank == -1, "a run with an infinite time is refused", "rank: " + std::to_string(infinite_time_rank));
+	batch.check(loadHighScores().empty(), "refused runs aren't saved",
+		"rows saved: " + std::to_string(loadHighScores().size()));
+
+	writeHighScoreFile(std::string(HIGH_SCORE_HEADER) +
+		"-3,1,2.00\n2,-1,2.00\n2,1,-2.00\n2,1,nan\n2,1,inf\n4,1,3.00\n");
+	loaded = loadHighScores();
+	batch.check(loaded.size() == 1 && loaded[0].seeds == 4,
+		"saved rows with negative or non-number values are skipped", "rows loaded: " + std::to_string(loaded.size()));
+
+	// --- Death screen: impossible totals ---
+	clearHighScores();
+	GameOver* p_bad_game_over = new GameOver(-5, -2, -1, -3.0);
+	batch.check(p_bad_game_over->getRank() == -1 && loadHighScores().empty(),
+		"a death screen given negative totals doesn't record a high score",
+		"rank: " + std::to_string(p_bad_game_over->getRank()) + " rows saved: " + std::to_string(loadHighScores().size()));
+	WM.markForDelete(p_bad_game_over);
+	runFrame();
+
+	// --- High score table drawing: rows and highlights out of range ---
+	writeHighScoreFile(fullHighScoreFile());
+	drawHighScoreTable(8, 50);
+	drawHighScoreTable(8, -7);
+	drawHighScoreTable(-20, -1);
+	drawHighScoreTable(500, -1);
+	batch.check(true, "the high score table draws with an out-of-range highlight or start row without crashing");
+
+	// --- Exiting: bad calls during and after shutdown ---
+	// Regression: ResourceManager::shutDown() used to loop over sounds with the music count,
+	// so more music than sounds read past the end of the sound list. Loaded only, never played.
+	bool audio_loaded = RM.loadSound("Resources/Sounds/move.wav", "shutdown test sound") == 0 &&
+		RM.loadMusic("Resources/Sounds/outside.wav", "shutdown test music 1") == 0 &&
+		RM.loadMusic("Resources/Sounds/outside.wav", "shutdown test music 2") == 0;
+	batch.check(audio_loaded, "one sound and two music tracks load for the shutdown test");
+
+	batch.check(WM.markForDelete(nullptr) == -1, "deleting a null object is refused");
 	GM.shutDown();
+	GM.shutDown();
+	batch.check(!GM.isStarted() && !WM.isStarted() && !df::DisplayManager::getInstance().isStarted() &&
+		!df::EventManager::getInstance().isStarted() && !RM.isStarted() && !df::LogManager::getInstance().isStarted(),
+		"shutting down twice (with more music than sounds loaded) is harmless");
 	return batch;
 }
 
@@ -1006,6 +1170,8 @@ int runMapStress(int maps) {
 }
 
 int runGameTests() {
+	// Remove the last run's totals first, so a run that crashes leaves none instead of stale ones
+	std::remove(GAME_TEST_RESULTS_FILE);
 	backUpHighScores();
 
 	TestBatch batches[] = { runBatchNormal(), runBatchError(), runBatchEdgeCases() };
@@ -1025,6 +1191,9 @@ int runGameTests() {
 	}
 	logkeeper.writeLog("game tests: %d passed, %d failed", total_pass, total_fail);
 	logkeeper.shutDown();
+
+	std::ofstream results(GAME_TEST_RESULTS_FILE, std::ios::trunc);
+	results << (total_pass + total_fail) << " " << total_fail << "\n";
 
 	std::printf("testing complete! %d passed, %d failed\ntesting log saved to dragonfly.log\n", total_pass, total_fail);
 	return total_fail;

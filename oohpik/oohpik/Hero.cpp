@@ -101,6 +101,9 @@ int Hero::eventHandler(const df::Event* p_e) {
 		return 1;
 	} else if (p_e->getType() == df::COLLISION_EVENT) {
 		auto* c = static_cast<const df::EventCollision*>(p_e);
+		if (c->getObject2() == nullptr) {
+			return 0; // nothing was hit
+		}
 		if (c->getObject2()->getType() == "Tree") {
 			die();
 		} else if (c->getObject2()->getType() == "Seed") {

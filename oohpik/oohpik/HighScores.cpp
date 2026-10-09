@@ -1,5 +1,6 @@
 #include "HighScores.h"
 #include "DisplayManager.h"
+#include <cmath>
 #include <cstdio>
 #include <fstream>
 #include <sstream>
@@ -9,6 +10,11 @@ namespace {
 	const char* HIGH_SCORE_FILE = "highscores.csv";
 	const char* HIGH_SCORE_HEADER = "seeds,levels,time";
 	const int CENTER_X = 57; // middle of the 115-column window
+
+	// A run that could actually happen: no negative counts, and a real, non-negative time
+	bool isPossible(const ScoreEntry& entry) {
+		return entry.seeds >= 0 && entry.levels >= 0 && std::isfinite(entry.time) && entry.time >= 0.0;
+	}
 
 	// Ranking: more seeds wins; ties go to more levels; then to the faster run.
 	bool isBetter(const ScoreEntry& a, const ScoreEntry& b) {
@@ -36,11 +42,12 @@ std::vector<ScoreEntry> loadHighScores() {
 	std::ifstream file(HIGH_SCORE_FILE);
 	std::string line;
 	while (std::getline(file, line) && (int)scores.size() < MAX_HIGH_SCORES) {
-		// Expect "seeds,levels,time"; skip the header and anything malformed
+		// Expect "seeds,levels,time"; skip the header, anything malformed and impossible runs
 		std::stringstream fields(line);
 		ScoreEntry entry;
 		char comma1 = 0, comma2 = 0;
-		if (fields >> entry.seeds >> comma1 >> entry.levels >> comma2 >> entry.time && comma1 == ',' && comma2 == ',') {
+		if (fields >> entry.seeds >> comma1 >> entry.levels >> comma2 >> entry.time && comma1 == ',' && comma2 == ',' &&
+			isPossible(entry)) {
 			scores.push_back(entry);
 		}
 	}
@@ -48,6 +55,11 @@ std::vector<ScoreEntry> loadHighScores() {
 }
 
 int submitHighScore(const ScoreEntry& entry) {
+	// Negative counts or a negative / non-number time can't come from a real run: not saved
+	if (!isPossible(entry)) {
+		return -1;
+	}
+
 	std::vector<ScoreEntry> scores = loadHighScores();
 
 	// Find the first saved run this one beats; the new run goes just above it.

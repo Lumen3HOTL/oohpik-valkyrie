@@ -10,6 +10,8 @@
 #include "HighScores.h"
 #include "ResourceManager.h"
 #include "Sound.h"
+#include "GameTests.h"
+#include <fstream>
 #include <string>
 
 namespace {
@@ -52,6 +54,15 @@ TitleScreen::TitleScreen() {
 	m_pending_action = -1;
 	m_showing_controls = false;
 	m_showing_scores = false;
+
+	// Totals saved by the last game test run (see GameTests.cpp); shown in Debug builds
+	m_test_total = -1;
+	m_test_failures = 0;
+	std::ifstream test_results(GAME_TEST_RESULTS_FILE);
+	if (!(test_results >> m_test_total >> m_test_failures)) {
+		m_test_total = -1;
+	}
+
 	df::EventManager::getInstance().registerEvent(this, df::KEYBOARD_EVENT);
 	df::EventManager::getInstance().registerEvent(this, df::STEP_EVENT);
 }
@@ -159,6 +170,14 @@ void TitleScreen::drawMenu() {
 	}
 
 	dm.drawString(df::Vector(CENTER_X, 26), "w/s or arrow keys to choose, enter to select", df::CENTER_JUSTIFIED, df::WHITE);
+
+#ifdef _DEBUG
+	// Last game test run, bottom-left; red if anything failed
+	if (m_test_total >= 0) {
+		std::string test_line = "tests: " + std::to_string(m_test_total) + "  errors: " + std::to_string(m_test_failures);
+		dm.drawString(df::Vector(1, 29), test_line, df::LEFT_JUSTIFIED, m_test_failures > 0 ? df::RED : df::WHITE);
+	}
+#endif
 }
 
 void TitleScreen::drawControls() {
