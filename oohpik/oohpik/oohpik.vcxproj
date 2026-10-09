@@ -163,6 +163,7 @@
     <ClCompile Include="MapGenConfigObj.cpp" />
     <ClCompile Include="MapGenDebugObject.cpp" />
     <ClCompile Include="Seed.cpp" />
+    <ClCompile Include="TitleScreen.cpp" />
     <ClCompile Include="Tree.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -179,6 +180,7 @@
     <ClInclude Include="MapGenDebugObj.h" />
     <ClInclude Include="ookpikEnums.h" />
     <ClInclude Include="Seed.h" />
+    <ClInclude Include="TitleScreen.h" />
     <ClInclude Include="Tree.h" />
   </ItemGroup>
   <ItemGroup>
