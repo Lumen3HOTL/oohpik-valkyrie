@@ -1138,8 +1138,7 @@ TestBatch runBatchEdgeCases() {
 
 }  // namespace
 
-// TEMP-MAPGEN-DEBUG: build maps back to back (no gameplay, no drawing) and count the ones
-// that never finish building within 10 seconds. Returns that count.
+#ifdef _DEBUG
 int runMapStress(int maps) {
 	if (!startGame(false)) {
 		GM.shutDown();
@@ -1168,6 +1167,7 @@ int runMapStress(int maps) {
 	std::printf("map stress: %d of %d maps never finished\n", stalled, maps);
 	return stalled;
 }
+#endif
 
 int runGameTests() {
 	// Remove the last run's totals first, so a run that crashes leaves none instead of stale ones

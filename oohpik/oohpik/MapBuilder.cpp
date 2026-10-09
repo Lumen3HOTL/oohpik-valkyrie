@@ -1,7 +1,7 @@
   #include "MapBuilder.h"
 #include <algorithm>
 #include <cmath>
-#include <fstream> // TEMP-MAPGEN-DEBUG
+#include <fstream>
 
 //behold madness
 namespace ookpik {
@@ -2893,19 +2893,25 @@ namespace ookpik {
 	void MapBuilder::setCurrentMode(GenerationStages::GenerationStage new_mode) {
 		if (!this->getDeleteMode()) {
 			m_mode_gate.lock();
-			GenerationStages::GenerationStage old_mode = m_current_mode; // TEMP-MAPGEN-DEBUG
+			GenerationStages::GenerationStage old_mode = m_current_mode;
 			m_current_mode = new_mode;
 			m_mode_gate.unlock();
-			// TEMP-MAPGEN-DEBUG: record every stage change, which thread made it, and any queued errors
-			static std::mutex debug_file_gate; // TEMP-MAPGEN-DEBUG
-			std::lock_guard<std::mutex> debug_lock(debug_file_gate); // TEMP-MAPGEN-DEBUG
-			std::ofstream debug_file("mapgen_debug.log", std::ios::app); // TEMP-MAPGEN-DEBUG
-			debug_file << "builder " << this->getId() << " thread " << std::this_thread::get_id() << " mode " << (int)old_mode << " -> " << (int)new_mode << "\n"; // TEMP-MAPGEN-DEBUG
-			if ((new_mode == GenerationStages::GENERATION_ERROR || new_mode == GenerationStages::BUILD_ERROR) && m_debug_harness != nullptr) { // TEMP-MAPGEN-DEBUG
-				for (const std::string& message : m_debug_harness->getErrorMessages()) { // TEMP-MAPGEN-DEBUG
-					debug_file << "    error: " << message << "\n"; // TEMP-MAPGEN-DEBUG
-				} // TEMP-MAPGEN-DEBUG
-			} // TEMP-MAPGEN-DEBUG
+#ifdef _DEBUG
+			// Debug builds only: record every stage change in mapgen_debug.log (next to the exe),
+			// with the thread that made it and any queued errors. Has its own lock, since the
+			// generation thread calls this too.
+			static std::mutex debug_file_gate;
+			std::lock_guard<std::mutex> debug_lock(debug_file_gate);
+			std::ofstream debug_file("mapgen_debug.log", std::ios::app);
+			debug_file << "builder " << this->getId() << " thread " << std::this_thread::get_id() << " mode " << (int)old_mode << " -> " << (int)new_mode << "\n";
+			if ((new_mode == GenerationStages::GENERATION_ERROR || new_mode == GenerationStages::BUILD_ERROR) && m_debug_harness != nullptr) {
+				for (const std::string& message : m_debug_harness->getErrorMessages()) {
+					debug_file << "    error: " << message << "\n";
+				}
+			}
+#else
+			(void)old_mode;
+#endif
 		}
 	}
 

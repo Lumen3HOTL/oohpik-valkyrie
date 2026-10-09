@@ -9,4 +9,8 @@ const char* const GAME_TEST_RESULTS_FILE = "gametests_results.txt";
 // Returns the total number of failed tests (0 = all passed).
 int runGameTests();
 
-int runMapStress(int maps); // TEMP-MAPGEN-DEBUG
+#ifdef _DEBUG
+// Debug builds only: build maps back to back (no gameplay, no drawing) and count the ones
+// that never finish building within 10 seconds. Returns that count.
+int runMapStress(int maps);
+#endif
