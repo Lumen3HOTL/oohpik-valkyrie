@@ -35,6 +35,7 @@ private:
     std::string m_timeString;
 
     df::Clock m_timer;
+    df::Clock m_run_timer; // whole-run time for the high score table; never reset
 
     bool m_started;
 

@@ -7,24 +7,43 @@
 #include "WorldManager.h"
 #include "Level.h"
 #include "TitleScreen.h"
+#include "HighScores.h"
+#include <cstdio>
 
-GameOver::GameOver(int moves, int seeds, int maps) {
+GameOver::GameOver(int moves, int seeds, int maps, double time) {
     setType("GameOver");
     setSolidness(df::SPECTRAL);
     m_moves = moves;
     m_seeds = seeds;
     m_maps = maps;
+    m_time = time;
+
+    // Record the run once, when the death screen appears
+    m_rank = submitHighScore(ScoreEntry{ seeds, maps, time });
     df::EventManager::getInstance().registerEvent(this, df::KEYBOARD_EVENT);
     df::EventManager::getInstance().registerEvent(this, df::STEP_EVENT);
 }
 
 int GameOver::draw() {
     df::DisplayManager& dm = df::DisplayManager::getInstance(); // not DM: that macro is still wrong
-    dm.drawString(df::Vector(57, 11), "you died!", df::CENTER_JUSTIFIED, df::RED);
-    dm.drawString(df::Vector(57, 13), "moves: " + std::to_string(m_moves), df::CENTER_JUSTIFIED, df::WHITE);
-    dm.drawString(df::Vector(57, 14), "seeds collected: " + std::to_string(m_seeds), df::CENTER_JUSTIFIED, df::WHITE);
-    dm.drawString(df::Vector(57, 15), "maps completed: " + std::to_string(m_maps), df::CENTER_JUSTIFIED, df::WHITE);
-    dm.drawString(df::Vector(57, 17), "press any key to return to the title screen", df::CENTER_JUSTIFIED, df::WHITE);
+    dm.drawString(df::Vector(57, 3), "you died!", df::CENTER_JUSTIFIED, df::RED);
+    dm.drawString(df::Vector(57, 5), "moves: " + std::to_string(m_moves), df::CENTER_JUSTIFIED, df::WHITE);
+    dm.drawString(df::Vector(57, 6), "seeds collected: " + std::to_string(m_seeds), df::CENTER_JUSTIFIED, df::WHITE);
+    dm.drawString(df::Vector(57, 7), "maps completed: " + std::to_string(m_maps), df::CENTER_JUSTIFIED, df::WHITE);
+    char time_text[32];
+    std::snprintf(time_text, sizeof(time_text), "time: %.2fs", m_time);
+    dm.drawString(df::Vector(57, 8), time_text, df::CENTER_JUSTIFIED, df::WHITE);
+
+    // Where this run landed in the high score table
+    if (m_rank >= 0) {
+        dm.drawString(df::Vector(57, 10), "new high score! #" + std::to_string(m_rank + 1), df::CENTER_JUSTIFIED, df::YELLOW);
+    } else {
+        dm.drawString(df::Vector(57, 10), "next time...", df::CENTER_JUSTIFIED, df::WHITE);
+    }
+    dm.drawString(df::Vector(57, 12), "high scores", df::CENTER_JUSTIFIED, df::YELLOW);
+    drawHighScoreTable(13, m_rank);
+
+    dm.drawString(df::Vector(57, 26), "press any key to return to the title screen", df::CENTER_JUSTIFIED, df::WHITE);
     return 0;
 }
 

@@ -40,6 +40,7 @@ Hero::Hero() {
 	m_statusChangeCount = 4;
 
 	m_timer = df::Clock();
+	m_run_timer = df::Clock();
 
 	m_started = false;
 
@@ -186,6 +187,7 @@ int Hero::draw() {
 }
 
 void Hero::die() {
-	new GameOver(m_moves, m_seeds, m_maps);  // show the death screen with this run's totals
+	double run_seconds = m_run_timer.split() / 1000000.0; // the clock counts microseconds
+	new GameOver(m_moves, m_seeds, m_maps, run_seconds);  // show the death screen with this run's totals
 	WM.markForDelete(this); // remove the owl; deletion happens at the end of this frame
 }

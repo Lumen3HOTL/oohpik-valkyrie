@@ -7,11 +7,12 @@
 #include "WorldManager.h"
 #include "Hero.h"
 #include "Level.h"
+#include "HighScores.h"
 #include <string>
 
 namespace {
-	enum MenuOption { PLAY, CONTROLS, QUIT, OPTION_COUNT };
-	const char* MENU_LABELS[OPTION_COUNT] = { "[P]lay", "[C]ontrols", "[Q]uit" };
+	enum MenuOption { PLAY, CONTROLS, HIGH_SCORES, QUIT, OPTION_COUNT };
+	const char* MENU_LABELS[OPTION_COUNT] = { "[P]lay", "[C]ontrols", "[H]igh scores", "[Q]uit" };
 
 	const int CENTER_X = 57; // middle of the 115 unit wide window
 
@@ -40,6 +41,7 @@ TitleScreen::TitleScreen() {
 	m_selected = PLAY;
 	m_pending_action = -1;
 	m_showing_controls = false;
+	m_showing_scores = false;
 	df::EventManager::getInstance().registerEvent(this, df::KEYBOARD_EVENT);
 	df::EventManager::getInstance().registerEvent(this, df::STEP_EVENT);
 }
@@ -60,9 +62,10 @@ int TitleScreen::eventHandler(const df::Event* p_e) {
 		auto* k = static_cast<const df::EventKeyboard*>(p_e);
 		if (k->getKeyboardAction() != df::KEY_PRESSED) return 0;
 
-		// Any key leaves the controls guide
-		if (m_showing_controls) {
+		// Any key leaves the controls guide or the high score table
+		if (m_showing_controls || m_showing_scores) {
 			m_showing_controls = false;
+			m_showing_scores = false;
 			return 1;
 		}
 
@@ -76,6 +79,7 @@ int TitleScreen::eventHandler(const df::Event* p_e) {
 			case df::Keyboard::RETURN: case df::Keyboard::SPACE: choose(m_selected); break;
 			case df::Keyboard::P: choose(PLAY); break;
 			case df::Keyboard::C: choose(CONTROLS); break;
+			case df::Keyboard::H: choose(HIGH_SCORES); break;
 			case df::Keyboard::Q: case df::Keyboard::ESCAPE: choose(QUIT); break;
 			default: return 0;
 		}
@@ -101,6 +105,9 @@ void TitleScreen::carryOut(int option) {
 		case CONTROLS:
 			m_showing_controls = true;
 			break;
+		case HIGH_SCORES:
+			m_showing_scores = true;
+			break;
 		case QUIT:
 			GM.setGameOver();
 			break;
@@ -110,6 +117,8 @@ void TitleScreen::carryOut(int option) {
 int TitleScreen::draw() {
 	if (m_showing_controls) {
 		drawControls();
+	} else if (m_showing_scores) {
+		drawHighScores();
 	} else {
 		drawMenu();
 	}
@@ -155,6 +164,16 @@ void TitleScreen::drawControls() {
 	dm.drawString(df::Vector(CENTER_X, 14), "you can only hop forward one tile, or turn on the spot.", df::CENTER_JUSTIFIED, df::WHITE);
 	dm.drawString(df::Vector(CENTER_X, 16), "collect the seeds (@) and avoid the trees (#): flying into one is fatal.", df::CENTER_JUSTIFIED, df::WHITE);
 	dm.drawString(df::Vector(CENTER_X, 17), "reach the exit (E) to move on to a new forest.", df::CENTER_JUSTIFIED, df::WHITE);
+
+	dm.drawString(df::Vector(CENTER_X, 22), "press any key to return", df::CENTER_JUSTIFIED, df::WHITE);
+}
+
+void TitleScreen::drawHighScores() {
+	df::DisplayManager& dm = df::DisplayManager::getInstance();
+
+	dm.drawString(df::Vector(CENTER_X, 4), "high scores", df::CENTER_JUSTIFIED, df::YELLOW);
+	dm.drawString(df::Vector(CENTER_X, 5), "ranked by seeds, then levels, then fastest time", df::CENTER_JUSTIFIED, df::WHITE);
+	drawHighScoreTable(8, -1);
 
 	dm.drawString(df::Vector(CENTER_X, 22), "press any key to return", df::CENTER_JUSTIFIED, df::WHITE);
 }

@@ -156,6 +156,7 @@
     <ClCompile Include="GameOver.cpp" />
     <ClCompile Include="Ground.cpp" />
     <ClCompile Include="Hero.cpp" />
+    <ClCompile Include="HighScores.cpp" />
     <ClCompile Include="Level.cpp" />
     <ClCompile Include="MapBuilder.cpp" />
     <ClCompile Include="MapBuildStateObject.cpp" />
@@ -172,6 +173,7 @@
     <ClInclude Include="GameOver.h" />
     <ClInclude Include="Ground.h" />
     <ClInclude Include="Hero.h" />
+    <ClInclude Include="HighScores.h" />
     <ClInclude Include="Level.h" />
     <ClInclude Include="MapBuilder.h" />
     <ClInclude Include="MapBuildStateObject.h" />
