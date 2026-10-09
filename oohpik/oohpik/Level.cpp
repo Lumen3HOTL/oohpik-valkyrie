@@ -68,14 +68,17 @@ namespace {
 	}
 }
 
-void startNewMap(df::Object* p_owl) {
-	// Clear the previous map by type. MapBuilder::destroyMap isn't used because its
-	// object list also contains the owl, which must survive between maps.
+void clearMap() {
+	// Remove by type. MapBuilder::destroyMap isn't used because its object list also contains the owl which must survive between maps.
 	removeObjectsOfType("Tree");
 	removeObjectsOfType("Ground");
 	removeObjectsOfType("Seed");
 	removeObjectsOfType("mapExit");
 	removeObjectsOfType("mapBuilder");
+}
+
+void startNewMap(df::Object* p_owl) {
+	clearMap();
 
 	ookpik::MapBuilder* p_map_builder = new ookpik::MapBuilder();
 	p_map_builder->startGenerateMap(makeMapConfig(), p_owl);

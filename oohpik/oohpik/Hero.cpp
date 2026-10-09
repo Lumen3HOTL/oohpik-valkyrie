@@ -31,12 +31,13 @@ Hero::Hero() {
 	m_statusSubstring7 = "";
 	m_statusSubstring8 = " second(s)";
 	m_statusSubstring9 = "    Level Time: ";
-	m_statusChange0= false;
-	m_statusChange1 = false;
-	m_statusChange2 = false;
-	m_statusChange3 = false;
+	// Start with every number flagged as changed so the status line shows 0s from the first frame
+	m_statusChange0 = true;
+	m_statusChange1 = true;
+	m_statusChange2 = true;
+	m_statusChange3 = true;
 	m_timeString = "";
-	m_statusChangeCount = 0;
+	m_statusChangeCount = 4;
 
 	m_timer = df::Clock();
 
@@ -174,6 +175,8 @@ int Hero::draw() {
 	currentPos += m_statusSubstring6.length();
 	df::DisplayManager::getInstance().drawString(df::Vector(currentPos, 0), m_statusSubstring7, df::LEFT_JUSTIFIED, df::WHITE);
 	currentPos += m_statusSubstring7.length();
+	df::DisplayManager::getInstance().drawString(df::Vector(currentPos, 0), m_statusSubstring9, df::LEFT_JUSTIFIED, df::WHITE);
+	currentPos += m_statusSubstring9.length();
 	m_timeString = std::to_string((((double)((double)((double)(m_timer.split() / 1000)) / 33) / 30)));
 	df::DisplayManager::getInstance().drawString(df::Vector(currentPos, 0), m_timeString, df::LEFT_JUSTIFIED, df::WHITE);
 	currentPos += m_timeString.length();
