@@ -4,3 +4,5 @@
 // Results are written to dragonfly.log, and a combined total is printed to the console.
 // Returns the total number of failed tests (0 = all passed).
 int runGameTests();
+
+int runMapStress(int maps); // TEMP-MAPGEN-DEBUG

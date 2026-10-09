@@ -1,4 +1,7 @@
   #include "MapBuilder.h"
+#include <algorithm>
+#include <cmath>
+#include <fstream> // TEMP-MAPGEN-DEBUG
 
 //behold madness
 namespace ookpik {
@@ -726,18 +729,11 @@ namespace ookpik {
 				}
 				break;
 			case 2:
-				topLeftx = fixPoints.getPoint1().getX();
-				repairWidth = fixPoints.getPoint1().getX() - fixPoints.getPoint0().getX();
-				topLefty = fixPoints.getPoint0().getY();
-				repairHeight = fixPoints.getPoint0().getY() - fixPoints.getPoint1().getY();
-				if (fixPoints.getPoint0().getX() < fixPoints.getPoint1().getX()) {
-					topLeftx = fixPoints.getPoint0().getX();
-					repairWidth =  fixPoints.getPoint1().getX()- fixPoints.getPoint0().getX();
-				}
-				if (fixPoints.getPoint1().getY() > fixPoints.getPoint0().getY()) {
-					topLefty = fixPoints.getPoint0().getY();
-					repairHeight = fixPoints.getPoint1().getY() - fixPoints.getPoint0().getY();
-				}
+				// The box starts at the smaller x and y of the two points, so it never extends past either point
+				topLeftx = std::min(fixPoints.getPoint0().getX(), fixPoints.getPoint1().getX());
+				repairWidth = std::abs(fixPoints.getPoint1().getX() - fixPoints.getPoint0().getX());
+				topLefty = std::min(fixPoints.getPoint0().getY(), fixPoints.getPoint1().getY());
+				repairHeight = std::abs(fixPoints.getPoint1().getY() - fixPoints.getPoint0().getY());
 				if (repairWidth <= 0) {
 					repairWidth = 1;
 				}
@@ -2751,8 +2747,10 @@ namespace ookpik {
 			
 			m_player = owl;
 			m_configObj = config;
+			m_requested_config = config;
 			this->setBaseFunctionExit(false);
-			this->setCurrentMode(GenerationStages::WAITING_FOR_BUILD_START);
+			// Wait for the generation thread; it moves to WAITING_FOR_THREAD_EXIT when the map plan is ready
+			this->setCurrentMode(GenerationStages::GENERATING);
 			m_builder_state = MapBuildStateObject();
 			m_genThread = new std::thread(&MapBuilder::generateMap, this);
 
@@ -2763,6 +2761,22 @@ namespace ookpik {
 		}
 		return -1;
 		
+	}
+
+	void MapBuilder::retryGeneration() {
+		df::LogManager& lm = df::LogManager::getInstance();
+		for (const std::string& message : m_debug_harness->getErrorMessages()) {
+			lm.writeLog("map generation error: %s", message.c_str());
+		}
+		// A fixed seed would fail the same way again, and a bad config fails every time
+		if (m_requested_config.getRandomSeed() != 0 || m_retries >= MAX_GENERATION_RETRIES) {
+			lm.writeLog("map generation failed, not retrying (retries used: %d)", m_retries);
+			return;
+		}
+		m_retries++;
+		lm.writeLog("map generation retry %d of %d", m_retries, MAX_GENERATION_RETRIES);
+		this->setCurrentMode(GenerationStages::READY); // startGenerateMap() only starts from READY or DONE
+		this->startGenerateMap(m_requested_config, m_player);
 	}
 
 	bool MapBuilder::isMapGenFinished() {
@@ -2808,6 +2822,8 @@ namespace ookpik {
 		m_genTime = 0;
 		m_genTime = 0;
 		m_error_handled=false;
+		m_requested_config = MapGenConfig();
+		m_retries = 0;
 		m_RandomEngine = std::mt19937();
 		this->setCurrentMode(GenerationStages::READY);
 		this->setCameraAffected(false);
@@ -2850,8 +2866,19 @@ namespace ookpik {
 	void MapBuilder::setCurrentMode(GenerationStages::GenerationStage new_mode) {
 		if (!this->getDeleteMode()) {
 			m_mode_gate.lock();
+			GenerationStages::GenerationStage old_mode = m_current_mode; // TEMP-MAPGEN-DEBUG
 			m_current_mode = new_mode;
 			m_mode_gate.unlock();
+			// TEMP-MAPGEN-DEBUG: record every stage change, which thread made it, and any queued errors
+			static std::mutex debug_file_gate; // TEMP-MAPGEN-DEBUG
+			std::lock_guard<std::mutex> debug_lock(debug_file_gate); // TEMP-MAPGEN-DEBUG
+			std::ofstream debug_file("mapgen_debug.log", std::ios::app); // TEMP-MAPGEN-DEBUG
+			debug_file << "builder " << this->getId() << " thread " << std::this_thread::get_id() << " mode " << (int)old_mode << " -> " << (int)new_mode << "\n"; // TEMP-MAPGEN-DEBUG
+			if ((new_mode == GenerationStages::GENERATION_ERROR || new_mode == GenerationStages::BUILD_ERROR) && m_debug_harness != nullptr) { // TEMP-MAPGEN-DEBUG
+				for (const std::string& message : m_debug_harness->getErrorMessages()) { // TEMP-MAPGEN-DEBUG
+					debug_file << "    error: " << message << "\n"; // TEMP-MAPGEN-DEBUG
+				} // TEMP-MAPGEN-DEBUG
+			} // TEMP-MAPGEN-DEBUG
 		}
 	}
 
@@ -2897,6 +2924,7 @@ namespace ookpik {
 							done = EventMapGenDone(m_debug_harness->getErrorMessages());
 							gm.onEvent(&done);
 							m_error_handled = true;
+							this->retryGeneration();
 						}
 
 					}
@@ -2909,6 +2937,7 @@ namespace ookpik {
 						done = EventMapGenDone(m_debug_harness->getErrorMessages());
 						gm.onEvent(&done);
 						m_error_handled = true;
+						this->retryGeneration();
 					}
 					break;
 				case GenerationStages::WAITING_TO_GENERATE:

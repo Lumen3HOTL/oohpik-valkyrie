@@ -23,6 +23,7 @@ namespace df {
 	Vector::Vector(float init_x, float init_y) {
 		m_x = init_x;
 		m_y = init_y;
+		m_compairison_tollerance = DEFUALT_VECTOR_COMPAIRISON_TOLLERANCE;
 	}
 
 	void Vector::setX(float new_x) {

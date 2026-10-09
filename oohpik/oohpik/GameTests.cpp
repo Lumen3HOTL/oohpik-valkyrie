@@ -29,6 +29,7 @@
 #include "Hero.h"
 #include "GameOver.h"
 #include "HighScores.h"
+#include "Level.h" // TEMP-MAPGEN-DEBUG
 #include "MapBuilder.h"
 #include "Seed.h"
 #include "MapExit.h"
@@ -330,8 +331,7 @@ void placeOwl(Hero* p_hero, df::Vector stand, int facing) {
 
 // --- Reading what's shown ---
 
-// Compare positions by their coordinates. Vector's == isn't used here: Vector(x, y) leaves
-// its comparison tolerance unset, so == can report equal positions as different.
+// Compare positions by their coordinates, so these tests don't depend on Vector's == tolerance
 bool samePosition(df::Vector a, df::Vector b) {
 	return std::fabs(a.getX() - b.getX()) < 0.001f && std::fabs(a.getY() - b.getY()) < 0.001f;
 }
@@ -785,6 +785,10 @@ TestBatch runBatchEdgeCases() {
 	}
 	clearHighScores();
 
+	// Regression: Vector(x, y) used to leave its comparison tolerance unset
+	batch.check(df::Vector(28, 6) == df::Vector(28, 6) && !(df::Vector(28, 6) != df::Vector(28, 6)),
+		"positions made from the same coordinates compare equal");
+
 	// --- Title screen ---
 	new TitleScreen();
 	runFrame();
@@ -969,6 +973,37 @@ TestBatch runBatchEdgeCases() {
 }
 
 }  // namespace
+
+// TEMP-MAPGEN-DEBUG: build maps back to back (no gameplay, no drawing) and count the ones
+// that never finish building within 10 seconds. Returns that count.
+int runMapStress(int maps) {
+	if (!startGame(false)) {
+		GM.shutDown();
+		return -1;
+	}
+	df::Object* p_owl = new df::Object(); // stands in for the owl; the builder only moves it
+	int stalled = 0;
+	for (int map = 0; map < maps; map++) {
+		startNewMap(p_owl);
+		bool finished = false;
+		df::Clock wait_clock;
+		while (!finished && wait_clock.split() < 10000000LL) {
+			df::EventStep step(step_count++);
+			GM.onEvent(&step);
+			WM.update();
+			ookpik::MapBuilder* p_builder = static_cast<ookpik::MapBuilder*>(findNewest("mapBuilder"));
+			finished = p_builder != nullptr && p_builder->isMapBuildFinished();
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		}
+		if (!finished) {
+			stalled++;
+			std::printf("map %d never finished: %s\n", map, describeMapBuilder().c_str());
+		}
+	}
+	GM.shutDown();
+	std::printf("map stress: %d of %d maps never finished\n", stalled, maps);
+	return stalled;
+}
 
 int runGameTests() {
 	backUpHighScores();

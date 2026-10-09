@@ -28,6 +28,8 @@
 #include "EventManager.h"
 #include "ookpikEnums.h"
 namespace ookpik {
+	// Fresh generations a map builder starts after errors before it gives up
+	const int MAX_GENERATION_RETRIES = 5;
 	
 	class MapBuilder : public df::Object {
 	private:
@@ -51,6 +53,8 @@ namespace ookpik {
 		GenerationStages::GenerationStage m_current_mode;
 		bool m_base_function_exit;
 		bool m_error_handled;
+		MapGenConfig m_requested_config; // the config as passed in, before generateMap() picks a random seed
+		int m_retries; // fresh generations started after an error
 
 
 		int configureMapBuilding(MapGenConfig config, std::vector<std::vector<mapTileIds::mapTileId>> mapPlan, df::Object* owl);
@@ -147,6 +151,9 @@ namespace ookpik {
 		int calculateNeededOpenSpaces(int seeds);
 
 		void generateMap();
+
+		// After a generation or build error: log the errors and start a fresh map
+		void retryGeneration();
 		
 
 		

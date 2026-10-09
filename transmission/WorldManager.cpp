@@ -101,8 +101,8 @@ namespace df {
 	void WorldManager::shutDown() {
 		//go through and tell every object to kill itself
 
-		for (int i = 0; i < m_updates.getCount(); i++) {
-
+		//each object's destructor removes it from m_updates, so keep deleting the front until the list is empty
+		while (m_updates.getCount() > 0) {
 			delete m_updates[0];
 		}
 		//clear our lists

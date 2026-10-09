@@ -17,6 +17,9 @@ int main(int argc, char* argv[]) {
 	if (argc > 1 && std::strcmp(argv[1], "--test") == 0) {
 		return runGameTests();
 	}
+	if (argc > 1 && std::strcmp(argv[1], "--mapstress") == 0) { // TEMP-MAPGEN-DEBUG
+		return runMapStress(200); // TEMP-MAPGEN-DEBUG
+	} // TEMP-MAPGEN-DEBUG
 
 	df::GameManager& game_manager = df::GameManager::getInstance();
 

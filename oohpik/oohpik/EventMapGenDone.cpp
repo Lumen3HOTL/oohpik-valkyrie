@@ -16,11 +16,14 @@ namespace ookpik {
 		m_buildTime = new_build_time;
 	}
 	EventMapGenDone::EventMapGenDone(df::ObjectList mapObjects, unsigned long long genTimeMS, unsigned long long buildTimeMS) {
+		this->setType(GEN_DONE_EVENT);
+		m_error = false;
 		m_genTime = genTimeMS;
 		m_map_objects = mapObjects;
 		m_buildTime = buildTimeMS;
 	}
 	EventMapGenDone::EventMapGenDone(std::vector<std::string> error_message) {
+		this->setType(GEN_DONE_EVENT);
 		m_error = true;
 		m_error_messages = error_message;
 	}

@@ -71,6 +71,7 @@ Hero::Hero() {
 	df::EventManager::getInstance().registerEvent(this, df::KEYBOARD_EVENT);
 	df::EventManager::getInstance().registerEvent(this, df::COLLISION_EVENT);
 	df::EventManager::getInstance().registerEvent(this, df::STEP_EVENT);
+	df::EventManager::getInstance().registerEvent(this, ookpik::GEN_DONE_EVENT); // restarts Level Time on each new map
 
 	// A new owl means a run is starting: start the in-game music (loops until the owl dies)
 	if (gameMusic() != nullptr) {
