@@ -40,4 +40,20 @@ void loadResources(void) {
 	RM.loadSprite("Resources/Sprites/tree.sprite", "tree");
 	RM.loadSprite("Resources/Sprites/seed.sprite", "seed");
 	RM.loadSprite("Resources/Sprites/exit.sprite", "exit");
+
+	// The engine doesn't log sound loading failures, report them here
+	const char* sounds[][2] = {
+		{ "Resources/Sounds/move.wav", "move" },
+		{ "Resources/Sounds/getseed.wav", "getseed" },
+		{ "Resources/Sounds/nextlevel.wav", "nextlevel" },
+		{ "Resources/Sounds/death.wav", "death" },
+	};
+	for (const auto& sound : sounds) {
+		if (RM.loadSound(sound[0], sound[1]) != 0) {
+			df::LogManager::getInstance().writeLog("Error loading sound %s from %s", sound[1], sound[0]);
+		}
+	}
+	if (RM.loadMusic("Resources/Sounds/outside.wav", "outside") != 0) {
+		df::LogManager::getInstance().writeLog("Error loading music outside from Resources/Sounds/outside.wav");
+	}
 }

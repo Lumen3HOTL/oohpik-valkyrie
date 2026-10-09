@@ -190,6 +190,11 @@
     <None Include="Resources\Sprites\tree.sprite" />
     <None Include="Resources\Sprites\seed.sprite" />
     <None Include="Resources\Sprites\exit.sprite" />
+    <None Include="Resources\Sounds\death.wav" />
+    <None Include="Resources\Sounds\getseed.wav" />
+    <None Include="Resources\Sounds\move.wav" />
+    <None Include="Resources\Sounds\nextlevel.wav" />
+    <None Include="Resources\Sounds\outside.wav" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\transmission\MakeADragonFly.vcxproj">

@@ -10,6 +10,24 @@
 #include "Level.h"
 #include <string>
 #include "EventStep.h"
+#include "ResourceManager.h"
+#include "Sound.h"
+#include "Music.h"
+
+namespace {
+	// Play a sound loaded in Game.cpp's loadResources(); does nothing if it failed to load
+	void playSound(const std::string& label) {
+		df::Sound* p_sound = RM.getSound(label);
+		if (p_sound != nullptr) {
+			p_sound->play();
+		}
+	}
+
+	// The in-game music; null if it failed to load
+	df::Music* gameMusic() {
+		return RM.getMusic("outside");
+	}
+}
 
 Hero::Hero() {
 	// initialize general system params
@@ -48,10 +66,16 @@ Hero::Hero() {
 	m_seeds = 0;
 	m_maps = 0;
 	m_direction = 1;
+	m_move_had_sound = false;
 	updateFrame();
 	df::EventManager::getInstance().registerEvent(this, df::KEYBOARD_EVENT);
 	df::EventManager::getInstance().registerEvent(this, df::COLLISION_EVENT);
 	df::EventManager::getInstance().registerEvent(this, df::STEP_EVENT);
+
+	// A new owl means a run is starting: start the in-game music (loops until the owl dies)
+	if (gameMusic() != nullptr) {
+		gameMusic()->play(true);
+	}
 }
 
 // Placeholder so the game links; Object's destructor is virtual.
@@ -81,6 +105,8 @@ int Hero::eventHandler(const df::Event* p_e) {
 		} else if (c->getObject2()->getType() == "Seed") {
 			// collect() returns false if this seed was already picked up by an earlier event this move
 			if (static_cast<ookpik::Seed*>(c->getObject2())->collect()) {
+				playSound("getseed");
+				m_move_had_sound = true;
 				m_seeds++;
 				m_statusChange0 = true;
 				m_statusChange1 = true;
@@ -90,6 +116,8 @@ int Hero::eventHandler(const df::Event* p_e) {
 		} else if (c->getObject2()->getType() == "mapExit") {
 			// use() returns false if this exit already fired earlier this move
 			if (static_cast<ookpik::MapExit*>(c->getObject2())->use()) {
+				playSound("nextlevel");
+				m_move_had_sound = true;
 				m_maps++;
 				m_statusChangeCount++;
 				m_statusChange3 = true;
@@ -128,8 +156,12 @@ void Hero::forward() {
 		return;
 	}
 
-	// Move
-	WM.moveObject(this, target);
+	// Move. moveObject returns -1 if a tree blocked player (collision handler plays death sound),
+	// move into a seed or the exit plays that sound instead of the hop sound.
+	m_move_had_sound = false;
+	if (WM.moveObject(this, target) == 0 && !m_move_had_sound) {
+		playSound("move");
+	}
 	updateFrame();
 }
 
@@ -187,6 +219,12 @@ int Hero::draw() {
 }
 
 void Hero::die() {
+	// The run is over: stop the in-game music (the death screen is a menu) and play the death sound
+	if (gameMusic() != nullptr) {
+		gameMusic()->stop();
+	}
+	playSound("death");
+
 	double run_seconds = m_run_timer.split() / 1000000.0; // the clock counts microseconds
 	new GameOver(m_moves, m_seeds, m_maps, run_seconds);  // show the death screen with this run's totals
 	WM.markForDelete(this); // remove the owl; deletion happens at the end of this frame

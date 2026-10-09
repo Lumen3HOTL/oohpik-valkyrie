@@ -39,6 +39,8 @@ private:
 
     bool m_started;
 
+    bool m_move_had_sound; // set when a hop picked up a seed or reached the exit, so the plain hop sound is skipped
+
 public:
     Hero();
     ~Hero();

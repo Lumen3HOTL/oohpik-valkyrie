@@ -16,6 +16,9 @@
     <Filter Include="Resource Files\Sprites">
       <UniqueIdentifier>{3f0b6a52-8c1e-4d7a-9b2e-5a6c1d4e7f90}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\Sounds">
+      <UniqueIdentifier>{7ec49ef3-ade3-46f1-b7d7-6a844fc6f053}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Game.cpp">
@@ -129,6 +132,21 @@
     </None>
     <None Include="Resources\Sprites\exit.sprite">
       <Filter>Resource Files\Sprites</Filter>
+    </None>
+    <None Include="Resources\Sounds\death.wav">
+      <Filter>Resource Files\Sounds</Filter>
+    </None>
+    <None Include="Resources\Sounds\getseed.wav">
+      <Filter>Resource Files\Sounds</Filter>
+    </None>
+    <None Include="Resources\Sounds\move.wav">
+      <Filter>Resource Files\Sounds</Filter>
+    </None>
+    <None Include="Resources\Sounds\nextlevel.wav">
+      <Filter>Resource Files\Sounds</Filter>
+    </None>
+    <None Include="Resources\Sounds\outside.wav">
+      <Filter>Resource Files\Sounds</Filter>
     </None>
   </ItemGroup>
 </Project>
