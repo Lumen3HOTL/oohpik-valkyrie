@@ -5,11 +5,19 @@
 
 // Game includes
 #include "TitleScreen.h"
+#include "GameTests.h"
+
+#include <cstring>
 
 // Function prototypes
 void loadResources(void);
 
 int main(int argc, char* argv[]) {
+	// "oohpik.exe --test" runs the game tests (GameTests.cpp) instead of the game
+	if (argc > 1 && std::strcmp(argv[1], "--test") == 0) {
+		return runGameTests();
+	}
+
 	df::GameManager& game_manager = df::GameManager::getInstance();
 
 	// Start up the game engine.

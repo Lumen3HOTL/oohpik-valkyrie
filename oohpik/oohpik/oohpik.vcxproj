@@ -154,6 +154,7 @@
     <ClCompile Include="EventMapGenDone.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GameOver.cpp" />
+    <ClCompile Include="GameTests.cpp" />
     <ClCompile Include="Ground.cpp" />
     <ClCompile Include="Hero.cpp" />
     <ClCompile Include="HighScores.cpp" />
@@ -171,6 +172,7 @@
     <ClInclude Include="CoordinatePair.h" />
     <ClInclude Include="EventMapGenDone.h" />
     <ClInclude Include="GameOver.h" />
+    <ClInclude Include="GameTests.h" />
     <ClInclude Include="Ground.h" />
     <ClInclude Include="Hero.h" />
     <ClInclude Include="HighScores.h" />

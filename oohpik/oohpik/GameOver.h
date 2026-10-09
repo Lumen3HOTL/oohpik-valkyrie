@@ -13,5 +13,12 @@ public:
     GameOver(int moves, int seeds, int maps, double time);
     int draw() override;
     int eventHandler(const df::Event* p_e) override;
-    
+
+    // Read-only accessors, used by GameTests
+    int getMoves() const { return m_moves; }
+    int getSeeds() const { return m_seeds; }
+    int getMaps() const { return m_maps; }
+    double getTime() const { return m_time; }
+    int getRank() const { return m_rank; }
+
 };

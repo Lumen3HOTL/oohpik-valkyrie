@@ -218,6 +218,13 @@ int Hero::draw() {
 	return result;
 }
 
+// Same pieces, in the same order, that draw() puts on the top row
+std::string Hero::getStatusLine() const {
+	return m_statusSubstring0 + m_statusSubstring1 + m_statusSubstring2 + m_statusSubstring3 +
+		m_statusSubstring4 + m_statusSubstring5 + m_statusSubstring6 + m_statusSubstring7 +
+		m_statusSubstring9 + m_timeString + m_statusSubstring8;
+}
+
 void Hero::die() {
 	// The run is over: stop the in-game music (the death screen is a menu) and play the death sound
 	if (gameMusic() != nullptr) {

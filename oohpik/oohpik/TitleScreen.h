@@ -18,4 +18,9 @@ public:
     TitleScreen();
     int eventHandler(const df::Event* p_e) override;
     int draw() override;
+
+    // Read-only accessors, used by GameTests
+    int getSelected() const { return m_selected; }
+    bool isShowingControls() const { return m_showing_controls; }
+    bool isShowingScores() const { return m_showing_scores; }
 };

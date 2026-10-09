@@ -47,4 +47,11 @@ public:
     int eventHandler(const df::Event* p_e) override;
     int draw() override; // the owl, plus the status line on the top row
 
+    // Read-only accessors, used by GameTests
+    int getDirection() const { return m_direction; }
+    int getMoves() const { return m_moves; }
+    int getSeeds() const { return m_seeds; }
+    int getMaps() const { return m_maps; }
+    std::string getStatusLine() const; // the status line as it was last drawn
+
 };
