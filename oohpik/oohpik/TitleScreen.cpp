@@ -8,9 +8,19 @@
 #include "Hero.h"
 #include "Level.h"
 #include "HighScores.h"
+#include "ResourceManager.h"
+#include "Sound.h"
 #include <string>
 
 namespace {
+	// Play a sound loaded in Game.cpp's loadResources(); does nothing if it failed to load
+	void playSound(const std::string& label) {
+		df::Sound* p_sound = RM.getSound(label);
+		if (p_sound != nullptr) {
+			p_sound->play();
+		}
+	}
+
 	enum MenuOption { PLAY, CONTROLS, HIGH_SCORES, QUIT, OPTION_COUNT };
 	const char* MENU_LABELS[OPTION_COUNT] = { "[P]lay", "[C]ontrols", "[H]igh scores", "[Q]uit" };
 
@@ -72,9 +82,11 @@ int TitleScreen::eventHandler(const df::Event* p_e) {
 		switch (k->getKey()) {
 			case df::Keyboard::W: case df::Keyboard::UPARROW:
 				m_selected = (m_selected + OPTION_COUNT - 1) % OPTION_COUNT;
+				playSound("move");
 				break;
 			case df::Keyboard::S: case df::Keyboard::DOWNARROW:
 				m_selected = (m_selected + 1) % OPTION_COUNT;
+				playSound("move");
 				break;
 			case df::Keyboard::RETURN: case df::Keyboard::SPACE: choose(m_selected); break;
 			case df::Keyboard::P: choose(PLAY); break;
@@ -91,6 +103,7 @@ int TitleScreen::eventHandler(const df::Event* p_e) {
 void TitleScreen::choose(int option) {
 	m_selected = option;
 	m_pending_action = option;
+	playSound("getseed");
 }
 
 void TitleScreen::carryOut(int option) {

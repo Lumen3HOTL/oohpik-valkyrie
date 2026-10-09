@@ -26,6 +26,16 @@ GameOver::GameOver(int moves, int seeds, int maps, double time) {
 
 int GameOver::draw() {
     df::DisplayManager& dm = df::DisplayManager::getInstance(); // not DM: that macro is still wrong
+
+    // Blank panel behind the text so the map doesn't show through. Each drawn character
+    // paints its cell's background, and the map (altitude 0) is drawn before this object.
+    // Sprites are drawn centred on their position, so the 2-wide map tiles show on
+    // odd-even column pairs; columns 31-82 cover whole tiles and never cut one in half.
+    const std::string blank_row(52, ' ');
+    for (int row = 2; row <= 27; row++) {
+        dm.drawString(df::Vector(31, row), blank_row, df::LEFT_JUSTIFIED, df::WHITE);
+    }
+
     dm.drawString(df::Vector(57, 3), "you died!", df::CENTER_JUSTIFIED, df::RED);
     dm.drawString(df::Vector(57, 5), "moves: " + std::to_string(m_moves), df::CENTER_JUSTIFIED, df::WHITE);
     dm.drawString(df::Vector(57, 6), "seeds collected: " + std::to_string(m_seeds), df::CENTER_JUSTIFIED, df::WHITE);
