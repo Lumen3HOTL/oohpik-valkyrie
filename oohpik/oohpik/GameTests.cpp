@@ -35,6 +35,7 @@
 #include "Seed.h"
 #include "MapExit.h"
 
+#include <algorithm>
 #include <chrono>
 #include <climits>
 #include <cmath>
@@ -42,6 +43,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <limits>
+#include <set>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -158,8 +160,10 @@ bool startGame(bool append_log) {
 }
 
 // One pass of GameManager::run()'s loop. A key, if given, is sent where the InputManager
-// would send it: after the step event and before the world updates.
-void runFrame(df::Keyboard::Key key = df::Keyboard::UNDEFINED_KEY, df::EventKeyboardAction action = df::KEY_PRESSED) {
+// would send it: after the step event and before the world updates. key_repeats sends it
+// that many times in the same frame, like several presses arriving between two frames.
+void runFrame(df::Keyboard::Key key = df::Keyboard::UNDEFINED_KEY, df::EventKeyboardAction action = df::KEY_PRESSED,
+	int key_repeats = 1) {
 	df::Clock frame_clock;
 
 	df::EventStep step(step_count++);
@@ -177,7 +181,9 @@ void runFrame(df::Keyboard::Key key = df::Keyboard::UNDEFINED_KEY, df::EventKeyb
 		df::EventKeyboard keyboard;
 		keyboard.setKey(key);
 		keyboard.setKeyboardAction(action);
-		GM.onEvent(&keyboard);
+		for (int press = 0; press < key_repeats; press++) {
+			GM.onEvent(&keyboard);
+		}
 	}
 
 	df::TimerManager::getInstance().update();
@@ -276,8 +282,10 @@ const int BAD_MAP_FRAMES = 30;
 
 // Start a map builder with a config and let its errors and retries play out.
 // Returns true if the bad config was caught: the builder never finished and built nothing.
-// Needs a world with no map in it, so map objects can be counted.
+// Clears any map already in the world first, so map objects can be counted.
 bool mapConfigIsRejected(const ookpik::MapGenConfig& config) {
+	clearMap();
+	runFrame(); // any old map is deleted here
 	df::Object* p_owl = new df::Object(); // stands in for the owl; the builder only moves it
 	ookpik::MapBuilder* p_builder = new ookpik::MapBuilder();
 	p_builder->startGenerateMap(config, p_owl);
@@ -287,6 +295,121 @@ bool mapConfigIsRejected(const ookpik::MapGenConfig& config) {
 	WM.markForDelete(p_owl);
 	runFrame();
 	return rejected;
+}
+
+// Build a map from a config straight away (no title screen or Hero), to check what the
+// generator makes. Returns false if it doesn't finish. Remove it with clearMap() afterwards.
+bool buildTestMap(const ookpik::MapGenConfig& config, df::Object* p_owl) {
+	clearMap();
+	runFrame(); // the old map is deleted here
+	ookpik::MapBuilder* p_builder = new ookpik::MapBuilder();
+	return p_builder->startGenerateMap(config, p_owl) == 0 && waitForMap();
+}
+
+// A tile position as whole numbers, for comparing and looking up positions
+std::pair<int, int> tileOf(df::Vector position) {
+	return std::make_pair((int)std::lround(position.getX()), (int)std::lround(position.getY()));
+}
+
+// Every tree, seed and exit as "type x y", sorted, plus the owl's start: the whole layout of a map
+std::vector<std::string> mapLayout(df::Object* p_owl) {
+	std::vector<std::string> layout;
+	const char* types[] = { "Tree", "Seed", "mapExit" };
+	for (const char* type : types) {
+		df::ObjectList objects = WM.objectsOfType(type);
+		for (int i = 0; i < objects.getCount(); i++) {
+			std::pair<int, int> tile = tileOf(objects[i]->getPosition());
+			layout.push_back(std::string(type) + " " + std::to_string(tile.first) + " " + std::to_string(tile.second));
+		}
+	}
+	std::sort(layout.begin(), layout.end());
+	std::pair<int, int> owl_tile = tileOf(p_owl->getPosition());
+	layout.push_back("owl " + std::to_string(owl_tile.first) + " " + std::to_string(owl_tile.second));
+	return layout;
+}
+
+// Trees, seeds and exits that share a tile with another one (a correct map has none)
+int sharedTileCount() {
+	std::set<std::pair<int, int>> used;
+	int shared = 0;
+	const char* types[] = { "Tree", "Seed", "mapExit" };
+	for (const char* type : types) {
+		df::ObjectList objects = WM.objectsOfType(type);
+		for (int i = 0; i < objects.getCount(); i++) {
+			if (!used.insert(tileOf(objects[i]->getPosition())).second) {
+				shared++;
+			}
+		}
+	}
+	return shared;
+}
+
+// Trees, seeds and exits outside the window
+int outsideWindowCount() {
+	df::DisplayManager& display = df::DisplayManager::getInstance();
+	int outside = 0;
+	const char* types[] = { "Tree", "Seed", "mapExit" };
+	for (const char* type : types) {
+		df::ObjectList objects = WM.objectsOfType(type);
+		for (int i = 0; i < objects.getCount(); i++) {
+			df::Vector position = objects[i]->getPosition();
+			if (position.getX() < 0 || position.getY() < 0 ||
+				position.getX() >= display.getHorizontal() || position.getY() >= display.getVertical()) {
+				outside++;
+			}
+		}
+	}
+	return outside;
+}
+
+// Walk every tile the owl can hop to from start (trees block it; reaching the exit ends the
+// level, so it isn't walked through). Returns how many seeds the owl can't reach, and sets
+// exit_reached if the exit can be reached.
+int unreachableSeeds(df::Vector start, bool& exit_reached) {
+	df::DisplayManager& display = df::DisplayManager::getInstance();
+	std::set<std::pair<int, int>> trees;
+	df::ObjectList tree_list = WM.objectsOfType("Tree");
+	for (int i = 0; i < tree_list.getCount(); i++) {
+		trees.insert(tileOf(tree_list[i]->getPosition()));
+	}
+	std::set<std::pair<int, int>> exits;
+	df::ObjectList exit_list = WM.objectsOfType("mapExit");
+	for (int i = 0; i < exit_list.getCount(); i++) {
+		exits.insert(tileOf(exit_list[i]->getPosition()));
+	}
+
+	exit_reached = false;
+	std::set<std::pair<int, int>> visited;
+	std::vector<std::pair<int, int>> to_visit;
+	to_visit.push_back(tileOf(start));
+	visited.insert(tileOf(start));
+	while (!to_visit.empty()) {
+		std::pair<int, int> tile = to_visit.back();
+		to_visit.pop_back();
+		for (int dir = 0; dir < 4; dir++) {
+			std::pair<int, int> next = std::make_pair(tile.first + HOP_X[dir], tile.second + HOP_Y[dir]);
+			if (next.first < 0 || next.second < 0 || next.first >= display.getHorizontal() || next.second >= display.getVertical() ||
+				trees.count(next) > 0 || visited.count(next) > 0) {
+				continue;
+			}
+			visited.insert(next);
+			if (exits.count(next) > 0) {
+				exit_reached = true;
+			}
+			else {
+				to_visit.push_back(next);
+			}
+		}
+	}
+
+	int unreachable = 0;
+	df::ObjectList seed_list = WM.objectsOfType("Seed");
+	for (int i = 0; i < seed_list.getCount(); i++) {
+		if (visited.count(tileOf(seed_list[i]->getPosition())) == 0) {
+			unreachable++;
+		}
+	}
+	return unreachable;
 }
 
 // Lowest and highest ids among the map's trees, ground, seeds and exits.
@@ -340,6 +463,25 @@ df::Object* findReachable(Hero* p_hero, const std::string& type, df::Vector& sta
 	for (int i = 0; i < objects.getCount(); i++) {
 		if (findApproach(p_hero, objects[i], stand, facing)) {
 			return objects[i];
+		}
+	}
+	return nullptr;
+}
+
+// Find a seed with free tiles on both sides in a line, so the owl can hop onto it and then
+// straight on past it. Sets stand (the tile before it) and facing, or returns nullptr.
+df::Object* findSeedToHopOver(Hero* p_hero, df::Vector& stand, int& facing) {
+	df::ObjectList seeds = WM.objectsOfType("Seed");
+	for (int i = 0; i < seeds.getCount(); i++) {
+		df::Vector seed_position = seeds[i]->getPosition();
+		for (int dir = 0; dir < 4; dir++) {
+			df::Vector from(seed_position.getX() - HOP_X[dir], seed_position.getY() - HOP_Y[dir]);
+			df::Vector beyond(seed_position.getX() + HOP_X[dir], seed_position.getY() + HOP_Y[dir]);
+			if (isFreeTile(p_hero, from) && isFreeTile(p_hero, beyond)) {
+				stand = from;
+				facing = dir;
+				return seeds[i];
+			}
 		}
 	}
 	return nullptr;
@@ -953,6 +1095,132 @@ TestBatch runBatchEdgeCases() {
 	batch.check(df::Vector(28, 6) == df::Vector(28, 6) && !(df::Vector(28, 6) != df::Vector(28, 6)),
 		"positions made from the same coordinates compare equal");
 
+	// --- Map generation: what the generator actually builds ---
+	df::Object* p_test_owl = new df::Object(); // stands in for the owl; the builder only moves it
+
+	// The same fixed seed must build the same map
+	ookpik::MapGenConfig seeded_config = makeMapConfig();
+	seeded_config.setRandomSeed(424242);
+	bool first_seeded = buildTestMap(seeded_config, p_test_owl);
+	std::vector<std::string> first_layout = mapLayout(p_test_owl);
+	bool second_seeded = buildTestMap(seeded_config, p_test_owl);
+	std::vector<std::string> second_layout = mapLayout(p_test_owl);
+	batch.check(first_seeded && second_seeded && first_layout == second_layout,
+		"the same fixed random seed builds the same map",
+		"objects in first map: " + std::to_string(first_layout.size()) + " second: " + std::to_string(second_layout.size()));
+
+	// Random maps: everything must be inside the window, on its own tile, and reachable
+	const int RANDOM_MAPS = 5;
+	int maps_built = 0;
+	int maps_with_one_exit = 0;
+	int maps_with_seeds_in_range = 0;
+	int maps_inside_window = 0;
+	int maps_without_shared_tiles = 0;
+	int maps_fully_reachable = 0;
+	std::string reach_detail;
+	for (int map = 0; map < RANDOM_MAPS; map++) {
+		if (!buildTestMap(makeMapConfig(), p_test_owl)) {
+			continue;
+		}
+		maps_built++;
+		int seeds = WM.objectsOfTypeCount("Seed");
+		maps_with_one_exit += WM.objectsOfTypeCount("mapExit") == 1 ? 1 : 0;
+		maps_with_seeds_in_range += (seeds >= MIN_SEEDS && seeds <= MAX_SEEDS) ? 1 : 0;
+		maps_inside_window += outsideWindowCount() == 0 ? 1 : 0;
+		maps_without_shared_tiles += sharedTileCount() == 0 ? 1 : 0;
+		bool exit_reached = false;
+		int unreachable = unreachableSeeds(p_test_owl->getPosition(), exit_reached);
+		if (unreachable == 0 && exit_reached) {
+			maps_fully_reachable++;
+		}
+		else {
+			reach_detail += " map " + std::to_string(map) + ": " + std::to_string(unreachable) + " of " +
+				std::to_string(seeds) + " seeds unreachable, exit " + (exit_reached ? "reachable" : "unreachable") + ";";
+		}
+	}
+	std::string out_of = " (" + std::to_string(RANDOM_MAPS) + " random maps)";
+	batch.check(maps_built == RANDOM_MAPS, "every random map finishes building",
+		std::to_string(maps_built) + " of " + std::to_string(RANDOM_MAPS) + " built");
+	batch.check(maps_with_one_exit == maps_built, "every map has exactly one exit",
+		std::to_string(maps_with_one_exit) + " of " + std::to_string(maps_built) + out_of);
+	batch.check(maps_with_seeds_in_range == maps_built, "every map has between 15 and 30 seeds",
+		std::to_string(maps_with_seeds_in_range) + " of " + std::to_string(maps_built) + out_of);
+	batch.check(maps_inside_window == maps_built, "every tree, seed and exit is inside the window",
+		std::to_string(maps_inside_window) + " of " + std::to_string(maps_built) + out_of);
+	batch.check(maps_without_shared_tiles == maps_built, "no two trees, seeds or exits share a tile",
+		std::to_string(maps_without_shared_tiles) + " of " + std::to_string(maps_built) + out_of);
+	batch.check(maps_fully_reachable == maps_built, "the owl can reach every seed and the exit from its start",
+		std::to_string(maps_fully_reachable) + " of " + std::to_string(maps_built) + out_of + reach_detail);
+
+	// Range ends: min == max must give exactly that many seeds
+	ookpik::MapGenConfig exact_config = makeMapConfig();
+	exact_config.setMinSeeds(20);
+	exact_config.setMaxSeeds(20);
+	bool exact_built = buildTestMap(exact_config, p_test_owl);
+	batch.check(exact_built && WM.objectsOfTypeCount("Seed") == 20, "min seeds equal to max seeds gives exactly that many",
+		"seeds: " + std::to_string(WM.objectsOfTypeCount("Seed")));
+
+	// The smallest map the generator allows: a 6x4 play area, 1-tile border, one 2x2 room
+	// (it needs at least one room or line to carve open space), 1 seed, no extra trees
+	ookpik::MapGenConfig tiny_config = makeMapConfig();
+	tiny_config.setMapWidth(6);
+	tiny_config.setMapHeight(4);
+	tiny_config.setMapBorderThickness(1);
+	tiny_config.setTimeoutSeconds(5);
+	tiny_config.setMinRooms(0);
+	tiny_config.setMaxRooms(0);
+	tiny_config.setMinRoomWidth(1);
+	tiny_config.setMaxRoomWidth(1);
+	tiny_config.setMinRoomHeight(1);
+	tiny_config.setMaxRoomHeight(1);
+	tiny_config.setMinRightAngleLines(0);
+	tiny_config.setMaxRightAngleLine(0);
+	tiny_config.setMinRightAngleLineWidth(1);
+	tiny_config.setMaxRightAngleLineWidth(1);
+	tiny_config.setMinRightAngleLineHeight(1);
+	tiny_config.setMaxRightAngleLineHeight(1);
+	tiny_config.setMinDiagLines(0);
+	tiny_config.setMaxDiagLine(0);
+	tiny_config.setMinDiagLineWidth(1);
+	tiny_config.setMaxDiagLineWidth(1);
+	tiny_config.setMinDiagLineHeight(1);
+	tiny_config.setMaxDiagLineHeight(1);
+	tiny_config.setMinRandTrees(0);
+	tiny_config.setMaxRandTrees(0);
+	tiny_config.setMinSeeds(1);
+	tiny_config.setMaxSeeds(1);
+
+	// With no rooms or lines at all there's no open space to put anything in, so it's refused
+	batch.check(mapConfigIsRejected(tiny_config), "a map with no rooms or lines (no open space) is refused");
+
+	tiny_config.setMinRooms(1);
+	tiny_config.setMaxRooms(1);
+	tiny_config.setMinRoomWidth(2);
+	tiny_config.setMaxRoomWidth(2);
+	tiny_config.setMinRoomHeight(2);
+	tiny_config.setMaxRoomHeight(2);
+	bool tiny_built = buildTestMap(tiny_config, p_test_owl);
+	bool tiny_exit_reached = false;
+	int tiny_unreachable = tiny_built ? unreachableSeeds(p_test_owl->getPosition(), tiny_exit_reached) : -1;
+	batch.check(tiny_built && WM.objectsOfTypeCount("Seed") == 1 && WM.objectsOfTypeCount("mapExit") == 1 &&
+		tiny_unreachable == 0 && tiny_exit_reached,
+		"the smallest allowed map builds with its seed and exit reachable", describeMapBuilder() +
+		", seeds: " + std::to_string(WM.objectsOfTypeCount("Seed")) + ", exits: " + std::to_string(WM.objectsOfTypeCount("mapExit")));
+
+	// Starting a second map in the same frame as the first: only the second one is built
+	clearMap();
+	runFrame();
+	startNewMap(p_test_owl);
+	startNewMap(p_test_owl); // clears the first builder while its thread is still generating
+	bool double_start_built = waitForMap();
+	batch.check(double_start_built && WM.objectsOfTypeCount("mapBuilder") == 1 && WM.objectsOfTypeCount("mapExit") == 1,
+		"starting a new map while one is generating leaves exactly one map",
+		"builders: " + std::to_string(WM.objectsOfTypeCount("mapBuilder")) + " exits: " + std::to_string(WM.objectsOfTypeCount("mapExit")));
+
+	clearMap();
+	WM.markForDelete(p_test_owl);
+	runFrame();
+
 	// --- Title screen ---
 	new TitleScreen();
 	runFrame();
@@ -970,6 +1238,14 @@ TestBatch runBatchEdgeCases() {
 	pressKey(df::Keyboard::DOWNARROW);
 	pressKey(df::Keyboard::UPARROW);
 	batch.check(p_title->getSelected() == MENU_PLAY, "arrow keys move the highlight like W and S");
+
+	// Two menu keys arriving in the same frame: only the last one is carried out
+	sendKeyboardEvent(df::Keyboard::P, df::KEY_PRESSED);
+	sendKeyboardEvent(df::Keyboard::C, df::KEY_PRESSED);
+	runFrame();
+	batch.check(p_title->isShowingControls() && WM.objectsOfTypeCount("Hero") == 0,
+		"two menu keys in one frame: only the last one is carried out");
+	pressKey(df::Keyboard::SPACE); // close the controls guide
 
 	pressKey(df::Keyboard::Q);
 	bool quit_same_frame = GM.getGameOver();
@@ -1014,6 +1290,53 @@ TestBatch runBatchEdgeCases() {
 		batch.check(statusShows(p_hero, 1, seeds_left - 1, p_hero->getMoves(), 0),
 			"status line shows the new seed totals on the same frame",
 			statusDetail(p_hero, 1, seeds_left - 1, p_hero->getMoves(), 0));
+	}
+
+	// --- Two hops in one frame straight over a seed: it's collected once and the owl lands past it ---
+	df::Object* p_hop_seed = findSeedToHopOver(p_hero, stand, facing);
+	batch.check(p_hop_seed != nullptr, "found a seed with free tiles before and after it");
+	if (p_hop_seed != nullptr) {
+		df::Vector seed_position = p_hop_seed->getPosition();
+		df::Vector beyond(seed_position.getX() + HOP_X[facing], seed_position.getY() + HOP_Y[facing]);
+		int seeds_before = p_hero->getSeeds();
+		placeOwl(p_hero, stand, facing);
+		int moves_before = p_hero->getMoves();
+		runFrame(df::Keyboard::W, df::KEY_PRESSED, 2);
+		batch.check(p_hero->getSeeds() == seeds_before + 1 && samePosition(p_hero->getPosition(), beyond) &&
+			p_hero->getMoves() == moves_before + 2,
+			"two hops in one frame over a seed collect it once and land past it",
+			"seeds: " + std::to_string(seeds_before) + " -> " + std::to_string(p_hero->getSeeds()) +
+			", owl at " + describe(p_hero->getPosition()) + " expected " + describe(beyond));
+	}
+
+	// --- The other window edges block hops too (the left edge is in the Errors batch) ---
+	const df::Vector EDGE_TILES[] = { df::Vector(57, 0), df::Vector(114, 15), df::Vector(57, 29) };
+	const int EDGE_FACINGS[] = { 0, 1, 2 }; // up, right, down: straight out of the window
+	const char* EDGE_NAMES[] = { "top", "right", "bottom" };
+	for (int edge = 0; edge < 3; edge++) {
+		placeOwl(p_hero, EDGE_TILES[edge], EDGE_FACINGS[edge]);
+		pressKey(df::Keyboard::W);
+		std::string name = std::string("owl can't hop off the ") + EDGE_NAMES[edge] + " edge of the window";
+		batch.check(samePosition(p_hero->getPosition(), EDGE_TILES[edge]) && WM.objectsOfTypeCount("Hero") == 1,
+			name.c_str(), "owl at " + describe(p_hero->getPosition()));
+	}
+
+	// --- Collecting the last seed on the map ---
+	df::Object* p_last_seed = findReachable(p_hero, "Seed", stand, facing);
+	batch.check(p_last_seed != nullptr, "found a seed to leave as the last one");
+	if (p_last_seed != nullptr) {
+		df::ObjectList all_seeds = WM.objectsOfType("Seed");
+		for (int i = 0; i < all_seeds.getCount(); i++) {
+			if (all_seeds[i] != p_last_seed) {
+				WM.markForDelete(all_seeds[i]);
+			}
+		}
+		runFrame(); // every other seed is removed here
+		int seeds_before = p_hero->getSeeds();
+		placeOwl(p_hero, stand, facing);
+		pressKey(df::Keyboard::W);
+		batch.check(WM.objectsOfTypeCount("Seed") == 0 && statusShows(p_hero, seeds_before + 1, 0, p_hero->getMoves(), 0),
+			"collecting the last seed shows 0 remaining", statusDetail(p_hero, seeds_before + 1, 0, p_hero->getMoves(), 0));
 	}
 
 	// --- A blocked hop still counts as a move ---
@@ -1077,6 +1400,26 @@ TestBatch runBatchEdgeCases() {
 			"a new run after dying starts with 0 moves, seeds and maps",
 			"moves: " + std::to_string(p_hero->getMoves()) + " seeds: " + std::to_string(p_hero->getSeeds()) +
 			" maps: " + std::to_string(p_hero->getMaps()));
+	}
+
+	// --- Two hops into a tree in the same frame: the owl only dies once ---
+	// Also a run with nothing collected: it's still a valid run, so it's recorded
+	clearHighScores();
+	if (p_hero != nullptr) {
+		p_tree = findReachable(p_hero, "Tree", stand, facing);
+		batch.check(p_tree != nullptr, "found a tree the owl can fly into");
+		if (p_tree != nullptr) {
+			placeOwl(p_hero, stand, facing);
+			runFrame(df::Keyboard::W, df::KEY_PRESSED, 2); // the owl is deleted at the end of this frame
+			p_hero = nullptr;
+			std::vector<ScoreEntry> death_scores = loadHighScores();
+			batch.check(WM.objectsOfTypeCount("GameOver") == 1, "two hops into a tree in one frame give one death screen",
+				"death screens: " + std::to_string(WM.objectsOfTypeCount("GameOver")));
+			batch.check(death_scores.size() == 1, "two hops into a tree in one frame record one high score",
+				"rows saved: " + std::to_string(death_scores.size()));
+			batch.check(!death_scores.empty() && death_scores[0].seeds == 0 && death_scores[0].levels == 0,
+				"a run with nothing collected is still recorded");
+		}
 	}
 
 	// --- High score ranking ---
