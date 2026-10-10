@@ -8,6 +8,7 @@
 #include "Seed.h"
 #include "MapExit.h"
 #include "Level.h"
+#include <cstdio>
 #include <string>
 #include "EventStep.h"
 #include "ResourceManager.h"
@@ -62,6 +63,8 @@ Hero::Hero() {
 
 	m_started = false;
 	m_dead = false;
+	m_forward_held = false;
+	m_hold_steps = 0;
 
 	m_moves = 0;
 	m_seeds = 0;
@@ -90,13 +93,35 @@ int Hero::eventHandler(const df::Event* p_e) {
 	if (m_dead && (p_e->getType() == df::KEYBOARD_EVENT || p_e->getType() == df::COLLISION_EVENT)) {
 		return 0;
 	}
+	if (p_e->getType() == df::STEP_EVENT) {
+		// Holding W (or space) hops again every HOLD_REPEAT_STEPS steps after the first hop
+		if (m_forward_held && !m_dead) {
+			m_hold_steps++;
+			if (m_hold_steps >= HOLD_REPEAT_STEPS) {
+				m_hold_steps = 0;
+				forward();
+			}
+		}
+		return 0;
+	}
 	if (p_e->getType() == df::KEYBOARD_EVENT) {
 		auto* k = static_cast<const df::EventKeyboard*>(p_e);
+		if (k->getKeyboardAction() == df::KEY_RELEASED) {
+			if (k->getKey() == df::Keyboard::W || k->getKey() == df::Keyboard::SPACE) {
+				m_forward_held = false;
+			}
+			return 0;
+		}
 		if (k->getKeyboardAction() != df::KEY_PRESSED) return 0; // one action per press, like input()
 		// Moves are counted by turn() and forward() themselves, so a hop the window edge blocks
 		// isn't counted, and a fatal hop is counted before die() records the run
 		switch (k->getKey()) {
-			case df::Keyboard::W: case df::Keyboard::SPACE: forward(); break;
+			case df::Keyboard::W: case df::Keyboard::SPACE:
+				// Hop now; keep hopping while it's held (the engine sends no repeat presses)
+				m_forward_held = true;
+				m_hold_steps = 0;
+				forward();
+				break;
 			case df::Keyboard::A: turn(-1); break;
 			case df::Keyboard::D: turn(+1); break;
 			case df::Keyboard::ESCAPE: GM.setGameOver(); break; // quitting isn't a move
@@ -129,6 +154,7 @@ int Hero::eventHandler(const df::Event* p_e) {
 				m_maps++;
 				m_statusChangeCount++;
 				m_statusChange3 = true;
+				m_forward_held = false; // holding stops here: press W again on the new map
 				startNewMap(this); // old map is removed at the end of this frame
 			}
 		}
@@ -227,7 +253,10 @@ int Hero::draw() {
 	currentPos += m_statusSubstring7.length();
 	df::DisplayManager::getInstance().drawString(df::Vector(currentPos, 0), m_statusSubstring9, df::LEFT_JUSTIFIED, df::WHITE);
 	currentPos += m_statusSubstring9.length();
-	m_timeString = std::to_string((((double)((double)((double)(m_timer.split() / 1000)) / 33) / 30)));
+	// Seconds to one decimal place (the clock counts microseconds)
+	char time_text[32];
+	std::snprintf(time_text, sizeof(time_text), "%.1f", m_timer.split() / 1000000.0);
+	m_timeString = time_text;
 	df::DisplayManager::getInstance().drawString(df::Vector(currentPos, 0), m_timeString, df::LEFT_JUSTIFIED, df::WHITE);
 	currentPos += m_timeString.length();
 	df::DisplayManager::getInstance().drawString(df::Vector(currentPos, 0), m_statusSubstring8, df::LEFT_JUSTIFIED, df::WHITE);

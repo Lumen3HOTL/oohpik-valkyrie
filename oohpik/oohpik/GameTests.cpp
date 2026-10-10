@@ -205,7 +205,17 @@ void runFrames(int count) {
 	}
 }
 
+// A quick tap: the key is pressed in this frame and let go before the next one
 void pressKey(df::Keyboard::Key key) {
+	runFrame(key, df::KEY_PRESSED);
+	df::EventKeyboard release;
+	release.setKey(key);
+	release.setKeyboardAction(df::KEY_RELEASED);
+	GM.onEvent(&release);
+}
+
+// Press a key and keep it held down (let go with releaseKey)
+void holdKey(df::Keyboard::Key key) {
 	runFrame(key, df::KEY_PRESSED);
 }
 
@@ -416,6 +426,40 @@ int unreachableSeeds(df::Vector start, bool& exit_reached, std::set<std::pair<in
 	return unreachable;
 }
 
+// Time the work in the game loop with whatever is in the world now, averaged over some
+// frames (in ms): the step event, the world update, drawing, and showing the frame
+// (swapBuffers, which is where batched characters are actually drawn). No sleeping.
+struct FrameTimes {
+	double step = 0;
+	double update = 0;
+	double draw = 0;
+	double show = 0;
+	double total() const { return step + update + draw + show; }
+};
+
+FrameTimes timeFrames(int frames) {
+	long long step_us = 0, update_us = 0, draw_us = 0, show_us = 0;
+	df::Clock clock;
+	for (int frame = 0; frame < frames; frame++) {
+		clock.delta();
+		df::EventStep step(step_count++);
+		GM.onEvent(&step);
+		step_us += clock.delta();
+		WM.update();
+		update_us += clock.delta();
+		WM.draw();
+		draw_us += clock.delta();
+		df::DisplayManager::getInstance().swapBuffers();
+		show_us += clock.delta();
+	}
+	FrameTimes times;
+	times.step = step_us / 1000.0 / frames;
+	times.update = update_us / 1000.0 / frames;
+	times.draw = draw_us / 1000.0 / frames;
+	times.show = show_us / 1000.0 / frames;
+	return times;
+}
+
 // Lowest and highest ids among the map's trees, ground, seeds and exits.
 // Ids only go up, so every object of a newer map has a higher id than any older one.
 void mapObjectIdRange(unsigned long long& lowest, unsigned long long& highest) {
@@ -489,6 +533,33 @@ df::Object* findSeedToHopOver(Hero* p_hero, df::Vector& stand, int& facing) {
 		}
 	}
 	return nullptr;
+}
+
+// Find a tile and direction with `length` free tiles in a straight line ahead of it, for
+// watching several hops in a row. Sets stand and facing, or returns false.
+bool findStraightRun(Hero* p_hero, int length, df::Vector& stand, int& facing) {
+	df::DisplayManager& display = df::DisplayManager::getInstance();
+	for (int y = 1; y < display.getVertical(); y++) {
+		for (int x = 0; x < display.getHorizontal(); x += 2) {
+			df::Vector start((float)x, (float)y);
+			if (!isFreeTile(p_hero, start)) {
+				continue;
+			}
+			for (int dir = 0; dir < 4; dir++) {
+				bool clear = true;
+				for (int step = 1; step <= length && clear; step++) {
+					df::Vector tile(start.getX() + HOP_X[dir] * step, start.getY() + HOP_Y[dir] * step);
+					clear = isFreeTile(p_hero, tile);
+				}
+				if (clear) {
+					stand = start;
+					facing = dir;
+					return true;
+				}
+			}
+		}
+	}
+	return false;
 }
 
 // Turn the owl with real key presses until it faces a direction (each turn counts as a move)
@@ -696,6 +767,17 @@ TestBatch runBatchNormal() {
 		"status line starts at 0 seeds, every seed remaining, 0 moves, 0 maps",
 		statusDetail(p_hero, 0, seeds_on_map, 0, 0));
 
+	// Level Time is shown as seconds with one decimal place, e.g. "Level Time: 1.4 second(s)"
+	std::string status = p_hero->getStatusLine();
+	std::string time_label = "Level Time: ";
+	size_t time_start = status.find(time_label);
+	size_t time_end = status.find(" second(s)");
+	std::string shown_time = (time_start == std::string::npos || time_end == std::string::npos) ? "" :
+		status.substr(time_start + time_label.length(), time_end - (time_start + time_label.length()));
+	size_t dot = shown_time.find('.');
+	batch.check(dot != std::string::npos && dot > 0 && dot + 2 == shown_time.length(),
+		"Level Time is shown to one decimal place", "shown: \"" + shown_time + "\"");
+
 	// --- Moving and turning ---
 	pressKey(df::Keyboard::D);
 	batch.check(p_hero->getDirection() == 2, "D turns the owl right (from facing right to facing down)");
@@ -722,6 +804,40 @@ TestBatch runBatchNormal() {
 			"expected " + describe(hop_to) + " actual " + describe(p_hero->getPosition()));
 		batch.check(p_hero->getMoves() == moves_before_hop + 1, "a hop counts as a move",
 			"moves before: " + std::to_string(moves_before_hop) + " after: " + std::to_string(p_hero->getMoves()));
+	}
+
+	// --- Holding W hops again every HOLD_REPEAT_STEPS frames (0.2 s), and stops when let go ---
+	df::Vector run_start;
+	int run_facing = 0;
+	bool found_run = findStraightRun(p_hero, 3, run_start, run_facing);
+	batch.check(found_run, "found three free tiles in a row to hold W along");
+	if (found_run) {
+		placeOwl(p_hero, run_start, run_facing);
+		int moves_before_hold = p_hero->getMoves();
+		holdKey(df::Keyboard::W);
+		int hops_on_press = p_hero->getMoves() - moves_before_hold;
+		runFrames(HOLD_REPEAT_STEPS - 1);
+		int hops_before_delay = p_hero->getMoves() - moves_before_hold;
+		runFrame();
+		int hops_after_delay = p_hero->getMoves() - moves_before_hold;
+		runFrames(HOLD_REPEAT_STEPS);
+		int hops_after_second_delay = p_hero->getMoves() - moves_before_hold;
+		releaseKey(df::Keyboard::W);
+		runFrames(HOLD_REPEAT_STEPS * 2);
+		int hops_after_release = p_hero->getMoves() - moves_before_hold;
+		df::Vector run_end(run_start.getX() + HOP_X[run_facing] * 3, run_start.getY() + HOP_Y[run_facing] * 3);
+
+		batch.check(hops_on_press == 1, "pressing W hops straight away",
+			"hops: " + std::to_string(hops_on_press));
+		batch.check(hops_before_delay == 1 && hops_after_delay == 2,
+			"holding W hops again after 6 frames (0.2 s), not sooner",
+			"hops after 5 frames: " + std::to_string(hops_before_delay) + ", after 6: " + std::to_string(hops_after_delay));
+		batch.check(hops_after_second_delay == 3, "holding W keeps hopping every 6 frames",
+			"hops: " + std::to_string(hops_after_second_delay));
+		batch.check(hops_after_release == 3 && samePosition(p_hero->getPosition(), run_end) && !p_hero->isForwardHeld(),
+			"letting go of W stops the hopping",
+			"hops: " + std::to_string(hops_after_release) + ", owl at " + describe(p_hero->getPosition()) +
+			" expected " + describe(run_end));
 	}
 
 	// --- Collecting seeds ---
@@ -1231,6 +1347,17 @@ TestBatch runBatchEdgeCases() {
 	batch.check(maps_fully_reachable == maps_built, "the owl can reach every seed and the exit from its start",
 		std::to_string(maps_fully_reachable) + " of " + std::to_string(maps_built) + out_of + reach_detail);
 
+	// Speed: with a full map built, one game loop pass must fit in the frame time (33 ms).
+	// Regression: drawing each character with its own draw calls used to take ~50 ms (Release)
+	// to ~250 ms (Debug) per frame. --frameprofile shows where the time goes.
+	FrameTimes frame_times = timeFrames(30);
+	char frame_detail[160];
+	std::snprintf(frame_detail, sizeof(frame_detail),
+		"average ms per frame: step %.2f, update %.2f, draw %.2f, show %.2f, total %.2f (budget %d), objects: %d",
+		frame_times.step, frame_times.update, frame_times.draw, frame_times.show, frame_times.total(),
+		GM.getFrameTime(), WM.AllObjectsCount());
+	batch.check(frame_times.total() < GM.getFrameTime(), "a frame with a full map fits in the frame time", frame_detail);
+
 	// Range ends: min == max must give exactly that many seeds
 	ookpik::MapGenConfig exact_config = makeMapConfig();
 	exact_config.setMinSeeds(20);
@@ -1396,6 +1523,7 @@ TestBatch runBatchEdgeCases() {
 		placeOwl(p_hero, stand, facing);
 		int moves_before = p_hero->getMoves();
 		runFrame(df::Keyboard::W, df::KEY_PRESSED, 2);
+		sendKeyboardEvent(df::Keyboard::W, df::KEY_RELEASED); // let go, so W isn't left held
 		batch.check(p_hero->getSeeds() == seeds_before + 1 && samePosition(p_hero->getPosition(), beyond) &&
 			p_hero->getMoves() == moves_before + 2,
 			"two hops in one frame over a seed collect it once and land past it",
@@ -1441,6 +1569,13 @@ TestBatch runBatchEdgeCases() {
 		"a hop blocked by the window edge doesn't count as a move",
 		"moves before: " + std::to_string(moves_before_blocked) + " after: " + std::to_string(p_hero->getMoves()));
 
+	holdKey(df::Keyboard::W);
+	runFrames(HOLD_REPEAT_STEPS * 2);
+	batch.check(samePosition(p_hero->getPosition(), LEFT_EDGE_TILE) && p_hero->getMoves() == moves_before_blocked,
+		"holding W against the window edge doesn't move or count moves",
+		"moves before: " + std::to_string(moves_before_blocked) + " after: " + std::to_string(p_hero->getMoves()));
+	releaseKey(df::Keyboard::W);
+
 	int moves_before_escape = p_hero->getMoves();
 	pressKey(df::Keyboard::ESCAPE);
 	batch.check(GM.getGameOver() && p_hero->getMoves() == moves_before_escape, "escape doesn't count as a move",
@@ -1454,7 +1589,7 @@ TestBatch runBatchEdgeCases() {
 	batch.check(p_exit != nullptr, "found the exit and a free tile next to it");
 	if (p_exit != nullptr) {
 		placeOwl(p_hero, stand, facing);
-		pressKey(df::Keyboard::W);
+		holdKey(df::Keyboard::W); // still held when the owl reaches the exit
 		bool next_loaded = waitForMap();
 		batch.check(next_loaded, "the next map finishes building", describeMapBuilder());
 		runFrame();
@@ -1462,6 +1597,16 @@ TestBatch runBatchEdgeCases() {
 		batch.check(next_loaded && time_after_exit < time_before_exit, "Level Time restarts when a new map loads",
 			"level time before exit: " + std::to_string(time_before_exit) +
 			" after new map: " + std::to_string(time_after_exit));
+
+		// Holding W ends at the exit: the owl waits on the new map until W is pressed again
+		df::Vector new_map_start = p_hero->getPosition();
+		int moves_on_new_map = p_hero->getMoves();
+		runFrames(HOLD_REPEAT_STEPS * 2);
+		batch.check(!p_hero->isForwardHeld() && samePosition(p_hero->getPosition(), new_map_start) &&
+			p_hero->getMoves() == moves_on_new_map,
+			"holding W into the exit stops on the new map until W is pressed again",
+			"owl at " + describe(p_hero->getPosition()) + " started at " + describe(new_map_start));
+		releaseKey(df::Keyboard::W);
 	}
 
 	// --- The death screen's move count includes the fatal hop ---
@@ -1718,43 +1863,29 @@ int runMapStress(int maps) {
 	std::printf("map stress: %d of %d maps never finished\n", stalled, maps);
 	return stalled;
 }
-#endif
 
-// TEMP-PROFILE: build a normal map and time each part of the frame loop, then print averages
 int runFrameProfile(int frames) {
 	if (!startGame(false)) {
 		GM.shutDown();
 		return -1;
 	}
-	df::Object* p_owl = new df::Object();
-	if (!buildTestMap(makeMapConfig(), p_owl)) {
-		std::printf("map didn't build\n");
+	df::Object* p_owl = new df::Object(); // stands in for the owl; the builder only moves it
+	ookpik::MapGenConfig config = makeMapConfig();
+	config.setRandomSeed(6); // the same map every run, so runs can be compared
+	if (!buildTestMap(config, p_owl)) {
+		std::printf("frame profile: the map didn't build\n");
 		GM.shutDown();
 		return -1;
 	}
-	std::printf("objects in world: %d (trees %d, seeds %d, ground %d)\n", WM.AllObjectsCount(),
-		WM.objectsOfTypeCount("Tree"), WM.objectsOfTypeCount("Seed"), WM.objectsOfTypeCount("Ground"));
-
-	long long step_us = 0, update_us = 0, draw_us = 0, swap_us = 0;
-	df::Clock clock;
-	for (int frame = 0; frame < frames; frame++) {
-		clock.delta();
-		df::EventStep step(step_count++);
-		GM.onEvent(&step);
-		step_us += clock.delta();
-		WM.update();
-		update_us += clock.delta();
-		WM.draw();
-		draw_us += clock.delta();
-		df::DisplayManager::getInstance().swapBuffers();
-		swap_us += clock.delta();
-	}
-	std::printf("average per frame over %d frames (ms): step %.2f, update %.2f, draw %.2f, swap %.2f, total %.2f (budget 33)\n",
-		frames, step_us / 1000.0 / frames, update_us / 1000.0 / frames, draw_us / 1000.0 / frames, swap_us / 1000.0 / frames,
-		(step_us + update_us + draw_us + swap_us) / 1000.0 / frames);
+	std::printf("objects in world: %d (trees %d, seeds %d)\n", WM.AllObjectsCount(),
+		WM.objectsOfTypeCount("Tree"), WM.objectsOfTypeCount("Seed"));
+	FrameTimes times = timeFrames(frames);
+	std::printf("average per frame over %d frames (ms): step %.2f, update %.2f, draw %.2f, show %.2f, total %.2f (budget %d)\n",
+		frames, times.step, times.update, times.draw, times.show, times.total(), GM.getFrameTime());
 	GM.shutDown();
 	return 0;
 }
+#endif
 
 int runGameTests() {
 	// Remove the last run's totals first, so a run that crashes leaves none instead of stale ones

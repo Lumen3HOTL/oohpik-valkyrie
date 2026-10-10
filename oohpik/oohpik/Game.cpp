@@ -17,9 +17,6 @@ int main(int argc, char* argv[]) {
 	if (argc > 1 && std::strcmp(argv[1], "--test") == 0) {
 		return runGameTests();
 	}
-	if (argc > 1 && std::strcmp(argv[1], "--frameprofile") == 0) { // TEMP-PROFILE
-		return runFrameProfile(60); // TEMP-PROFILE
-	} // TEMP-PROFILE
 #ifdef _DEBUG
 	// "oohpik.exe --mapstress" builds 200 maps back to back and counts any that never finish
 	if (argc > 1 && std::strcmp(argv[1], "--mapstress") == 0) {
@@ -28,6 +25,10 @@ int main(int argc, char* argv[]) {
 	// "oohpik.exe --mapscan" checks maps from seeds 1-400 for seeds or an exit the owl can't reach
 	if (argc > 1 && std::strcmp(argv[1], "--mapscan") == 0) {
 		return runMapScan(1, 400);
+	}
+	// "oohpik.exe --frameprofile" times each part of the frame loop on a full map
+	if (argc > 1 && std::strcmp(argv[1], "--frameprofile") == 0) {
+		return runFrameProfile(60);
 	}
 #endif
 

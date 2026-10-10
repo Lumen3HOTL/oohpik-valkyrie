@@ -4,6 +4,17 @@
 #include "Camera.h"
 namespace df {
 
+	// Add a rectangle to a batch as two triangles, with the matching part of the texture
+	static void appendQuad(sf::VertexArray& batch, float left, float top, float right, float bottom, sf::Color color,
+		float u1, float v1, float u2, float v2) {
+		batch.append(sf::Vertex{ sf::Vector2f(left, top), color, sf::Vector2f(u1, v1) });
+		batch.append(sf::Vertex{ sf::Vector2f(right, top), color, sf::Vector2f(u2, v1) });
+		batch.append(sf::Vertex{ sf::Vector2f(left, bottom), color, sf::Vector2f(u1, v2) });
+		batch.append(sf::Vertex{ sf::Vector2f(left, bottom), color, sf::Vector2f(u1, v2) });
+		batch.append(sf::Vertex{ sf::Vector2f(right, top), color, sf::Vector2f(u2, v1) });
+		batch.append(sf::Vertex{ sf::Vector2f(right, bottom), color, sf::Vector2f(u2, v2) });
+	}
+
 
 	// Compute character height in pixels, based on window size.
 	float charHeight() {
@@ -68,6 +79,8 @@ namespace df {
 		m_custom_color = 0;
 		this->setType("DisplayManager");
 		m_apply_camera = true;
+		m_batch = sf::VertexArray(sf::PrimitiveType::Triangles);
+		m_batch_char_size = 0;
 	}
 
 	DisplayManager& DisplayManager::getInstance() {
@@ -166,6 +179,7 @@ namespace df {
 			delete m_p_window;
 			m_p_window = nullptr;
 		}
+		m_batch.clear();
 		m_font = sf::Font();
 		m_window_horizontal_pixels = 0; // Horizontal pixels in window.
 		m_window_vertical_pixels = 0; // Vertical pixels in window.
@@ -192,27 +206,20 @@ namespace df {
 
 			if ((world_pos2.getX() >= 0) && (world_pos2.getX() <= this->getHorizontal()) && (world_pos2.getY() >= 0) && (world_pos2.getY() <= this->getVertical())) {
 				Vector pixelPos = spacesToPixels(world_pos2);
+				float width = charWidth();
+				float height = charHeight();
 
-				sf::Vector2f maskSize = sf::Vector2f(charWidth(), charHeight());
-				sf::Vector2f maskPos = sf::Vector2f((pixelPos.getX() - (charWidth() / 10)), (pixelPos.getY() - (charHeight() / 5)));
-				sf::RectangleShape matteMask;
+				// Characters are batched and drawn together by flush() (see swapBuffers()).
+				// The font texture keeps a white square at (0, 0)-(2, 2); background boxes are
+				// textured from it so boxes and characters share one draw call, in drawing order.
+				float maskLeft = pixelPos.getX() - (width / 10);
+				float maskTop = pixelPos.getY() - (height / 5);
+				appendQuad(m_batch, maskLeft, maskTop, maskLeft + width, maskTop + height, m_window_background_color,
+					1.f, 1.f, 1.f, 1.f);
 
-				matteMask.setSize(maskSize);
-				matteMask.setPosition(maskPos);
-				matteMask.setFillColor(m_window_background_color);
-
-				m_p_window->draw(matteMask);
-
-				sf::Text textToDraw(m_font);
-				textToDraw.setStyle(sf::Text::Bold); // Set text style.
-				textToDraw.setString(ch);
-
-				if (charWidth() < charHeight()) {
-					textToDraw.setCharacterSize(charWidth() * 2);
-				}
-				else {
-					textToDraw.setCharacterSize(charHeight() * 2);
-				}
+				// Same size and bold style the characters have always used
+				unsigned int characterSize = (unsigned int)((width < height ? width : height) * 2);
+				m_batch_char_size = characterSize;
 
 				sf::Color textColor;
 				switch (color) {
@@ -257,12 +264,25 @@ namespace df {
 					break;
 				}
 
-				sf::Vector2f textPos = sf::Vector2f(pixelPos.getX(), pixelPos.getY());
-
-				textToDraw.setPosition(textPos);
-				textToDraw.setFillColor(textColor);
-
-				m_p_window->draw(textToDraw);
+				// Spaces only need the background box (sf::Text draws nothing for them either)
+				if (ch != ' ' && ch != '\t' && ch != '\n') {
+					// Placed exactly as sf::Text places a single character: its baseline is
+					// characterSize below the text position, with 1 pixel of padding around the glyph
+					const sf::Glyph& glyph = m_font.getGlyph(static_cast<unsigned char>(ch), characterSize, true);
+					const float padding = 1.f;
+					float baseX = pixelPos.getX();
+					float baseY = pixelPos.getY() + (float)characterSize;
+					appendQuad(m_batch,
+						baseX + glyph.bounds.position.x - padding,
+						baseY + glyph.bounds.position.y - padding,
+						baseX + glyph.bounds.position.x + glyph.bounds.size.x + padding,
+						baseY + glyph.bounds.position.y + glyph.bounds.size.y + padding,
+						textColor,
+						(float)glyph.textureRect.position.x - padding,
+						(float)glyph.textureRect.position.y - padding,
+						(float)(glyph.textureRect.position.x + glyph.textureRect.size.x) + padding,
+						(float)(glyph.textureRect.position.y + glyph.textureRect.size.y) + padding);
+				}
 			}
 			
 			return 0;
@@ -382,6 +402,7 @@ namespace df {
 
 	int DisplayManager::swapBuffers() {
 		if (this->isStarted()) {
+			this->flush();
 			m_p_window->display();
 			m_p_window->clear(m_window_background_color);
 			return 0;
@@ -389,8 +410,22 @@ namespace df {
 		return -1;
 	}
 
+	int DisplayManager::flush() const {
+		if (this->isStarted()) {
+			if (m_batch.getVertexCount() > 0) {
+				sf::RenderStates states;
+				states.texture = &m_font.getTexture(m_batch_char_size);
+				m_p_window->draw(m_batch, states);
+				m_batch.clear();
+			}
+			return 0;
+		}
+		return -1;
+	}
+
 	int DisplayManager::clear() const {
 		if (this->isStarted()) {
+			m_batch.clear(); // anything drawn but not yet flushed is wiped too
 			m_p_window->clear(m_window_background_color);
 			return 0;
 		}

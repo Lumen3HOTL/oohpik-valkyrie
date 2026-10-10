@@ -156,7 +156,7 @@ void drawHighScoreTable(int top_row, int highlight_index) {
 
 	char row[64];
 	for (int i = 0; i < (int)scores.size(); i++) {
-		std::snprintf(row, sizeof(row), "%3d.    %3s   %5d   %6d   %7.2fs", i + 1, scores[i].name.c_str(),
+		std::snprintf(row, sizeof(row), "%3d.    %3s   %5d   %6d   %7.1fs", i + 1, scores[i].name.c_str(),
 			scores[i].seeds, scores[i].levels, scores[i].time);
 		df::Color color = (i == highlight_index) ? df::YELLOW : df::WHITE;
 		dm.drawString(df::Vector(left, top_row + 1 + i), row, df::LEFT_JUSTIFIED, color);

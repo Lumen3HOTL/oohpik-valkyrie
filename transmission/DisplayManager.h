@@ -68,6 +68,12 @@ namespace df {
 		Color m_window_background_color_df;
 		bool m_apply_camera;
 
+		// Background boxes and characters drawn since the last swapBuffers(), in drawing order.
+		// They're sent to the window in one draw call by flush(), which is far faster than one
+		// draw call per box and per character.
+		mutable sf::VertexArray m_batch;
+		mutable unsigned int m_batch_char_size; // character size the batch's glyphs come from
+
 	public:
 		// Get the one and only instance of the DisplayManager.
 			static DisplayManager& getInstance();
@@ -101,6 +107,11 @@ namespace df {
 			// Render current window buffer.
 			// Return 0 if ok, else -1.
 			int swapBuffers();
+
+			// Draw the characters batched so far into the window's buffer.
+			// swapBuffers() does this itself; call it only to read the window before then.
+			// Return 0 if ok, else -1.
+			int flush() const;
 			
 			std::uint32_t getCustomColor() const;
 

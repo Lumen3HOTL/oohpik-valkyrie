@@ -62,7 +62,7 @@ int GameOver::draw() {
     dm.drawString(df::Vector(57, 6), "seeds collected: " + std::to_string(m_seeds), df::CENTER_JUSTIFIED, df::WHITE);
     dm.drawString(df::Vector(57, 7), "maps completed: " + std::to_string(m_maps), df::CENTER_JUSTIFIED, df::WHITE);
     char time_text[32];
-    std::snprintf(time_text, sizeof(time_text), "time: %.2fs", m_time);
+    std::snprintf(time_text, sizeof(time_text), "time: %.1fs", m_time);
     dm.drawString(df::Vector(57, 8), time_text, df::CENTER_JUSTIFIED, df::WHITE);
 
     // Where this run landed in the high score table
