@@ -916,6 +916,56 @@ namespace ookpik {
 		return 0;
 	}
 
+	// True if every open tile and seed, apart from (skip_x, skip_y), can reach every other one
+	// moving up, down, left or right without passing through (skip_x, skip_y).
+	// placeExit() uses it so the exit never sits on the only way into part of the map.
+	static bool connectedWithout(const std::vector<std::vector<mapTileIds::mapTileId>>& map, int skip_x, int skip_y) {
+		int total = 0;
+		int start_x = -1;
+		int start_y = -1;
+		for (int x = 0; x < (int)map.size(); x++) {
+			for (int y = 0; y < (int)map[x].size(); y++) {
+				if ((x != skip_x || y != skip_y) && (map[x][y] == mapTileIds::EMPTY || map[x][y] == mapTileIds::SEED)) {
+					total++;
+					if (start_x < 0) {
+						start_x = x;
+						start_y = y;
+					}
+				}
+			}
+		}
+		if (total == 0) {
+			return true;
+		}
+
+		std::vector<std::vector<bool>> seen(map.size());
+		for (int x = 0; x < (int)map.size(); x++) {
+			seen[x].assign(map[x].size(), false);
+		}
+		const int dx[] = { 1, -1, 0, 0 };
+		const int dy[] = { 0, 0, 1, -1 };
+		std::vector<std::pair<int, int>> to_visit;
+		to_visit.push_back(std::make_pair(start_x, start_y));
+		seen[start_x][start_y] = true;
+		int reached = 0;
+		while (!to_visit.empty()) {
+			std::pair<int, int> tile = to_visit.back();
+			to_visit.pop_back();
+			reached++;
+			for (int d = 0; d < 4; d++) {
+				int nx = tile.first + dx[d];
+				int ny = tile.second + dy[d];
+				if (nx < 0 || nx >= (int)map.size() || ny < 0 || ny >= (int)map[nx].size() || (nx == skip_x && ny == skip_y) ||
+					seen[nx][ny] || !(map[nx][ny] == mapTileIds::EMPTY || map[nx][ny] == mapTileIds::SEED)) {
+					continue;
+				}
+				seen[nx][ny] = true;
+				to_visit.push_back(std::make_pair(nx, ny));
+			}
+		}
+		return reached == total;
+	}
+
 	int MapBuilder::placeExit(std::vector < std::vector < mapTileIds::mapTileId >> &map, mapTileIds::mapTileId open, mapTileIds::mapTileId exit) {
 		if (map.empty()) {
 			this->m_debug_harness->queueErrorMessage(std::string("placeExit: error 0 empty map!"));
@@ -923,26 +973,34 @@ namespace ookpik {
 			return -1;
 		}
 
-		df::Vector openPos = this->getRandomCoordOfValue(map, open);
+		// Open tiles in random order; the exit goes on the first one that doesn't cut any open
+		// tiles or seeds off from the rest, since stepping onto the exit ends the level
+		std::vector<df::Vector> candidates = this->getRandomCoordListOfValue(map, open);
 		if (this->getCurrentMode()==GenerationStages::GENERATION_ERROR) {
 			this->m_debug_harness->queueErrorMessage(std::string("placeExit: error 1 open coord generation failed!"));
 			return -1;
 		}
 
-		if ((((int)openPos.getX()) < 0) || (((int)openPos.getX()) >= map.size())) {
-			this->m_debug_harness->queueErrorMessage(std::string("placeExit: error 2 random open pos x invalid! values: pos x: ").append(std::to_string(((int)openPos.getX()))).append(" map x: ").append(std::to_string(map.size())).append("!"));
-			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
-			return -1;
-		}
-		if ((((int)openPos.getY()) < 0) || (((int)openPos.getY()) >= map.at(((int)openPos.getX())).size())) {
-			this->m_debug_harness->queueErrorMessage(std::string("placeExit: error 3 random open pos Y invalid! values: pos y: ").append(std::to_string(((int)openPos.getY()))).append(" map Y: ").append(std::to_string(map.at((int)openPos.getX()).size())).append("!"));
-			this->setCurrentMode(GenerationStages::GENERATION_ERROR);
-			return -1;
+		for (const df::Vector& openPos : candidates) {
+			if ((((int)openPos.getX()) < 0) || (((int)openPos.getX()) >= map.size())) {
+				this->m_debug_harness->queueErrorMessage(std::string("placeExit: error 2 random open pos x invalid! values: pos x: ").append(std::to_string(((int)openPos.getX()))).append(" map x: ").append(std::to_string(map.size())).append("!"));
+				this->setCurrentMode(GenerationStages::GENERATION_ERROR);
+				return -1;
+			}
+			if ((((int)openPos.getY()) < 0) || (((int)openPos.getY()) >= map.at(((int)openPos.getX())).size())) {
+				this->m_debug_harness->queueErrorMessage(std::string("placeExit: error 3 random open pos Y invalid! values: pos y: ").append(std::to_string(((int)openPos.getY()))).append(" map Y: ").append(std::to_string(map.at((int)openPos.getX()).size())).append("!"));
+				this->setCurrentMode(GenerationStages::GENERATION_ERROR);
+				return -1;
+			}
+			if (connectedWithout(map, (int)openPos.getX(), (int)openPos.getY())) {
+				map.at(((int)openPos.getX())).at((int)openPos.getY()) = exit;
+				return 0;
+			}
 		}
 
-
-		map.at(((int)openPos.getX())).at((int)openPos.getY()) = exit;
-		return 0;
+		this->m_debug_harness->queueErrorMessage(std::string("placeExit: error 4 every open tile would cut part of the map off!"));
+		this->setCurrentMode(GenerationStages::GENERATION_ERROR);
+		return -1;
 	}
 
 	

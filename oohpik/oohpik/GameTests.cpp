@@ -123,7 +123,8 @@ const df::Vector LEFT_EDGE_TILE(0, 15);
 
 const char* HIGH_SCORE_FILE = "highscores.csv";
 const char* HIGH_SCORE_BACKUP = "highscores.csv.testbackup";
-const char* HIGH_SCORE_HEADER = "seeds,levels,time\n";
+const char* HIGH_SCORE_HEADER = "name,seeds,levels,time\n";
+const char* OLD_HIGH_SCORE_HEADER = "seeds,levels,time\n"; // files saved before names existed
 
 unsigned long long step_count = 0;
 int probes_destroyed = 0;
@@ -364,8 +365,8 @@ int outsideWindowCount() {
 
 // Walk every tile the owl can hop to from start (trees block it; reaching the exit ends the
 // level, so it isn't walked through). Returns how many seeds the owl can't reach, and sets
-// exit_reached if the exit can be reached.
-int unreachableSeeds(df::Vector start, bool& exit_reached) {
+// exit_reached if the exit can be reached. If p_reached is given, it gets every tile reached.
+int unreachableSeeds(df::Vector start, bool& exit_reached, std::set<std::pair<int, int>>* p_reached = nullptr) {
 	df::DisplayManager& display = df::DisplayManager::getInstance();
 	std::set<std::pair<int, int>> trees;
 	df::ObjectList tree_list = WM.objectsOfType("Tree");
@@ -408,6 +409,9 @@ int unreachableSeeds(df::Vector start, bool& exit_reached) {
 		if (visited.count(tileOf(seed_list[i]->getPosition())) == 0) {
 			unreachable++;
 		}
+	}
+	if (p_reached != nullptr) {
+		*p_reached = visited;
 	}
 	return unreachable;
 }
@@ -577,9 +581,37 @@ void restoreHighScores() {
 std::string fullHighScoreFile() {
 	std::string contents = HIGH_SCORE_HEADER;
 	for (int seeds = 20; seeds > 20 - MAX_HIGH_SCORES; seeds--) {
-		contents += std::to_string(seeds) + ",0,1.00\n";
+		contents += "TST," + std::to_string(seeds) + ",0,1.00\n";
 	}
 	return contents;
+}
+
+// Type a string on the death screen's initials prompt, one key press per character
+void typeInitials(const std::string& text) {
+	for (char c : text) {
+		if (c >= 'A' && c <= 'Z') {
+			pressKey(static_cast<df::Keyboard::Key>(df::Keyboard::A + (c - 'A')));
+		}
+		else if (c >= '1' && c <= '9') {
+			pressKey(static_cast<df::Keyboard::Key>(df::Keyboard::NUM1 + (c - '1')));
+		}
+		else if (c == '0') {
+			pressKey(df::Keyboard::NUM0);
+		}
+	}
+}
+
+// Leave the death screen for the title screen the way a player would: wait out the input
+// delay, enter initials if the run made the table, then press a key
+void leaveDeathScreen() {
+	runFrames(DEATH_INPUT_DELAY);
+	GameOver* p_game_over = findGameOver();
+	if (p_game_over != nullptr && p_game_over->isEnteringName()) {
+		typeInitials("TST");
+		pressKey(df::Keyboard::RETURN);
+	}
+	pressKey(df::Keyboard::SPACE);
+	runFrame(); // the death screen returns to the title here
 }
 
 TestBatch runBatchNormal() {
@@ -781,12 +813,27 @@ TestBatch runBatchNormal() {
 		"time: " + std::to_string(p_game_over->getTime()));
 
 	// --- Logging high scores ---
-	batch.check(p_game_over->getRank() == 0, "the run is ranked first in an empty high score table",
+	batch.check(p_game_over->getRank() == 0, "the run would rank first in an empty high score table",
 		"rank: " + std::to_string(p_game_over->getRank()));
+	batch.check(p_game_over->isEnteringName(), "a top-10 run asks for the player's initials");
+	batch.check(loadHighScores().empty(), "the run isn't saved before the initials are entered",
+		"saved runs: " + std::to_string(loadHighScores().size()));
+
+	runFrames(DEATH_INPUT_DELAY);
+	typeInitials("ABX");
+	pressKey(df::Keyboard::BACKSPACE);
+	typeInitials("C");
+	batch.check(p_game_over->getName() == "ABC", "letters type the initials and backspace removes the last one",
+		"initials: " + p_game_over->getName());
+	pressKey(df::Keyboard::RETURN);
+	batch.check(!p_game_over->isEnteringName() && p_game_over->getRank() == 0, "enter saves the run with its initials",
+		"rank: " + std::to_string(p_game_over->getRank()));
+
 	std::vector<ScoreEntry> scores = loadHighScores();
-	batch.check(scores.size() == 1, "dying saves the run to the high score table",
+	batch.check(scores.size() == 1, "the run is saved to the high score table",
 		"saved runs: " + std::to_string(scores.size()));
 	if (scores.size() == 1) {
+		batch.check(scores[0].name == "ABC", "the saved run has the player's initials", "saved name: " + scores[0].name);
 		batch.check(scores[0].seeds == seeds_at_death && scores[0].levels == maps_at_death,
 			"the saved run has the run's seeds and levels",
 			"saved seeds: " + std::to_string(scores[0].seeds) + " levels: " + std::to_string(scores[0].levels));
@@ -1006,6 +1053,27 @@ TestBatch runBatchError() {
 		runFrames(2);
 		batch.check(findGameOver() != nullptr && findTitleScreen() == nullptr,
 			"death screen ignores keys pressed during its input delay");
+
+		// --- Initials prompt: keys that can't be part of a name ---
+		GameOver* p_name_game_over = findGameOver();
+		batch.check(p_name_game_over != nullptr && p_name_game_over->isEnteringName(),
+			"the run asks for initials (empty table)");
+		if (p_name_game_over != nullptr && p_name_game_over->isEnteringName()) {
+			runFrames(DEATH_INPUT_DELAY);
+			pressKey(df::Keyboard::SPACE);
+			pressKey(df::Keyboard::ESCAPE);
+			pressKey(df::Keyboard::PERIOD);
+			runFrame();
+			batch.check(p_name_game_over->isEnteringName() && p_name_game_over->getName().empty() &&
+				findGameOver() != nullptr && findTitleScreen() == nullptr,
+				"keys that aren't letters or numbers don't type initials or leave the prompt",
+				"initials: \"" + p_name_game_over->getName() + "\"");
+
+			typeInitials("AB");
+			pressKey(df::Keyboard::RETURN);
+			batch.check(p_name_game_over->isEnteringName() && loadHighScores().empty(),
+				"enter with fewer than 3 initials doesn't save the run");
+		}
 	}
 
 	// --- High score table: bad or missing data ---
@@ -1040,6 +1108,17 @@ TestBatch runBatchError() {
 	batch.check(loadHighScores().empty(), "refused runs aren't saved",
 		"rows saved: " + std::to_string(loadHighScores().size()));
 
+	// Names that aren't 3 capital letters or digits are saved as "---" (a comma would also break the file)
+	clearHighScores();
+	submitHighScore(ScoreEntry{ 3, 0, 5.0, "A,B" });
+	submitHighScore(ScoreEntry{ 2, 0, 5.0, "ABCD" });
+	submitHighScore(ScoreEntry{ 1, 0, 5.0, "ab1" });
+	std::vector<ScoreEntry> named = loadHighScores();
+	batch.check(named.size() == 3 && named[0].name == NO_HIGH_SCORE_NAME && named[1].name == NO_HIGH_SCORE_NAME &&
+		named[2].name == NO_HIGH_SCORE_NAME,
+		"names with a comma, the wrong length or lower case are saved as ---",
+		"rows: " + std::to_string(named.size()) + (named.empty() ? std::string() : " first name: " + named[0].name));
+
 	writeHighScoreFile(std::string(HIGH_SCORE_HEADER) +
 		"-3,1,2.00\n2,-1,2.00\n2,1,-2.00\n2,1,nan\n2,1,inf\n4,1,3.00\n");
 	loaded = loadHighScores();
@@ -1049,7 +1128,7 @@ TestBatch runBatchError() {
 	// --- Death screen: impossible totals ---
 	clearHighScores();
 	GameOver* p_bad_game_over = new GameOver(-5, -2, -1, -3.0);
-	batch.check(p_bad_game_over->getRank() == -1 && loadHighScores().empty(),
+	batch.check(p_bad_game_over->getRank() == -1 && !p_bad_game_over->isEnteringName() && loadHighScores().empty(),
 		"a death screen given negative totals doesn't record a high score",
 		"rank: " + std::to_string(p_bad_game_over->getRank()) + " rows saved: " + std::to_string(loadHighScores().size()));
 	WM.markForDelete(p_bad_game_over);
@@ -1207,6 +1286,21 @@ TestBatch runBatchEdgeCases() {
 		"the smallest allowed map builds with its seed and exit reachable", describeMapBuilder() +
 		", seeds: " + std::to_string(WM.objectsOfTypeCount("Seed")) + ", exits: " + std::to_string(WM.objectsOfTypeCount("mapExit")));
 
+	// Regression: these fixed seeds used to put the exit on the only way into part of the map,
+	// leaving seeds behind it that could never be collected (found with --mapscan)
+	const int EXIT_REGRESSION_SEEDS[] = { 6, 15, 54 };
+	for (int regression_seed : EXIT_REGRESSION_SEEDS) {
+		ookpik::MapGenConfig regression_config = makeMapConfig();
+		regression_config.setRandomSeed(regression_seed);
+		bool regression_built = buildTestMap(regression_config, p_test_owl);
+		bool regression_exit_reached = false;
+		int regression_unreachable = regression_built ?
+			unreachableSeeds(p_test_owl->getPosition(), regression_exit_reached) : -1;
+		std::string name = "map seed " + std::to_string(regression_seed) + " leaves every seed and the exit reachable";
+		batch.check(regression_built && regression_unreachable == 0 && regression_exit_reached, name.c_str(),
+			std::to_string(regression_unreachable) + " seeds unreachable, exit " + (regression_exit_reached ? "reachable" : "unreachable"));
+	}
+
 	// Starting a second map in the same frame as the first: only the second one is built
 	clearMap();
 	runFrame();
@@ -1339,14 +1433,19 @@ TestBatch runBatchEdgeCases() {
 			"collecting the last seed shows 0 remaining", statusDetail(p_hero, seeds_before + 1, 0, p_hero->getMoves(), 0));
 	}
 
-	// --- A blocked hop still counts as a move ---
-	// Documents current behaviour: Hero counts W as a move even when forward() refuses to move.
+	// --- Only real moves count: not a hop the window edge blocks, and not quitting ---
 	placeOwl(p_hero, LEFT_EDGE_TILE, FACING_LEFT);
 	int moves_before_blocked = p_hero->getMoves();
 	pressKey(df::Keyboard::W);
-	batch.check(samePosition(p_hero->getPosition(), LEFT_EDGE_TILE) && p_hero->getMoves() == moves_before_blocked + 1,
-		"a hop blocked by the window edge still counts as a move (current behaviour)",
+	batch.check(samePosition(p_hero->getPosition(), LEFT_EDGE_TILE) && p_hero->getMoves() == moves_before_blocked,
+		"a hop blocked by the window edge doesn't count as a move",
 		"moves before: " + std::to_string(moves_before_blocked) + " after: " + std::to_string(p_hero->getMoves()));
+
+	int moves_before_escape = p_hero->getMoves();
+	pressKey(df::Keyboard::ESCAPE);
+	batch.check(GM.getGameOver() && p_hero->getMoves() == moves_before_escape, "escape doesn't count as a move",
+		"moves before: " + std::to_string(moves_before_escape) + " after: " + std::to_string(p_hero->getMoves()));
+	GM.setGameOver(false); // keep testing
 
 	// --- Level Time restarts on a new map ---
 	runFrames(30); // let the level clock run for about a second
@@ -1365,9 +1464,7 @@ TestBatch runBatchEdgeCases() {
 			" after new map: " + std::to_string(time_after_exit));
 	}
 
-	// --- The death screen's move count ---
-	// Documents current behaviour: die() runs inside forward(), before eventHandler adds the
-	// hop to m_moves, so the fatal hop isn't in the death screen's total.
+	// --- The death screen's move count includes the fatal hop ---
 	df::Object* p_tree = findReachable(p_hero, "Tree", stand, facing);
 	batch.check(p_tree != nullptr, "found a tree the owl can fly into");
 	if (p_tree == nullptr) {
@@ -1379,15 +1476,30 @@ TestBatch runBatchEdgeCases() {
 	pressKey(df::Keyboard::W); // the owl is deleted at the end of this frame
 	p_hero = nullptr;
 	GameOver* p_game_over = findGameOver();
-	batch.check(p_game_over != nullptr && p_game_over->getMoves() == moves_before_fatal,
-		"death screen move count leaves out the fatal hop (current behaviour)",
+	batch.check(p_game_over != nullptr && p_game_over->getMoves() == moves_before_fatal + 1,
+		"death screen move count includes the fatal hop",
 		"moves before the fatal hop: " + std::to_string(moves_before_fatal) + " death screen: " +
 		std::to_string(p_game_over != nullptr ? p_game_over->getMoves() : -1));
 
+	// --- Initials: digits from both number rows, and limits on what can be typed ---
+	if (p_game_over != nullptr && p_game_over->isEnteringName()) {
+		runFrames(DEATH_INPUT_DELAY);
+		pressKey(df::Keyboard::BACKSPACE); // nothing to remove yet
+		pressKey(df::Keyboard::NUM7);
+		pressKey(df::Keyboard::NUMPAD4);
+		typeInitials("Z");
+		typeInitials("Q"); // a 4th character
+		batch.check(p_game_over->getName() == "74Z",
+			"initials take digits from either number row, and a 4th character is ignored",
+			"initials: " + p_game_over->getName());
+		pressKey(df::Keyboard::RETURN);
+		std::vector<ScoreEntry> digit_scores = loadHighScores();
+		batch.check(!digit_scores.empty() && digit_scores[0].name == "74Z", "initials made of digits are saved",
+			"saved name: " + (digit_scores.empty() ? std::string("none") : digit_scores[0].name));
+	}
+
 	// --- A second run starts from zero ---
-	runFrames(DEATH_INPUT_DELAY);
-	pressKey(df::Keyboard::SPACE);
-	runFrame();
+	leaveDeathScreen();
 	pressKey(df::Keyboard::P);
 	runFrame();
 	bool replay_loaded = waitForMap();
@@ -1412,9 +1524,13 @@ TestBatch runBatchEdgeCases() {
 			placeOwl(p_hero, stand, facing);
 			runFrame(df::Keyboard::W, df::KEY_PRESSED, 2); // the owl is deleted at the end of this frame
 			p_hero = nullptr;
-			std::vector<ScoreEntry> death_scores = loadHighScores();
 			batch.check(WM.objectsOfTypeCount("GameOver") == 1, "two hops into a tree in one frame give one death screen",
 				"death screens: " + std::to_string(WM.objectsOfTypeCount("GameOver")));
+			// Every death screen gets the same initials, so a second one would save a second row
+			runFrames(DEATH_INPUT_DELAY);
+			typeInitials("ZZZ");
+			pressKey(df::Keyboard::RETURN);
+			std::vector<ScoreEntry> death_scores = loadHighScores();
 			batch.check(death_scores.size() == 1, "two hops into a tree in one frame record one high score",
 				"rows saved: " + std::to_string(death_scores.size()));
 			batch.check(!death_scores.empty() && death_scores[0].seeds == 0 && death_scores[0].levels == 0,
@@ -1460,6 +1576,27 @@ TestBatch runBatchEdgeCases() {
 	batch.check((int)loadHighScores().size() == MAX_HIGH_SCORES, "only the top 10 rows of a longer file are loaded",
 		"rows loaded: " + std::to_string(loadHighScores().size()));
 
+	// --- High score names and older files ---
+	writeHighScoreFile(std::string(OLD_HIGH_SCORE_HEADER) + "9,2,30.00\r\n8,1,20.00\n");
+	std::vector<ScoreEntry> old_rows = loadHighScores();
+	batch.check(old_rows.size() == 2 && old_rows[0].name == NO_HIGH_SCORE_NAME && old_rows[1].seeds == 8,
+		"a table saved before names existed loads with --- names, including Windows line endings",
+		"rows loaded: " + std::to_string(old_rows.size()));
+
+	writeHighScoreFile(std::string(HIGH_SCORE_HEADER) + "ABC,9,2,30.00\n7,1,20.00\nab,5,0,1.00\n");
+	std::vector<ScoreEntry> mixed_rows = loadHighScores();
+	batch.check(mixed_rows.size() == 3 && mixed_rows[0].name == "ABC" && mixed_rows[1].name == NO_HIGH_SCORE_NAME &&
+		mixed_rows[2].name == NO_HIGH_SCORE_NAME,
+		"a table mixing named and unnamed rows loads every row, and a bad saved name shows as ---",
+		"rows loaded: " + std::to_string(mixed_rows.size()));
+
+	writeHighScoreFile(fullHighScoreFile());
+	GameOver* p_low_game_over = new GameOver(0, 0, 0, 99.0);
+	batch.check(p_low_game_over->getRank() == -1 && !p_low_game_over->isEnteringName(),
+		"a run that doesn't make the top 10 isn't asked for initials");
+	WM.markForDelete(p_low_game_over);
+	runFrame();
+
 	// --- Exiting: every object is deleted ---
 	// Empty the world first, so the probes are the only objects left when the engine shuts down
 	df::ObjectList everything = WM.getAllObjects();
@@ -1482,6 +1619,77 @@ TestBatch runBatchEdgeCases() {
 }  // namespace
 
 #ifdef _DEBUG
+int runMapScan(int first_seed, int last_seed) {
+	if (!startGame(false)) {
+		GM.shutDown();
+		return -1;
+	}
+	df::Object* p_owl = new df::Object(); // stands in for the owl; the builder only moves it
+	int bad_maps = 0;
+	for (int seed = first_seed; seed <= last_seed; seed++) {
+		clearMap();
+		WM.update();
+		ookpik::MapGenConfig config = makeMapConfig();
+		config.setRandomSeed(seed);
+		ookpik::MapBuilder* p_builder = new ookpik::MapBuilder();
+		p_builder->startGenerateMap(config, p_owl);
+		df::Clock wait_clock;
+		bool finished = false;
+		while (!finished && wait_clock.split() < 10000000LL) {
+			df::EventStep step(step_count++);
+			GM.onEvent(&step);
+			WM.update();
+			finished = p_builder->isMapBuildFinished();
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		}
+		if (!finished) {
+			std::printf("seed %d: map never finished\n", seed);
+			continue;
+		}
+
+		bool exit_reached = false;
+		std::set<std::pair<int, int>> reached;
+		int unreachable = unreachableSeeds(p_owl->getPosition(), exit_reached, &reached);
+		if (unreachable == 0 && exit_reached) {
+			continue;
+		}
+		bad_maps++;
+		std::printf("seed %d: %d of %d seeds unreachable, exit %s\n", seed, unreachable,
+			WM.objectsOfTypeCount("Seed"), exit_reached ? "reachable" : "unreachable");
+		if (bad_maps > 1) {
+			continue; // only the first bad map is drawn
+		}
+
+		// One character per tile: # tree, @ reachable seed, ! unreachable seed, E exit, O owl,
+		// space for open tiles the owl can reach, - for open tiles it can't
+		std::set<std::pair<int, int>> trees, seeds, exits;
+		const char* types[] = { "Tree", "Seed", "mapExit" };
+		std::set<std::pair<int, int>>* sets[] = { &trees, &seeds, &exits };
+		for (int t = 0; t < 3; t++) {
+			df::ObjectList objects = WM.objectsOfType(types[t]);
+			for (int i = 0; i < objects.getCount(); i++) {
+				sets[t]->insert(tileOf(objects[i]->getPosition()));
+			}
+		}
+		std::pair<int, int> owl = tileOf(p_owl->getPosition());
+		for (int y = 0; y < 30; y++) {
+			std::string line;
+			for (int x = 0; x < 115; x += 2) {
+				std::pair<int, int> tile = std::make_pair(x, y);
+				if (tile == owl) line += 'O';
+				else if (trees.count(tile)) line += '#';
+				else if (exits.count(tile)) line += 'E';
+				else if (seeds.count(tile)) line += reached.count(tile) ? '@' : '!';
+				else line += reached.count(tile) ? ' ' : '-';
+			}
+			std::printf("%2d |%s|\n", y, line.c_str());
+		}
+	}
+	GM.shutDown();
+	std::printf("map scan: %d of %d seeds built a map with something unreachable\n", bad_maps, last_seed - first_seed + 1);
+	return bad_maps;
+}
+
 int runMapStress(int maps) {
 	if (!startGame(false)) {
 		GM.shutDown();
@@ -1511,6 +1719,42 @@ int runMapStress(int maps) {
 	return stalled;
 }
 #endif
+
+// TEMP-PROFILE: build a normal map and time each part of the frame loop, then print averages
+int runFrameProfile(int frames) {
+	if (!startGame(false)) {
+		GM.shutDown();
+		return -1;
+	}
+	df::Object* p_owl = new df::Object();
+	if (!buildTestMap(makeMapConfig(), p_owl)) {
+		std::printf("map didn't build\n");
+		GM.shutDown();
+		return -1;
+	}
+	std::printf("objects in world: %d (trees %d, seeds %d, ground %d)\n", WM.AllObjectsCount(),
+		WM.objectsOfTypeCount("Tree"), WM.objectsOfTypeCount("Seed"), WM.objectsOfTypeCount("Ground"));
+
+	long long step_us = 0, update_us = 0, draw_us = 0, swap_us = 0;
+	df::Clock clock;
+	for (int frame = 0; frame < frames; frame++) {
+		clock.delta();
+		df::EventStep step(step_count++);
+		GM.onEvent(&step);
+		step_us += clock.delta();
+		WM.update();
+		update_us += clock.delta();
+		WM.draw();
+		draw_us += clock.delta();
+		df::DisplayManager::getInstance().swapBuffers();
+		swap_us += clock.delta();
+	}
+	std::printf("average per frame over %d frames (ms): step %.2f, update %.2f, draw %.2f, swap %.2f, total %.2f (budget 33)\n",
+		frames, step_us / 1000.0 / frames, update_us / 1000.0 / frames, draw_us / 1000.0 / frames, swap_us / 1000.0 / frames,
+		(step_us + update_us + draw_us + swap_us) / 1000.0 / frames);
+	GM.shutDown();
+	return 0;
+}
 
 int runGameTests() {
 	// Remove the last run's totals first, so a run that crashes leaves none instead of stale ones

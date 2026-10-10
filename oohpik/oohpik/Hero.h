@@ -6,6 +6,7 @@ class Hero : public df::Object {
 private:
     void turn(int delta);
     void forward();
+    void countMove();
     void updateFrame();
     void die();
 
@@ -38,6 +39,8 @@ private:
     df::Clock m_run_timer; // whole-run time for the high score table; never reset
 
     bool m_started;
+
+    bool m_dead; // set by die(); the owl is only removed at the end of the frame, so later input that frame is ignored
 
     bool m_move_had_sound; // set when a hop picked up a seed or reached the exit, so the plain hop sound is skipped
 

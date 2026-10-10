@@ -10,6 +10,25 @@
 #include "HighScores.h"
 #include <cstdio>
 
+namespace {
+    // The character a key types into the initials (A-Z, 0-9 on either number row), or 0 if none
+    char nameCharFor(df::Keyboard::Key key) {
+        if (key >= df::Keyboard::A && key <= df::Keyboard::Z) {
+            return (char)('A' + (key - df::Keyboard::A));
+        }
+        if (key >= df::Keyboard::NUM1 && key <= df::Keyboard::NUM9) {
+            return (char)('1' + (key - df::Keyboard::NUM1));
+        }
+        if (key == df::Keyboard::NUM0) {
+            return '0';
+        }
+        if (key >= df::Keyboard::NUMPAD0 && key <= df::Keyboard::NUMPAD9) {
+            return (char)('0' + (key - df::Keyboard::NUMPAD0));
+        }
+        return 0;
+    }
+}
+
 GameOver::GameOver(int moves, int seeds, int maps, double time) {
     setType("GameOver");
     setSolidness(df::SPECTRAL);
@@ -18,8 +37,10 @@ GameOver::GameOver(int moves, int seeds, int maps, double time) {
     m_maps = maps;
     m_time = time;
 
-    // Record the run once, when the death screen appears
-    m_rank = submitHighScore(ScoreEntry{ seeds, maps, time });
+    // A top-10 run asks for the player's initials; it's saved once they press enter
+    m_rank = rankHighScore(ScoreEntry{ seeds, maps, time });
+    m_entering_name = m_rank >= 0;
+    m_name = "";
     df::EventManager::getInstance().registerEvent(this, df::KEYBOARD_EVENT);
     df::EventManager::getInstance().registerEvent(this, df::STEP_EVENT);
 }
@@ -50,10 +71,27 @@ int GameOver::draw() {
     } else {
         dm.drawString(df::Vector(57, 10), "next time...", df::CENTER_JUSTIFIED, df::WHITE);
     }
-    dm.drawString(df::Vector(57, 12), "high scores", df::CENTER_JUSTIFIED, df::YELLOW);
-    drawHighScoreTable(13, m_rank);
 
-    dm.drawString(df::Vector(57, 26), "press any key to return to the title screen", df::CENTER_JUSTIFIED, df::WHITE);
+    if (m_entering_name) {
+        // Typed characters so far, then underscores for the rest, e.g. "A B _"
+        std::string shown;
+        for (int i = 0; i < HIGH_SCORE_NAME_LENGTH; i++) {
+            shown += (i < (int)m_name.length()) ? m_name[i] : '_';
+            if (i < HIGH_SCORE_NAME_LENGTH - 1) {
+                shown += ' ';
+            }
+        }
+        dm.drawString(df::Vector(57, 11), "your initials: " + shown, df::CENTER_JUSTIFIED, df::YELLOW);
+    }
+
+    dm.drawString(df::Vector(57, 12), "high scores", df::CENTER_JUSTIFIED, df::YELLOW);
+    drawHighScoreTable(13, m_entering_name ? -1 : m_rank); // the run isn't in the table until it's saved
+
+    if (m_entering_name) {
+        dm.drawString(df::Vector(57, 26), "type, backspace to fix, enter to save", df::CENTER_JUSTIFIED, df::WHITE);
+    } else {
+        dm.drawString(df::Vector(57, 26), "press any key to return to the title screen", df::CENTER_JUSTIFIED, df::WHITE);
+    }
     return 0;
 }
 
@@ -73,6 +111,30 @@ int GameOver::eventHandler(const df::Event* p_e) {
     }
     if (p_e->getType() == df::KEYBOARD_EVENT && static_cast<const df::EventKeyboard*>(p_e)->getKeyboardAction() == df::KEY_PRESSED) {
         if (m_death_input_delay > 0) return 0; // too soon after death
+        df::Keyboard::Key key = static_cast<const df::EventKeyboard*>(p_e)->getKey();
+
+        if (m_entering_name) {
+            char typed = nameCharFor(key);
+            if (typed != 0) {
+                if ((int)m_name.length() < HIGH_SCORE_NAME_LENGTH) {
+                    m_name += typed;
+                }
+                return 1;
+            }
+            if (key == df::Keyboard::BACKSPACE) {
+                if (!m_name.empty()) {
+                    m_name.pop_back();
+                }
+                return 1;
+            }
+            if (key == df::Keyboard::RETURN && (int)m_name.length() == HIGH_SCORE_NAME_LENGTH) {
+                m_rank = submitHighScore(ScoreEntry{ m_seeds, m_maps, m_time, m_name });
+                m_entering_name = false;
+                return 1;
+            }
+            return 0; // other keys don't leave the screen before the run is saved
+        }
+
         m_return_pending = true;
         return 1;
     }

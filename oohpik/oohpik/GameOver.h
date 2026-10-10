@@ -7,6 +7,8 @@ class GameOver : public df::Object {
     int m_maps;  // maps completed (exits reached)
     double m_time; // length of the run, in seconds
     int m_rank;    // position in the high score table (0 = best), -1 if it doesnt make the top 10
+    bool m_entering_name; // true while a top-10 run is waiting for the player's initials
+    std::string m_name;   // initials typed so far
     int m_death_input_delay = 30;
     bool m_return_pending = false; // a key was pressed; go back to the title screen on the next step
 public:
@@ -20,5 +22,7 @@ public:
     int getMaps() const { return m_maps; }
     double getTime() const { return m_time; }
     int getRank() const { return m_rank; }
+    bool isEnteringName() const { return m_entering_name; }
+    std::string getName() const { return m_name; }
 
 };
