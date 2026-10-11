@@ -54,6 +54,9 @@
     <ClCompile Include="MapExit.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Enemy.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="CoordinatePair.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -104,6 +107,9 @@
     <ClInclude Include="MapExit.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Enemy.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="CoordinatePair.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -137,6 +143,9 @@
       <Filter>Resource Files\Sprites</Filter>
     </None>
     <None Include="Resources\Sprites\exit.sprite">
+      <Filter>Resource Files\Sprites</Filter>
+    </None>
+    <None Include="Resources\Sprites\enemy.sprite">
       <Filter>Resource Files\Sprites</Filter>
     </None>
     <None Include="Resources\Sounds\death.wav">

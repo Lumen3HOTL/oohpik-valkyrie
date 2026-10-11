@@ -6,6 +6,10 @@
 // While W (or space) is held, the owl hops again every this many steps (6 at 30 fps = 0.2 s)
 const int HOLD_REPEAT_STEPS = 6;
 
+// A W (or space) press only hops if at least this many steps have passed since the last hop
+// (3 at 30 fps = 0.1 s); a press sooner than that is ignored. Turning isn't limited.
+const int MANUAL_HOP_STEPS = 3;
+
 class Hero : public df::Object {
 private:
     void turn(int delta);
@@ -48,6 +52,7 @@ private:
 
     bool m_forward_held; // W (or space) is being held down: keep hopping
     int m_hold_steps;    // steps since the last hop while held
+    int m_steps_since_hop; // steps since the last hop, for MANUAL_HOP_STEPS
 
     bool m_move_had_sound; // set when a hop picked up a seed or reached the exit, so the plain hop sound is skipped
 

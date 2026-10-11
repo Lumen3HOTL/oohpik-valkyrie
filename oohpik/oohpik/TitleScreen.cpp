@@ -194,7 +194,7 @@ void TitleScreen::drawControls() {
 
 	dm.drawString(df::Vector(CENTER_X, 13), "you are the owl (^ > v <), pointing the way you face.", df::CENTER_JUSTIFIED, df::WHITE);
 	dm.drawString(df::Vector(CENTER_X, 14), "you can only hop forward one tile, or turn on the spot.", df::CENTER_JUSTIFIED, df::WHITE);
-	dm.drawString(df::Vector(CENTER_X, 16), "collect the seeds (@) and avoid the trees (#): flying into one is fatal.", df::CENTER_JUSTIFIED, df::WHITE);
+	dm.drawString(df::Vector(CENTER_X, 16), "collect the seeds (@) and avoid the trees (#) and poisonous bugs ( }{ ): flying into either is fatal.", df::CENTER_JUSTIFIED, df::WHITE);
 	dm.drawString(df::Vector(CENTER_X, 17), "reach the exit (E) to move on to a new forest.", df::CENTER_JUSTIFIED, df::WHITE);
 
 	dm.drawString(df::Vector(CENTER_X, 22), "press any key to return", df::CENTER_JUSTIFIED, df::WHITE);

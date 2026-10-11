@@ -34,6 +34,7 @@
 #include "MapBuilder.h"
 #include "Seed.h"
 #include "MapExit.h"
+#include "Enemy.h"
 
 #include <algorithm>
 #include <chrono>
@@ -43,6 +44,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <limits>
+#include <map>
 #include <set>
 #include <sstream>
 #include <string>
@@ -157,6 +159,7 @@ bool startGame(bool append_log) {
 	loaded = RM.loadSprite("Resources/Sprites/tree.sprite", "tree") == 0 && loaded;
 	loaded = RM.loadSprite("Resources/Sprites/seed.sprite", "seed") == 0 && loaded;
 	loaded = RM.loadSprite("Resources/Sprites/exit.sprite", "exit") == 0 && loaded;
+	loaded = RM.loadSprite("Resources/Sprites/enemy.sprite", "enemy") == 0 && loaded;
 	return loaded;
 }
 
@@ -282,10 +285,10 @@ std::string describeMapBuilder() {
 		", build finished: " + (p_builder->isMapBuildFinished() ? "yes" : "no");
 }
 
-// Number of trees, ground tiles, seeds and exits in the world
+// Number of trees, ground tiles, seeds, exits and enemies in the world
 int mapObjectCount() {
 	return WM.objectsOfTypeCount("Tree") + WM.objectsOfTypeCount("Ground") +
-		WM.objectsOfTypeCount("Seed") + WM.objectsOfTypeCount("mapExit");
+		WM.objectsOfTypeCount("Seed") + WM.objectsOfTypeCount("mapExit") + WM.objectsOfTypeCount("Enemy");
 }
 
 // Frames a map builder with a bad config gets to try (and retry) before the test checks it
@@ -535,6 +538,39 @@ df::Object* findSeedToHopOver(Hero* p_hero, df::Vector& stand, int& facing) {
 	return nullptr;
 }
 
+// Fewest hops between two tiles along tiles without trees, or -1 if there's no way through
+int hopsBetween(df::Vector from, df::Vector to) {
+	df::DisplayManager& display = df::DisplayManager::getInstance();
+	std::set<std::pair<int, int>> trees;
+	df::ObjectList tree_list = WM.objectsOfType("Tree");
+	for (int i = 0; i < tree_list.getCount(); i++) {
+		trees.insert(std::make_pair((int)std::lround(tree_list[i]->getPosition().getX()),
+			(int)std::lround(tree_list[i]->getPosition().getY())));
+	}
+	std::pair<int, int> start((int)std::lround(from.getX()), (int)std::lround(from.getY()));
+	std::pair<int, int> goal((int)std::lround(to.getX()), (int)std::lround(to.getY()));
+	std::map<std::pair<int, int>, int> hops;
+	std::vector<std::pair<int, int>> frontier;
+	hops[start] = 0;
+	frontier.push_back(start);
+	for (size_t next_index = 0; next_index < frontier.size(); next_index++) {
+		std::pair<int, int> tile = frontier[next_index];
+		if (tile == goal) {
+			return hops[tile];
+		}
+		for (int dir = 0; dir < 4; dir++) {
+			std::pair<int, int> next(tile.first + HOP_X[dir], tile.second + HOP_Y[dir]);
+			if (next.first < 0 || next.second < 0 || next.first >= display.getHorizontal() || next.second >= display.getVertical() ||
+				trees.count(next) > 0 || hops.count(next) > 0) {
+				continue;
+			}
+			hops[next] = hops[tile] + 1;
+			frontier.push_back(next);
+		}
+	}
+	return -1;
+}
+
 // Find a tile and direction with `length` free tiles in a straight line ahead of it, for
 // watching several hops in a row. Sets stand and facing, or returns false.
 bool findStraightRun(Hero* p_hero, int length, df::Vector& stand, int& facing) {
@@ -569,10 +605,12 @@ void turnOwl(Hero* p_hero, int facing) {
 	}
 }
 
-// Move the owl straight to a tile (no hop, so no collisions), then turn it to face a direction
+// Move the owl straight to a tile (no hop, so no collisions), turn it to face a direction,
+// and wait out the 0.1 s hop limit so the next W press hops
 void placeOwl(Hero* p_hero, df::Vector stand, int facing) {
 	p_hero->setPosition(stand);
 	turnOwl(p_hero, facing);
+	runFrames(MANUAL_HOP_STEPS);
 }
 
 // --- Reading what's shown ---
@@ -766,6 +804,8 @@ TestBatch runBatchNormal() {
 	batch.check(statusShows(p_hero, 0, seeds_on_map, 0, 0),
 		"status line starts at 0 seeds, every seed remaining, 0 moves, 0 maps",
 		statusDetail(p_hero, 0, seeds_on_map, 0, 0));
+	batch.check(WM.objectsOfTypeCount("Enemy") == 0, "level 1 has no enemy",
+		"enemies: " + std::to_string(WM.objectsOfTypeCount("Enemy")));
 
 	// Level Time is shown as seconds with one decimal place, e.g. "Level Time: 1.4 second(s)"
 	std::string status = p_hero->getStatusLine();
@@ -840,6 +880,31 @@ TestBatch runBatchNormal() {
 			" expected " + describe(run_end));
 	}
 
+	// --- Tapping W can't hop more often than every MANUAL_HOP_STEPS frames (0.1 s) ---
+	found_run = findStraightRun(p_hero, 2, run_start, run_facing);
+	batch.check(found_run, "found two free tiles in a row to tap W along");
+	if (found_run) {
+		placeOwl(p_hero, run_start, run_facing);
+		int moves_before_taps = p_hero->getMoves();
+		pressKey(df::Keyboard::W); // hops
+		int hops_first_tap = p_hero->getMoves() - moves_before_taps;
+		pressKey(df::Keyboard::W); // 1 frame later: too soon
+		pressKey(df::Keyboard::W); // 2 frames later: too soon
+		int hops_too_soon = p_hero->getMoves() - moves_before_taps;
+		pressKey(df::Keyboard::W); // 3 frames (0.1 s) later: hops
+		int hops_after_limit = p_hero->getMoves() - moves_before_taps;
+		df::Vector two_tiles_on(run_start.getX() + HOP_X[run_facing] * 2, run_start.getY() + HOP_Y[run_facing] * 2);
+
+		batch.check(hops_first_tap == 1 && hops_too_soon == 1,
+			"W taps within 0.1 s of a hop are ignored",
+			"hops after the first tap: " + std::to_string(hops_first_tap) + ", after two more quick taps: " +
+			std::to_string(hops_too_soon));
+		batch.check(hops_after_limit == 2 && samePosition(p_hero->getPosition(), two_tiles_on),
+			"a W tap 0.1 s after a hop hops again",
+			"hops: " + std::to_string(hops_after_limit) + ", owl at " + describe(p_hero->getPosition()) +
+			" expected " + describe(two_tiles_on));
+	}
+
 	// --- Collecting seeds ---
 	df::Vector stand;
 	int facing = 0;
@@ -899,6 +964,49 @@ TestBatch runBatchNormal() {
 		batch.check(statusShows(p_hero, seeds_before, new_seeds, p_hero->getMoves(), 1),
 			"status line shows 1 map completed and the new map's seeds",
 			statusDetail(p_hero, seeds_before, new_seeds, p_hero->getMoves(), 1));
+
+		// --- Level 2: one enemy, spawned well away from the owl, stepping once a second ---
+		batch.check(WM.objectsOfTypeCount("Enemy") == 1, "level 2 has one enemy",
+			"enemies: " + std::to_string(WM.objectsOfTypeCount("Enemy")));
+		df::Object* p_enemy = findNewest("Enemy");
+		if (p_enemy != nullptr) {
+			int enemy_hops = hopsBetween(p_hero->getPosition(), p_enemy->getPosition());
+			batch.check(enemy_hops >= ENEMY_SPAWN_MIN_HOPS, "the enemy spawns at least 10 hops from the owl",
+				"hops from the owl: " + std::to_string(enemy_hops));
+			int enemy_interval = static_cast<ookpik::Enemy*>(p_enemy)->getMoveInterval();
+			batch.check(enemy_interval == enemyMoveStepsForLevel(2), "the level 2 enemy uses level 2's move interval (30 frames)",
+				"interval: " + std::to_string(enemy_interval));
+			df::ObjectList under_enemy = WM.getCollisions(p_enemy, p_enemy->getPosition());
+			bool enemy_on_free_tile = true;
+			for (int i = 0; i < under_enemy.getCount(); i++) {
+				if (under_enemy[i]->getType() == "Tree" || under_enemy[i]->getType() == "Seed" || under_enemy[i]->getType() == "mapExit") {
+					enemy_on_free_tile = false;
+				}
+			}
+			batch.check(enemy_on_free_tile, "the enemy spawns on a free tile (no tree, seed or exit)",
+				"enemy at " + describe(p_enemy->getPosition()));
+
+			// Wait for one move so the timing starts from a known point, then time the next one
+			df::Vector enemy_start = p_enemy->getPosition();
+			int frames_to_first_move = 0;
+			while (samePosition(p_enemy->getPosition(), enemy_start) && frames_to_first_move <= ookpik::ENEMY_MOVE_STEPS) {
+				runFrame();
+				frames_to_first_move++;
+			}
+			df::Vector after_first_move = p_enemy->getPosition();
+			runFrames(ookpik::ENEMY_MOVE_STEPS - 1);
+			bool still_before_second = samePosition(p_enemy->getPosition(), after_first_move);
+			runFrame();
+			df::Vector after_second_move = p_enemy->getPosition();
+			float step_x = std::fabs(after_second_move.getX() - after_first_move.getX());
+			float step_y = std::fabs(after_second_move.getY() - after_first_move.getY());
+			bool one_tile = (step_x == 2 && step_y == 0) || (step_x == 0 && step_y == 1);
+			batch.check(frames_to_first_move <= ookpik::ENEMY_MOVE_STEPS && still_before_second && one_tile,
+				"the enemy steps one tile every 30 frames (1 s)",
+				"frames to first move: " + std::to_string(frames_to_first_move) + ", waited 29 more frames: " +
+				(still_before_second ? "didn't move" : "moved") + ", then moved from " + describe(after_first_move) +
+				" to " + describe(after_second_move));
+		}
 	}
 
 	// --- Dying ---
@@ -921,6 +1029,22 @@ TestBatch runBatchNormal() {
 		GM.shutDown();
 		return batch;
 	}
+
+	// Regression: enemies (same default altitude) could be drawn over the death screen's panel.
+	// Objects are drawn lowest altitude first, so the death screen must be above everything left.
+	int drawn_above = 0;
+	std::string above_types;
+	df::ObjectList everything_left = WM.getAllObjects();
+	for (int i = 0; i < everything_left.getCount(); i++) {
+		if (everything_left[i] != p_game_over && everything_left[i]->getAltitude() >= p_game_over->getAltitude()) {
+			drawn_above++;
+			above_types += " " + everything_left[i]->getType();
+		}
+	}
+	batch.check(drawn_above == 0 && WM.objectsOfTypeCount("Enemy") > 0,
+		"the death screen is drawn above everything else, enemies included",
+		"enemies on the map: " + std::to_string(WM.objectsOfTypeCount("Enemy")) + ", objects at or above its altitude: " +
+		std::to_string(drawn_above) + above_types);
 	batch.check(p_game_over->getSeeds() == seeds_at_death, "death screen shows the seeds collected",
 		"expected " + std::to_string(seeds_at_death) + " actual " + std::to_string(p_game_over->getSeeds()));
 	batch.check(p_game_over->getMaps() == maps_at_death, "death screen shows the maps completed",
@@ -1156,15 +1280,38 @@ TestBatch runBatchError() {
 	WM.markForDelete(p_exit);
 	runFrame();
 
-	// --- Death screen: keys pressed too soon are ignored ---
+	// --- Enemies: bad level numbers, and nowhere to go ---
+	batch.check(enemyCountForLevel(0) == 0 && enemyCountForLevel(-3) == 0, "level 0 or a negative level has no enemies");
+
+	ookpik::Enemy* p_stuck_enemy = new ookpik::Enemy();
+	df::Vector far_away(200, 200); // every neighbouring tile is outside the window
+	p_stuck_enemy->setPosition(far_away);
+	bool stuck_moved = p_stuck_enemy->moveOnce();
+	batch.check(!stuck_moved && samePosition(p_stuck_enemy->getPosition(), far_away),
+		"an enemy with nowhere to go stays put", "enemy at " + describe(p_stuck_enemy->getPosition()));
+
+	p_stuck_enemy->setMoveInterval(0);
+	p_stuck_enemy->setMoveInterval(-5);
+	batch.check(p_stuck_enemy->getMoveInterval() == ookpik::ENEMY_MOVE_STEPS && enemyMoveStepsForLevel(-3) == ookpik::ENEMY_MOVE_STEPS,
+		"an enemy move interval below 1 is ignored, and a bad level number gives the normal interval",
+		"interval: " + std::to_string(p_stuck_enemy->getMoveInterval()));
+	WM.markForDelete(p_stuck_enemy);
+	runFrame();
+
+	// --- An enemy moving onto the owl kills it (then: death screen keys pressed too soon are ignored) ---
 	df::Vector stand;
 	int facing = 0;
-	df::Object* p_tree = findReachable(p_hero, "Tree", stand, facing);
-	batch.check(p_tree != nullptr, "found a tree the owl can fly into");
-	if (p_tree != nullptr) {
+	bool found_spot = findStraightRun(p_hero, 1, stand, facing);
+	batch.check(found_spot, "found a free tile with a free tile next to it");
+	if (found_spot) {
 		placeOwl(p_hero, stand, facing);
-		pressKey(df::Keyboard::W); // the owl is deleted at the end of this frame
+		ookpik::Enemy* p_attacker = new ookpik::Enemy();
+		p_attacker->setPosition(df::Vector(stand.getX() + HOP_X[facing], stand.getY() + HOP_Y[facing]));
+		WM.moveObject(p_attacker, p_hero->getPosition()); // the enemy steps onto the owl
+		runFrame(); // the owl is deleted at the end of this frame
 		p_hero = nullptr;
+		batch.check(WM.objectsOfTypeCount("Hero") == 0 && findGameOver() != nullptr, "an enemy moving onto the owl kills it",
+			"owls left: " + std::to_string(WM.objectsOfTypeCount("Hero")));
 		pressKey(df::Keyboard::SPACE);
 		runFrames(2);
 		batch.check(findGameOver() != nullptr && findTitleScreen() == nullptr,
@@ -1358,6 +1505,32 @@ TestBatch runBatchEdgeCases() {
 		GM.getFrameTime(), WM.AllObjectsCount());
 	batch.check(frame_times.total() < GM.getFrameTime(), "a frame with a full map fits in the frame time", frame_detail);
 
+	// A fast enemy (the fastest interval, 9 frames) really steps every 9 frames
+	int fast_spawned = spawnEnemies(1, ENEMY_FASTEST_MOVE_STEPS, p_test_owl);
+	ookpik::Enemy* p_fast_enemy = static_cast<ookpik::Enemy*>(findNewest("Enemy"));
+	if (fast_spawned == 1 && p_fast_enemy != nullptr) {
+		df::Vector fast_start = p_fast_enemy->getPosition();
+		int frames_to_first = 0;
+		while (samePosition(p_fast_enemy->getPosition(), fast_start) && frames_to_first <= ENEMY_FASTEST_MOVE_STEPS) {
+			runFrame();
+			frames_to_first++;
+		}
+		df::Vector fast_after_first = p_fast_enemy->getPosition();
+		runFrames(ENEMY_FASTEST_MOVE_STEPS - 1);
+		bool fast_waited = samePosition(p_fast_enemy->getPosition(), fast_after_first);
+		runFrame();
+		bool fast_moved = !samePosition(p_fast_enemy->getPosition(), fast_after_first);
+		batch.check(p_fast_enemy->getMoveInterval() == ENEMY_FASTEST_MOVE_STEPS && frames_to_first <= ENEMY_FASTEST_MOVE_STEPS &&
+			fast_waited && fast_moved,
+			"an enemy spawned at the fastest interval steps every 9 frames (0.3 s)",
+			"interval: " + std::to_string(p_fast_enemy->getMoveInterval()) + ", frames to first move: " +
+			std::to_string(frames_to_first) + ", still after 8 more: " + (fast_waited ? "yes" : "no") +
+			", moved on the 9th: " + (fast_moved ? "yes" : "no"));
+	}
+	else {
+		batch.check(false, "an enemy spawned at the fastest interval steps every 9 frames (0.3 s)", "the enemy didn't spawn");
+	}
+
 	// Range ends: min == max must give exactly that many seeds
 	ookpik::MapGenConfig exact_config = makeMapConfig();
 	exact_config.setMinSeeds(20);
@@ -1513,7 +1686,7 @@ TestBatch runBatchEdgeCases() {
 			statusDetail(p_hero, 1, seeds_left - 1, p_hero->getMoves(), 0));
 	}
 
-	// --- Two hops in one frame straight over a seed: it's collected once and the owl lands past it ---
+	// --- Two W presses in one frame: the 0.1 s hop limit lets only the first one hop ---
 	df::Object* p_hop_seed = findSeedToHopOver(p_hero, stand, facing);
 	batch.check(p_hop_seed != nullptr, "found a seed with free tiles before and after it");
 	if (p_hop_seed != nullptr) {
@@ -1524,12 +1697,25 @@ TestBatch runBatchEdgeCases() {
 		int moves_before = p_hero->getMoves();
 		runFrame(df::Keyboard::W, df::KEY_PRESSED, 2);
 		sendKeyboardEvent(df::Keyboard::W, df::KEY_RELEASED); // let go, so W isn't left held
-		batch.check(p_hero->getSeeds() == seeds_before + 1 && samePosition(p_hero->getPosition(), beyond) &&
-			p_hero->getMoves() == moves_before + 2,
-			"two hops in one frame over a seed collect it once and land past it",
+		batch.check(p_hero->getSeeds() == seeds_before + 1 && samePosition(p_hero->getPosition(), seed_position) &&
+			p_hero->getMoves() == moves_before + 1,
+			"two W presses in one frame hop once, onto the seed, collecting it once",
 			"seeds: " + std::to_string(seeds_before) + " -> " + std::to_string(p_hero->getSeeds()) +
-			", owl at " + describe(p_hero->getPosition()) + " expected " + describe(beyond));
+			", owl at " + describe(p_hero->getPosition()) + " expected " + describe(seed_position));
+
+		runFrames(MANUAL_HOP_STEPS);
+		pressKey(df::Keyboard::W);
+		batch.check(samePosition(p_hero->getPosition(), beyond) && p_hero->getSeeds() == seeds_before + 1,
+			"a press 0.1 s later hops on past the collected seed",
+			"owl at " + describe(p_hero->getPosition()) + " expected " + describe(beyond));
 	}
+
+	// --- Turning isn't limited: A and D on back-to-back frames both turn ---
+	int direction_before_turns = p_hero->getDirection();
+	pressKey(df::Keyboard::D);
+	pressKey(df::Keyboard::D);
+	batch.check(p_hero->getDirection() == (direction_before_turns + 2) % 4, "turns on back-to-back frames both happen",
+		"facing " + std::to_string(direction_before_turns) + " -> " + std::to_string(p_hero->getDirection()));
 
 	// --- The other window edges block hops too (the left edge is in the Errors batch) ---
 	const df::Vector EDGE_TILES[] = { df::Vector(57, 0), df::Vector(114, 15), df::Vector(57, 29) };
@@ -1609,18 +1795,89 @@ TestBatch runBatchEdgeCases() {
 		releaseKey(df::Keyboard::W);
 	}
 
-	// --- The death screen's move count includes the fatal hop ---
-	df::Object* p_tree = findReachable(p_hero, "Tree", stand, facing);
-	batch.check(p_tree != nullptr, "found a tree the owl can fly into");
-	if (p_tree == nullptr) {
+	// --- Enemies per level ---
+	batch.check(enemyCountForLevel(1) == 0 && enemyCountForLevel(2) == 1 && enemyCountForLevel(3) == 1 &&
+		enemyCountForLevel(4) == 2 && enemyCountForLevel(5) == 2 && enemyCountForLevel(6) == 3 && enemyCountForLevel(20) == 3,
+		"enemies per level: none on 1, 1 on 2-3, 2 on 4-5, then 3 at most");
+	batch.check(enemyMoveStepsForLevel(2) == 30 && enemyMoveStepsForLevel(4) == 30 && enemyMoveStepsForLevel(5) == 27 &&
+		enemyMoveStepsForLevel(7) == 27 && enemyMoveStepsForLevel(8) == 24 && enemyMoveStepsForLevel(20) == 12 &&
+		enemyMoveStepsForLevel(22) == 12 && enemyMoveStepsForLevel(23) == 9 && enemyMoveStepsForLevel(100) == 9,
+		"enemies step 3 frames (0.1 s) sooner every 3 levels from level 2, never faster than every 9 frames (0.3 s)",
+		"levels 2, 5, 8, 23: " + std::to_string(enemyMoveStepsForLevel(2)) + ", " + std::to_string(enemyMoveStepsForLevel(5)) +
+		", " + std::to_string(enemyMoveStepsForLevel(8)) + ", " + std::to_string(enemyMoveStepsForLevel(23)));
+
+	// --- Level 2's enemy: where it can go ---
+	ookpik::Enemy* p_level_enemy = static_cast<ookpik::Enemy*>(findNewest("Enemy"));
+	batch.check(p_level_enemy != nullptr, "level 2 has an enemy to test with");
+	if (p_level_enemy == nullptr) {
+		GM.shutDown();
+		return batch;
+	}
+	placeOwl(p_hero, df::Vector(200, 200), 0); // out of the enemy's reach while it wanders
+
+	int landed_on_tree = 0;
+	int left_window = 0;
+	for (int step = 0; step < 50; step++) {
+		p_level_enemy->moveOnce();
+		df::ObjectList under = WM.getCollisions(p_level_enemy, p_level_enemy->getPosition());
+		for (int i = 0; i < under.getCount(); i++) {
+			landed_on_tree += under[i]->getType() == "Tree" ? 1 : 0;
+		}
+		df::Vector at = p_level_enemy->getPosition();
+		df::DisplayManager& display = df::DisplayManager::getInstance();
+		bool inside = at.getX() >= 0 && at.getY() >= 0 && at.getX() < display.getHorizontal() && at.getY() < display.getVertical();
+		left_window += inside ? 0 : 1;
+	}
+	batch.check(landed_on_tree == 0 && left_window == 0, "50 random enemy steps never land on a tree or leave the window",
+		"on a tree: " + std::to_string(landed_on_tree) + ", outside the window: " + std::to_string(left_window));
+
+	df::Object* p_walk_seed = findReachable(p_hero, "Seed", stand, facing);
+	if (p_walk_seed != nullptr) {
+		df::Vector seed_position = p_walk_seed->getPosition();
+		int seeds_on_map_before = WM.objectsOfTypeCount("Seed");
+		int owl_seeds_before = p_hero->getSeeds();
+		p_level_enemy->setPosition(stand);
+		WM.moveObject(p_level_enemy, seed_position);
+		runFrame();
+		batch.check(samePosition(p_level_enemy->getPosition(), seed_position) &&
+			WM.objectsOfTypeCount("Seed") == seeds_on_map_before && p_hero->getSeeds() == owl_seeds_before,
+			"the enemy walks over a seed without collecting it",
+			"enemy at " + describe(p_level_enemy->getPosition()) + ", seeds on map: " +
+			std::to_string(seeds_on_map_before) + " -> " + std::to_string(WM.objectsOfTypeCount("Seed")));
+	}
+
+	p_exit = findReachable(p_hero, "mapExit", stand, facing);
+	if (p_exit != nullptr) {
+		df::Vector exit_position = p_exit->getPosition();
+		df::Object* p_builder_before = findNewest("mapBuilder");
+		int maps_before = p_hero->getMaps();
+		p_level_enemy->setPosition(stand);
+		WM.moveObject(p_level_enemy, exit_position);
+		runFrame();
+		batch.check(samePosition(p_level_enemy->getPosition(), exit_position) && p_hero->getMaps() == maps_before &&
+			findNewest("mapBuilder") == p_builder_before && WM.objectsOfTypeCount("mapExit") == 1,
+			"the enemy walks over the exit without starting a new map",
+			"enemy at " + describe(p_level_enemy->getPosition()) + ", maps: " + std::to_string(maps_before) +
+			" -> " + std::to_string(p_hero->getMaps()));
+	}
+
+	// --- Hopping into an enemy kills the owl, and the death screen counts that fatal hop ---
+	// The enemy is put right in front of the owl and W is sent at once, so its own step can't move it away first
+	bool found_spot = findStraightRun(p_hero, 1, stand, facing);
+	batch.check(found_spot, "found a free tile with a free tile next to it");
+	if (!found_spot) {
 		GM.shutDown();
 		return batch;
 	}
 	placeOwl(p_hero, stand, facing);
+	p_level_enemy->setPosition(df::Vector(stand.getX() + HOP_X[facing], stand.getY() + HOP_Y[facing]));
 	int moves_before_fatal = p_hero->getMoves();
-	pressKey(df::Keyboard::W); // the owl is deleted at the end of this frame
+	sendKeyboardEvent(df::Keyboard::W, df::KEY_PRESSED);
+	sendKeyboardEvent(df::Keyboard::W, df::KEY_RELEASED);
+	runFrame(); // the owl is deleted at the end of this frame
 	p_hero = nullptr;
 	GameOver* p_game_over = findGameOver();
+	batch.check(p_game_over != nullptr && WM.objectsOfTypeCount("Hero") == 0, "hopping into an enemy kills the owl");
 	batch.check(p_game_over != nullptr && p_game_over->getMoves() == moves_before_fatal + 1,
 		"death screen move count includes the fatal hop",
 		"moves before the fatal hop: " + std::to_string(moves_before_fatal) + " death screen: " +
@@ -1663,7 +1920,7 @@ TestBatch runBatchEdgeCases() {
 	// Also a run with nothing collected: it's still a valid run, so it's recorded
 	clearHighScores();
 	if (p_hero != nullptr) {
-		p_tree = findReachable(p_hero, "Tree", stand, facing);
+		df::Object* p_tree = findReachable(p_hero, "Tree", stand, facing);
 		batch.check(p_tree != nullptr, "found a tree the owl can fly into");
 		if (p_tree != nullptr) {
 			placeOwl(p_hero, stand, facing);

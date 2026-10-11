@@ -62,6 +62,7 @@ void loadResources(void) {
 	RM.loadSprite("Resources/Sprites/tree.sprite", "tree");
 	RM.loadSprite("Resources/Sprites/seed.sprite", "seed");
 	RM.loadSprite("Resources/Sprites/exit.sprite", "exit");
+	RM.loadSprite("Resources/Sprites/enemy.sprite", "enemy");
 
 	// The engine doesn't log sound loading failures, report them here
 	const char* sounds[][2] = {

@@ -32,6 +32,8 @@ namespace {
 GameOver::GameOver(int moves, int seeds, int maps, double time) {
     setType("GameOver");
     setSolidness(df::SPECTRAL);
+    // Top layer: drawn after the map, enemies and everything else, so nothing shows over the panel
+    setAltitude(df::MAX_ALTITUDE);
     m_moves = moves;
     m_seeds = seeds;
     m_maps = maps;

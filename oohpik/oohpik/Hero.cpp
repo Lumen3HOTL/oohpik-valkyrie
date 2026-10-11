@@ -65,6 +65,7 @@ Hero::Hero() {
 	m_dead = false;
 	m_forward_held = false;
 	m_hold_steps = 0;
+	m_steps_since_hop = MANUAL_HOP_STEPS; // the first press can hop straight away
 
 	m_moves = 0;
 	m_seeds = 0;
@@ -94,6 +95,9 @@ int Hero::eventHandler(const df::Event* p_e) {
 		return 0;
 	}
 	if (p_e->getType() == df::STEP_EVENT) {
+		if (m_steps_since_hop < MANUAL_HOP_STEPS) {
+			m_steps_since_hop++;
+		}
 		// Holding W (or space) hops again every HOLD_REPEAT_STEPS steps after the first hop
 		if (m_forward_held && !m_dead) {
 			m_hold_steps++;
@@ -117,10 +121,13 @@ int Hero::eventHandler(const df::Event* p_e) {
 		// isn't counted, and a fatal hop is counted before die() records the run
 		switch (k->getKey()) {
 			case df::Keyboard::W: case df::Keyboard::SPACE:
-				// Hop now; keep hopping while it's held (the engine sends no repeat presses)
+				// Hop now, unless the last hop was under MANUAL_HOP_STEPS steps ago; either way,
+				// keep hopping while it's held (the engine sends no repeat presses)
 				m_forward_held = true;
 				m_hold_steps = 0;
-				forward();
+				if (m_steps_since_hop >= MANUAL_HOP_STEPS) {
+					forward();
+				}
 				break;
 			case df::Keyboard::A: turn(-1); break;
 			case df::Keyboard::D: turn(+1); break;
@@ -130,14 +137,18 @@ int Hero::eventHandler(const df::Event* p_e) {
 		return 1;
 	} else if (p_e->getType() == df::COLLISION_EVENT) {
 		auto* c = static_cast<const df::EventCollision*>(p_e);
-		if (c->getObject2() == nullptr) {
+		// The other object: the one the owl hopped into, or the one that moved into the owl
+		df::Object* p_other = (c->getObject1() == this) ? c->getObject2() : c->getObject1();
+		if (p_other == nullptr) {
 			return 0; // nothing was hit
 		}
-		if (c->getObject2()->getType() == "Tree") {
+		if (p_other->getType() == "Tree" || p_other->getType() == "Enemy") {
 			die();
-		} else if (c->getObject2()->getType() == "Seed") {
+		} else if (c->getObject1() != this) {
+			return 0; // only the owl's own hops collect seeds and use the exit
+		} else if (p_other->getType() == "Seed") {
 			// collect() returns false if this seed was already picked up by an earlier event this move
-			if (static_cast<ookpik::Seed*>(c->getObject2())->collect()) {
+			if (static_cast<ookpik::Seed*>(p_other)->collect()) {
 				playSound("getseed");
 				m_move_had_sound = true;
 				m_seeds++;
@@ -146,9 +157,9 @@ int Hero::eventHandler(const df::Event* p_e) {
 				m_statusChangeCount+=2;
 				
 			}
-		} else if (c->getObject2()->getType() == "mapExit") {
+		} else if (p_other->getType() == "mapExit") {
 			// use() returns false if this exit already fired earlier this move
-			if (static_cast<ookpik::MapExit*>(c->getObject2())->use()) {
+			if (static_cast<ookpik::MapExit*>(p_other)->use()) {
 				playSound("nextlevel");
 				m_move_had_sound = true;
 				m_maps++;
@@ -162,6 +173,11 @@ int Hero::eventHandler(const df::Event* p_e) {
 	}
 	else if (p_e->getType().compare(ookpik::GEN_DONE_EVENT) == 0) {
 		m_timer.delta();
+		// A new map is ready (not a failed attempt, which gets retried): add this level's enemies
+		if (!static_cast<const ookpik::EventMapGenDone*>(p_e)->getError()) {
+			int level = m_maps + 1;
+			spawnEnemies(enemyCountForLevel(level), enemyMoveStepsForLevel(level), this);
+		}
 	}
 	return 0;
 }
@@ -198,6 +214,7 @@ void Hero::forward() {
 		return; // blocked: not a move
 	}
 	countMove(); // before moving, so a fatal hop is in the total die() records
+	m_steps_since_hop = 0;
 
 	// Move. moveObject returns -1 if a tree blocked player (collision handler plays death sound),
 	// move into a seed or the exit plays that sound instead of the hop sound.

@@ -151,6 +151,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CoordinatePair.cpp" />
+    <ClCompile Include="Enemy.cpp" />
     <ClCompile Include="EventMapGenDone.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GameOver.cpp" />
@@ -170,6 +171,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CoordinatePair.h" />
+    <ClInclude Include="Enemy.h" />
     <ClInclude Include="EventMapGenDone.h" />
     <ClInclude Include="GameOver.h" />
     <ClInclude Include="GameTests.h" />
@@ -192,6 +194,7 @@
     <None Include="Resources\Sprites\tree.sprite" />
     <None Include="Resources\Sprites\seed.sprite" />
     <None Include="Resources\Sprites\exit.sprite" />
+    <None Include="Resources\Sprites\enemy.sprite" />
     <None Include="Resources\Sounds\death.wav" />
     <None Include="Resources\Sounds\getseed.wav" />
     <None Include="Resources\Sounds\move.wav" />
@@ -213,7 +216,9 @@
   </Target>
   <!-- Debug x64: run the game tests (GameTests.cpp) after each build that produces a new exe.
        Failures are reported as a build warning, not an error. Results are in dragonfly.log. -->
-  <Target Name="RunGameTests" AfterTargets="CopyGameResources;CopySfmlDlls" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Inputs="$(TargetPath)" Outputs="$(OutDir)gametests.lastrun">
+  <!-- DependsOnTargets makes sure resources and DLLs are copied first (AfterTargets alone would
+       start the tests after whichever of those two copy steps happened to finish first). -->
+  <Target Name="RunGameTests" AfterTargets="Build" DependsOnTargets="CopyGameResources;CopySfmlDlls" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Inputs="$(TargetPath)" Outputs="$(OutDir)gametests.lastrun">
     <Exec Command="&quot;$(TargetPath)&quot; --test" WorkingDirectory="$(OutDir)" IgnoreExitCode="true">
       <Output TaskParameter="ExitCode" PropertyName="GameTestExitCode" />
     </Exec>
